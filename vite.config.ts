@@ -21,5 +21,15 @@ export default defineConfig({
   },
   build: {
     outDir: 'build'
+  },
+  server:{
+    proxy:{
+      '/api/v1': {
+                // config the target url based on your backend server
+                target: 'http://localhost:3000/',
+                changeOrigin: true,
+                secure: false,
+            }
+    }
   }
 });
