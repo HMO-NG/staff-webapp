@@ -27,32 +27,36 @@ function useAuth() {
         values: SignInCredential
     ): Promise<
         | {
-              status: Status
-              message: string
-          }
+            status: Status
+            message: string
+        }
         | undefined
     > => {
         try {
             const resp = await apiSignIn(values)
             if (resp.data) {
                 const { token } = resp.data
+                console.log(resp.data.user)
                 dispatch(signInSuccess(token))
                 if (resp.data.user) {
                     dispatch(
                         setUser(
                             resp.data.user || {
                                 avatar: '',
-                                userName: 'Anonymous',
-                                authority: ['USER'],
+                                first_name: 'Anonymous',
+                                last_name: '',
+                                authority: ['user'],
                                 email: '',
                             }
                         )
                     )
                 }
                 const redirectUrl = query.get(REDIRECT_URL_KEY)
+                console.log(redirectUrl)
                 navigate(
                     redirectUrl ? redirectUrl : appConfig.authenticatedEntryPath
                 )
+
                 return {
                     status: 'success',
                     message: '',
@@ -71,20 +75,23 @@ function useAuth() {
         try {
             const resp = await apiSignUp(values)
             if (resp.data) {
-                const { token } = resp.data
-                dispatch(signInSuccess(token))
-                if (resp.data.user) {
-                    dispatch(
-                        setUser(
-                            resp.data.user || {
-                                avatar: '',
-                                userName: 'Anonymous',
-                                authority: ['USER'],
-                                email: '',
-                            }
-                        )
-                    )
-                }
+                // const { token } = resp.data
+                // console.log("this is token", token)
+
+                // dispatch(signInSuccess(token))
+
+                // if (resp.data.user) {
+                //     dispatch(
+                //         setUser(
+                //             resp.data.user || {
+                //                 avatar: '',
+                //                 userName: 'Anonymous',
+                //                 authority: ['USER'],
+                //                 email: '',
+                //             }
+                //         )
+                //     )
+                // }
                 const redirectUrl = query.get(REDIRECT_URL_KEY)
                 navigate(
                     redirectUrl ? redirectUrl : appConfig.authenticatedEntryPath
@@ -108,7 +115,8 @@ function useAuth() {
         dispatch(
             setUser({
                 avatar: '',
-                userName: '',
+                first_name: '',
+                last_name: '',
                 email: '',
                 authority: [],
             })

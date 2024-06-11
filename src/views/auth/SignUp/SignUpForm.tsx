@@ -16,13 +16,19 @@ interface SignUpFormProps extends CommonProps {
 }
 
 type SignUpFormSchema = {
-    userName: string
-    password: string
+
     email: string
+    password: string
+    first_name: string
+    last_name: string
+    phone_number: string
+    role: string
+    type: string
 }
 
 const validationSchema = Yup.object().shape({
-    userName: Yup.string().required('Please enter your user name'),
+    first_name: Yup.string().required('Please enter your first name'),
+    last_name: Yup.string().required('Please enter your last name'),
     email: Yup.string()
         .email('Invalid email')
         .required('Please enter your email'),
@@ -31,6 +37,7 @@ const validationSchema = Yup.object().shape({
         [Yup.ref('password')],
         'Your passwords do not match'
     ),
+    phone_number: Yup.number().required("please enter your phone number").min(11)
 })
 
 const SignUpForm = (props: SignUpFormProps) => {
@@ -44,9 +51,9 @@ const SignUpForm = (props: SignUpFormProps) => {
         values: SignUpFormSchema,
         setSubmitting: (isSubmitting: boolean) => void
     ) => {
-        const { userName, password, email } = values
+        const { first_name, last_name, phone_number, role, type, password, email, } = values
         setSubmitting(true)
-        const result = await signUp({ userName, password, email })
+        const result = await signUp({ first_name, last_name, phone_number, password, email, role, type })
 
         if (result?.status === 'failed') {
             setMessage(result.message)
@@ -56,6 +63,7 @@ const SignUpForm = (props: SignUpFormProps) => {
     }
 
     return (
+
         <div className={className}>
             {message && (
                 <Alert showIcon className="mb-4" type="danger">
@@ -64,10 +72,14 @@ const SignUpForm = (props: SignUpFormProps) => {
             )}
             <Formik
                 initialValues={{
-                    userName: 'admin1',
-                    password: '123Qwe1',
-                    confirmPassword: '123Qwe1',
-                    email: 'test@testmail.com',
+                    first_name: '',
+                    last_name: '',
+                    password: '',
+                    phone_number: '',
+                    role: 'user',
+                    type: 'staff',
+                    confirmPassword: '',
+                    email: '',
                 }}
                 validationSchema={validationSchema}
                 onSubmit={(values, { setSubmitting }) => {
@@ -82,18 +94,33 @@ const SignUpForm = (props: SignUpFormProps) => {
                     <Form>
                         <FormContainer>
                             <FormItem
-                                label="User Name"
-                                invalid={errors.userName && touched.userName}
-                                errorMessage={errors.userName}
+                                label="First Name"
+                                invalid={errors.first_name && touched.first_name}
+                                errorMessage={errors.first_name}
                             >
                                 <Field
                                     type="text"
                                     autoComplete="off"
-                                    name="userName"
-                                    placeholder="User Name"
+                                    name="first_name"
+                                    placeholder="First Name"
                                     component={Input}
                                 />
                             </FormItem>
+
+                            <FormItem
+                                label="Last Name"
+                                invalid={errors.last_name && touched.last_name}
+                                errorMessage={errors.last_name}
+                            >
+                                <Field
+                                    type="text"
+                                    autoComplete="off"
+                                    name="last_name"
+                                    placeholder="Last Name"
+                                    component={Input}
+                                />
+                            </FormItem>
+
                             <FormItem
                                 label="Email"
                                 invalid={errors.email && touched.email}
@@ -107,6 +134,21 @@ const SignUpForm = (props: SignUpFormProps) => {
                                     component={Input}
                                 />
                             </FormItem>
+
+                            <FormItem
+                                label="Phone number"
+                                invalid={errors.phone_number && touched.phone_number}
+                                errorMessage={errors.phone_number}
+                            >
+                                <Field
+                                    type="number"
+                                    autoComplete="off"
+                                    name="phone_number"
+                                    placeholder="Phone Number"
+                                    component={Input}
+                                />
+                            </FormItem>
+
                             <FormItem
                                 label="Password"
                                 invalid={errors.password && touched.password}
