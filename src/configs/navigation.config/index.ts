@@ -16,17 +16,29 @@ const navigationConfig: NavigationTree[] = [
         authority: [],
         subMenu: [],
     },
-    /** Example purpose only, please remove */
     {
-        key: 'singleMenuItem',
-        path: '/single-menu-view',
-        title: 'Single menu item',
-        translateKey: 'nav.singleMenuItem',
-        icon: 'singleMenu',
-        type: NAV_ITEM_TYPE_ITEM,
-        authority: [],
-        subMenu: [],
+        key: 'provider',
+        path:'',
+        title:'Provider Menu',
+        translateKey: 'nav.provider.create',
+        icon:'singleMenu',
+        type: NAV_ITEM_TYPE_COLLAPSE,
+        authority:[],
+        subMenu:[
+            {
+                key: 'provider.create',
+                path: '/provider/create',
+                title: 'Add Provider',
+                translateKey: 'nav.provider.create',
+                icon: 'singleMenu',
+                type: NAV_ITEM_TYPE_ITEM,
+                authority: [],
+                subMenu: []
+            },
+        ]
     },
+
+    /** Example purpose only, please remove */
     {
         key: 'collapseMenu',
         path: '',

@@ -42,7 +42,7 @@ function useAuth() {
                     dispatch(
                         setUser(
                             resp.data.user || {
-                                avatar: '',
+                                id: '',
                                 first_name: 'Anonymous',
                                 last_name: '',
                                 authority: ['user'],

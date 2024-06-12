@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import authRoute from './authRoute'
 import type { Routes } from '@/@types/routes'
+import { components } from 'react-select'
 
 export const publicRoutes: Routes = [...authRoute,
     {
@@ -17,6 +18,12 @@ export const protectedRoutes = [
         path: '/home',
         component: lazy(() => import('@/views/Home')),
         authority: [],
+    },
+    {
+        key: 'provider.create',
+        path:'/provider/create',
+        component: lazy(() => import('@/views/provider/CreateProvider')),
+        authority:[]
     },
     /** Example purpose only, please remove */
     {
