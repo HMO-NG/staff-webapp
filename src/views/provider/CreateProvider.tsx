@@ -14,7 +14,11 @@ import Alert from '@/components/ui/Alert'
 import * as Yup from 'yup'
 import type { FieldProps } from 'formik'
 import { generateProviderCode, createProvider } from '@/services/ProviderService'
-import useProvider from '@/utils/customAuth/useProvider'
+import useProvider from '@/utils/customAuth/useProviderAuth'
+import { useNavigate } from "react-router-dom";
+import { useLocalStorage } from '@/utils/localStorage'
+
+
 
 
 type FormModel = {
@@ -59,16 +63,24 @@ const CreateProvider = () => {
     const { useCreateProvider } = useProvider()
 
 
+
+
     const CreateProvider = async (values) => {
 
+        // const navigate = useNavigate()
+
+
+        const {getItem} = useLocalStorage()
+
         // generate provider code
-        try {
+        // try {
             const result = await generateProviderCode()
             const codeLength = result.data.data.length
-            console.log(codeLength)
+
 
             // check for errors
             values.code = `${values.state}/${codeLength}`
+            values.user_id = getItem("user")
 
             const data = await useCreateProvider(values)
 
@@ -78,9 +90,11 @@ const CreateProvider = () => {
             //     setErrorMessage(data.message)
             // }
 
-        } catch (error) {
+        // } catch (error) {
 
-        }
+            // removeItem()
+            // navigate("/sign-in")
+        // }
     }
 
 
@@ -125,6 +139,7 @@ const CreateProvider = () => {
                         medical_director_name: '',
                         state: '',
                         code: '',
+                        user_id:'',
                         medical_director_phone_no: ''
 
                     }}

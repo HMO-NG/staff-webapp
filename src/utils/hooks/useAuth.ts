@@ -11,6 +11,7 @@ import { REDIRECT_URL_KEY } from '@/constants/app.constant'
 import { useNavigate } from 'react-router-dom'
 import useQuery from './useQuery'
 import type { SignInCredential, SignUpCredential } from '@/@types/auth'
+import { useLocalStorage } from '../localStorage'
 
 type Status = 'success' | 'failed'
 
@@ -20,6 +21,8 @@ function useAuth() {
     const navigate = useNavigate()
 
     const query = useQuery()
+
+    const {setItem} = useLocalStorage()
 
     const { token, signedIn } = useAppSelector((state) => state.auth.session)
 
@@ -42,7 +45,7 @@ function useAuth() {
                     dispatch(
                         setUser(
                             resp.data.user || {
-                                id: '',
+                                user_id: '',
                                 first_name: 'Anonymous',
                                 last_name: '',
                                 authority: ['user'],
@@ -50,6 +53,8 @@ function useAuth() {
                             }
                         )
                     )
+
+                    setItem("user",resp.data.user.user_id)
                 }
                 const redirectUrl = query.get(REDIRECT_URL_KEY)
                 console.log(redirectUrl)
@@ -114,7 +119,7 @@ function useAuth() {
         dispatch(signOutSuccess())
         dispatch(
             setUser({
-                avatar: '',
+                user_id: '',
                 first_name: '',
                 last_name: '',
                 email: '',

@@ -1,7 +1,7 @@
 
-export const useLocalStorage = (key:string) => {
+export const useLocalStorage = () => {
 
-    const getItem = () => {
+    const getItem = (key:string) => {
         try {
             const item = window.localStorage.getItem(key)
             return item ? JSON.parse(item) : null
@@ -10,7 +10,7 @@ export const useLocalStorage = (key:string) => {
         }
     }
 
-    const setItem = (data:string) => {
+    const setItem = (key:string,data:string) => {
         try {
             window.localStorage.setItem(key, JSON.stringify(data))
         } catch (error) {
@@ -18,7 +18,7 @@ export const useLocalStorage = (key:string) => {
         }
     }
 
-    const removeItem = () => {
+    const removeItem = (key:string) => {
         try {
             window.localStorage.removeItem(key)
         } catch (error) {

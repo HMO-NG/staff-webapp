@@ -4,11 +4,11 @@ import { useLocalStorage } from "../localStorage";
 
 function useProvider() {
     const navigate = useNavigate()
-    const {removeItem} = useLocalStorage("admin")
+    const {removeItem} = useLocalStorage()
 
 
 
-    const useCreateProvider = async (data: any):Promise<any> => {
+    const useCreateProvider = async (data: any) => {
         try {
             const response = await createProvider(data)
 
@@ -20,12 +20,16 @@ function useProvider() {
                 // clear session cache, this doesn't clear the user cache, i don't know why
                 // the session cache needs to be clear else, user won't be able to navigate
                 // to sign in
+
+                console.log("error one", error)
+
                 removeItem("admin")
-                removeItem("user")
 
                 navigate("/sign-in")
 
             }
+
+            console.log("error two", error)
         }
     }
 
