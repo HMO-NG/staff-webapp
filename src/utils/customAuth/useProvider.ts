@@ -1,8 +1,10 @@
 import { createProvider } from "@/services/ProviderService";
 import { useNavigate } from "react-router-dom";
+import { useLocalStorage } from "../localStorage";
 
 function useProvider() {
     const navigate = useNavigate()
+    const {removeItem} = useLocalStorage("admin")
 
     const useCreateProvider = async (data: any) => {
         try {
@@ -11,8 +13,9 @@ function useProvider() {
         } catch (error: any) {
             console.log("the error is", error?.response?.request.status)
 
-            
+
             if(error?.response?.request.status == 403){
+                removeItem()
                 navigate("/sign-in")
             }
         }

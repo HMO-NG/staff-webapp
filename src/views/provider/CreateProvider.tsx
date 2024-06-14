@@ -14,7 +14,7 @@ import Alert from '@/components/ui/Alert'
 import * as Yup from 'yup'
 import type { FieldProps } from 'formik'
 import { generateProviderCode, createProvider } from '@/services/ProviderService'
-import useProvider from '@/utils/provider/useProvider'
+import useProvider from '@/utils/customAuth/useProvider'
 
 
 type FormModel = {
