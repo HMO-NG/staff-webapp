@@ -4,24 +4,17 @@ import { HiOutlineEyeOff, HiOutlineEye, HiFire, HiCheckCircle } from 'react-icon
 import type { MouseEvent } from 'react'
 import Container from '@/components/shared/Container'
 import { NigerianState } from '@/data/NigerianStates'
-import { values } from 'lodash'
 import { FormItem, FormContainer } from '@/components/ui/Form'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import Select from '@/components/ui/Select'
-import DatePicker from '@/components/ui/DatePicker'
-import TimeInput from '@/components/ui/TimeInput'
-import Checkbox from '@/components/ui/Checkbox'
-import Radio from '@/components/ui/Radio'
-import Switcher from '@/components/ui/Switcher'
-import Segment from '@/components/ui/Segment'
-import Upload from '@/components/ui/Upload'
 import useTimeOutMessage from '@/utils/hooks/useTimeOutMessage'
 import { Field, Form, Formik } from 'formik'
 import Alert from '@/components/ui/Alert'
 import * as Yup from 'yup'
 import type { FieldProps } from 'formik'
 import { generateProviderCode, createProvider } from '@/services/ProviderService'
+import useProvider from '@/utils/provider/useProvider'
 
 
 type FormModel = {
@@ -63,8 +56,10 @@ const CreateProvider = () => {
     const [errorMessage, setErrorMessage] = useTimeOutMessage()
     const [successMessage, setSuccessMessage] = useTimeOutMessage()
 
+    const { useCreateProvider } = useProvider()
 
-    const onCreateProvider = async (values) => {
+
+    const CreateProvider = async (values) => {
 
         // generate provider code
         try {
@@ -75,7 +70,7 @@ const CreateProvider = () => {
             // check for errors
             values.code = `${values.state}/${codeLength}`
 
-            const  data = await createProvider(values)
+            const data = await useCreateProvider(values)
 
             console.log(data)
 
@@ -101,10 +96,10 @@ const CreateProvider = () => {
                 successMessage && (
                     <Alert closable
                         showIcon
-                    type="success"
-                    customIcon={<HiCheckCircle/>}
-                    title='Provided Added Successfully'
-                    duration={10000}>
+                        type="success"
+                        customIcon={<HiCheckCircle />}
+                        title='Provided Added Successfully'
+                        duration={10000}>
                         {successMessage}
                     </Alert>
                 )
@@ -137,7 +132,7 @@ const CreateProvider = () => {
 
                     onSubmit={(values, { setSubmitting, resetForm }) => {
                         console.log('values', values)
-                        onCreateProvider(values)
+                        CreateProvider(values)
 
                         setTimeout(() => {
                             // JSON.stringify(values, null, 2)
