@@ -25,6 +25,12 @@ export const protectedRoutes = [
         component: lazy(() => import('@/views/provider/CreateProvider')),
         authority:[]
     },
+    {
+        key: 'provider.view',
+        path:'/provider/view',
+        component: lazy(() => import('@/views/provider/ViewAllProvider')),
+        authority:[]
+    },
     /** Example purpose only, please remove */
     {
         key: 'singleMenuItem',

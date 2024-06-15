@@ -35,6 +35,16 @@ const navigationConfig: NavigationTree[] = [
                 authority: [],
                 subMenu: []
             },
+            {
+                key: 'provider.view',
+                path:'/provider/view',
+                title: 'View Provider',
+                translateKey: 'nav.provider.view',
+                icon: 'groupCollapseMenu',
+                type: NAV_ITEM_TYPE_ITEM,
+                authority: [],
+                subMenu: []
+            },
         ]
     },
 
