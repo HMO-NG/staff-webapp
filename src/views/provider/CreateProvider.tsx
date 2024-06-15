@@ -1,8 +1,5 @@
 import Card from '@/components/ui/Card'
-import { useState } from 'react'
-import { HiOutlineEyeOff, HiOutlineEye, HiFire, HiCheckCircle } from 'react-icons/hi'
-import type { MouseEvent } from 'react'
-import Container from '@/components/shared/Container'
+import { HiCheckCircle } from 'react-icons/hi'
 import { NigerianState } from '@/data/NigerianStates'
 import { FormItem, FormContainer } from '@/components/ui/Form'
 import Input from '@/components/ui/Input'
@@ -13,13 +10,8 @@ import { Field, Form, Formik } from 'formik'
 import Alert from '@/components/ui/Alert'
 import * as Yup from 'yup'
 import type { FieldProps } from 'formik'
-import { generateProviderCode, createProvider } from '@/services/ProviderService'
 import useProvider from '@/utils/customAuth/useProviderAuth'
-import { useNavigate } from "react-router-dom";
 import { useLocalStorage } from '@/utils/localStorage'
-
-
-
 
 type FormModel = {
     input: string
@@ -35,7 +27,6 @@ type FormModel = {
     upload: File[];
 }
 
-
 const validationSchema = Yup.object().shape({
 
     state: Yup.string().required('Please providers state!'),
@@ -43,14 +34,14 @@ const validationSchema = Yup.object().shape({
     email: Yup.string().email('Invalid email').required('Email Required'),
     address: Yup.string().required('address name Required'),
     phone_number: Yup.string()
-        .matches(/^[0-9]{11}$/, 'Phone number must be 11 digits and contain only numbers')
+        .matches(/^[0-9]{10}$/, 'Phone number must be 11 digits and contain only numbers')
         .required('Provider Phone number is required'),
     medical_director_name: Yup.string()
         .min(3, 'Too Short!')
         .max(20, 'Too Long!')
         .required('Medical Director Name Required'),
     medical_director_phone_no: Yup.string()
-        .matches(/^[0-9]{11}$/, 'Phone number must be 11 digits and contain only numbers')
+        .matches(/^[0-9]{10}$/, 'Phone number must be 11 digits and contain only numbers')
         .required('Medical Director Phone number is required'),
 
 })
@@ -62,42 +53,28 @@ const CreateProvider = () => {
 
     const { useCreateProvider } = useProvider()
 
+    const onCreateProvider = async (values: any,
+        setSubmitting: (isSubmitting: boolean) => void
+    ) => {
 
+        setSubmitting(true)
 
+        const { getItem } = useLocalStorage()
 
-    const CreateProvider = async (values) => {
+        values.user_id = getItem("user")
 
-        // const navigate = useNavigate()
+        const data = await useCreateProvider(values)
 
+        if (data?.data) {
 
-        const {getItem} = useLocalStorage()
+            setTimeout(() => {
+                setSuccessMessage(data.message)
+                setSubmitting(false)
+            }, 3000)
 
-        // generate provider code
-        // try {
-            const result = await generateProviderCode()
-            const codeLength = result.data.data.length
+        }
 
-
-            // check for errors
-            values.code = `${values.state}/${codeLength}`
-            values.user_id = getItem("user")
-
-            const data = await useCreateProvider(values)
-
-            console.log(data)
-
-            // if (data?.status === 'failed') {
-            //     setErrorMessage(data.message)
-            // }
-
-        // } catch (error) {
-
-            // removeItem()
-            // navigate("/sign-in")
-        // }
     }
-
-
 
     return (
         <div>
@@ -112,7 +89,7 @@ const CreateProvider = () => {
                         showIcon
                         type="success"
                         customIcon={<HiCheckCircle />}
-                        title='Provided Added Successfully'
+                        title='Successfully'
                         duration={10000}>
                         {successMessage}
                     </Alert>
@@ -126,7 +103,6 @@ const CreateProvider = () => {
                 </p>
             </Card>
 
-
             <div>
                 <Formik
                     enableReinitialize
@@ -139,23 +115,16 @@ const CreateProvider = () => {
                         medical_director_name: '',
                         state: '',
                         code: '',
-                        user_id:'',
+                        user_id: '',
                         medical_director_phone_no: ''
 
                     }}
                     validationSchema={validationSchema}
 
                     onSubmit={(values, { setSubmitting, resetForm }) => {
-                        console.log('values', values)
-                        CreateProvider(values)
+                        onCreateProvider(values, setSubmitting)
 
-                        setTimeout(() => {
-                            // JSON.stringify(values, null, 2)
-                            setSubmitting(false)
-                            setSuccessMessage(`${values.name} added successfully with code ${values.code} and will be awaiting verification`)
-                            resetForm()
 
-                        }, 5000)
                     }}
                 >
                     {({ values, touched, errors, isSubmitting }) => (
@@ -251,13 +220,13 @@ const CreateProvider = () => {
                                                 options={NigerianState}
                                                 value={NigerianState.filter(
                                                     (option) =>
-                                                        option.value ===
+                                                        option.label ===
                                                         values.state
                                                 )}
                                                 onChange={(option) =>
                                                     form.setFieldValue(
                                                         field.name,
-                                                        option?.value
+                                                        option?.label
                                                     )
                                                 }
                                             />

@@ -1,12 +1,8 @@
 import ApiService from "./ApiService"
 
-type ProviderResponse = {
+type CreateProviderResponse = {
     message: string,
-    data: []
-}
-
-type GenerateProviderRequest = {
-
+    data: string
 }
 
 export async function generateProviderCode<ProviderResponse, TRequest>() {
@@ -18,8 +14,8 @@ export async function generateProviderCode<ProviderResponse, TRequest>() {
     })
 }
 
-export async function createProvider<TResponse, TRequest>(data: any) {
-    return ApiService.fetchData<TResponse, TRequest>({
+export async function createProvider(data: any) {
+    return ApiService.fetchData<CreateProviderResponse>({
         url: '/provider/create',
         method: 'post',
         data
