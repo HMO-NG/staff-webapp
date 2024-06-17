@@ -5,12 +5,20 @@ type CreateProviderResponse = {
     data: string
 }
 
-export async function generateProviderCode<ProviderResponse, TRequest>() {
+type ProviderResponse = {
+    message:string,
+    data: [],
+    total:any
+}
 
-    return ApiService.fetchData<ProviderResponse, TRequest>({
+/*
+Returns the provider id, name, state, code, and user id, first name and last name as full name */
+export async function getAllProvider(data:any) {
+
+    return ApiService.fetchData<ProviderResponse>({
         url: '/provider/get',
-        method: 'get',
-
+        method: 'post',
+        data
     })
 }
 
