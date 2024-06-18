@@ -1,9 +1,11 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef, ChangeEvent } from 'react'
+import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import DataTable from '@/components/shared/DataTable'
 import axios from 'axios'
 import type { ColumnDef, OnSortParam, CellContext, Row } from '@/components/shared/DataTable'
 import useProvider from '@/utils/customAuth/useProviderAuth'
+import debounce from 'lodash/debounce'
 
 type Customer = {
     id: string;
@@ -37,11 +39,27 @@ const ViewAllProvider = () => {
         pageSize: 10,
         query: '',
         sort: {
-            order: '',
+            order: 'asc',
             key: '',
         },
     })
 
+    const inputRef = useRef(null)
+
+    const debounceFn = debounce(handleDebounceFn, 500)
+
+    function handleDebounceFn(val: string) {
+        if (typeof val === 'string' && (val.length > 1 || val.length === 0)) {
+            setTableData((prevData) => ({
+                ...prevData,
+                ...{ query: val, pageIndex: 1 },
+            }))
+        }
+    }
+
+    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+        debounceFn(e.target.value)
+    }
 
     const handleAction = (cellProps: CellContext<Customer, unknown>) => {
         console.log('Action clicked', cellProps)
@@ -145,7 +163,7 @@ const ViewAllProvider = () => {
         fetchData()
         // eslint-disable-next-line react-hooks/exhaustive-deps
 
-    }, [tableData.pageIndex, tableData.sort, tableData.pageSize])
+    }, [tableData.pageIndex, tableData.sort, tableData.pageSize, tableData.query])
 
     return (
         <>
@@ -160,6 +178,17 @@ const ViewAllProvider = () => {
                     </Button>
                 </div>
             )}
+
+            <div className="flex justify-end mb-4">
+                <Input
+                    ref={inputRef}
+                    placeholder="Search..."
+                    size="sm"
+                    className="lg:w-52"
+                    onChange={handleChange}
+                />
+            </div>
+
             <DataTable<Customer>
                 selectable
                 columns={columns}
