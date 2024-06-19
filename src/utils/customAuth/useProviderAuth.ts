@@ -1,4 +1,4 @@
-import { createProvider, getAllProvider } from "@/services/ProviderService";
+import { createProvider, getProviderByID, getAllProvider } from "@/services/ProviderService";
 
 function useProvider() {
 
@@ -33,10 +33,25 @@ function useProvider() {
         }
     }
 
+    const useGetProviderByID = async (data: any): Promise<{
+        message: string,
+        data: any,
+    }> => {
+        try {
+
+            const response = await getProviderByID(data)
+            console.log("Ddddd", response   )
+            return response.data
+
+        } catch (error: any) {
+            return error
+        }
+    }
 
     return {
         useCreateProvider,
-        useGetAllProvider
+        useGetAllProvider,
+        useGetProviderByID
     }
 }
 

@@ -2,13 +2,24 @@ import { useState, useEffect, useMemo, useRef, ChangeEvent } from 'react'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import DataTable from '@/components/shared/DataTable'
-import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
 import type { ColumnDef, OnSortParam, CellContext, Row } from '@/components/shared/DataTable'
 import useProvider from '@/utils/customAuth/useProviderAuth'
 import debounce from 'lodash/debounce'
+import Dropdown from '@/components/ui/Dropdown'
+import type { SyntheticEvent } from 'react'
+import Dialog from '@/components/ui/Dialog'
 
 type Customer = {
     id: string;
+    email: string,
+    address: string,
+    phone_number: string,
+    medical_director_name: string,
+    medical_director_phone_no: string,
+    modified_by: string,
+    created_at: string,
+    modified_at: string,
     name: string;
     state: string,
     code: string;
@@ -20,7 +31,7 @@ type Customer = {
 const ViewAllProvider = () => {
 
     const { useGetAllProvider } = useProvider()
-
+    const navigate = useNavigate()
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(false)
     const [selectedRows, setSelectedRows] = useState<string[]>([])
@@ -43,10 +54,59 @@ const ViewAllProvider = () => {
             key: '',
         },
     })
+    const [provider, setProvider] = useState<
+        {
+            id: string;
+            email: string,
+            address: string,
+            phone_number: string,
+            medical_director_name: string,
+            medical_director_phone_no: string,
+            modified_by: string,
+            created_at: string,
+            modified_at: string,
+            name: string;
+            state: string,
+            code: string;
+            user_id: string,
+            created_by: string
+        }>({
+            id: "",
+            email: "",
+            address: "",
+            phone_number: "",
+            medical_director_name: "",
+            medical_director_phone_no: "",
+            modified_by: "",
+            created_at: "",
+            modified_at: "",
+            name: "",
+            state: "",
+            code: "",
+            user_id: "",
+            created_by: "",
+        })
 
     const inputRef = useRef(null)
 
     const debounceFn = debounce(handleDebounceFn, 500)
+
+    const dropdownItems = [
+        { key: 'view', name: 'view' },
+        { key: 'edit', name: 'Edit' },
+        { key: 'deactive', name: 'Deactive' },
+    ]
+
+    const [dialogIsOpen, setIsOpen] = useState(false)
+    const [viewDialog, setViewDialog] = useState(false)
+
+    const onDropdownClick = (e: SyntheticEvent) => {
+        console.log('Dropdown Clicked', e)
+    }
+
+    const onDropdownItemClick = (eventKey: string, e: SyntheticEvent) => {
+        console.log('Dropdown Item Clicked', eventKey, e)
+    }
 
     function handleDebounceFn(val: string) {
         if (typeof val === 'string' && (val.length > 1 || val.length === 0)) {
@@ -61,8 +121,44 @@ const ViewAllProvider = () => {
         debounceFn(e.target.value)
     }
 
-    const handleAction = (cellProps: CellContext<Customer, unknown>) => {
+    const handleAction = async (cellProps: CellContext<Customer, unknown>, key: any) => {
         console.log('Action clicked', cellProps)
+
+        switch (key) {
+            case 'view':
+                // const providerResponse = await useGetProviderByID(cellProps.row.original.id)
+                // console.log("provider Response", providerResponse)
+                setProvider(
+                    {
+                        id: cellProps.row.original.id,
+                        email: cellProps.row.original.email,
+                        address: cellProps.row.original.address,
+                        phone_number: cellProps.row.original.phone_number,
+                        medical_director_name: cellProps.row.original.medical_director_name,
+                        medical_director_phone_no: cellProps.row.original.medical_director_phone_no,
+                        modified_by: cellProps.row.original.modified_by,
+                        created_at: cellProps.row.original.created_at,
+                        modified_at: cellProps.row.original.modified_at,
+                        name: cellProps.row.original.name,
+                        state: cellProps.row.original.state,
+                        code: cellProps.row.original.code,
+                        user_id: cellProps.row.original.user_id,
+                        created_by: cellProps.row.original.created_by
+                    }
+                )
+
+                setViewDialog(true)
+                break;
+            case 'edit':
+                navigate('/provider/edit')
+                break;
+            case 'deactive':
+                // Code to execute if expression === value2
+                break;
+            // ... more cases
+            default:
+            // Code to execute if expression doesn't match any case
+        }
     }
 
     const handleBatchAction = () => {
@@ -88,12 +184,27 @@ const ViewAllProvider = () => {
                 accessorKey: 'entered by',
             },
             {
+                header: 'Address',
+                accessorKey: 'email',
+            },
+            {
                 header: '',
                 id: 'action',
                 cell: (props) => (
-                    <Button size="xs" onClick={() => handleAction(props)}>
-                        Action
-                    </Button>
+                    <div>
+                        <Dropdown>
+                            {dropdownItems.map((item) => (
+                                <Dropdown.Item
+                                    key={item.key}
+                                    eventKey={item.key}
+                                    onSelect={onDropdownItemClick}
+                                    onClick={() => handleAction(props, item.key)}
+                                >
+                                    {item.name}
+                                </Dropdown.Item>
+                            ))}
+                        </Dropdown>
+                    </div>
                 ),
             },
         ]
@@ -151,6 +262,7 @@ const ViewAllProvider = () => {
         const fetchData = async () => {
             setLoading(true)
             const response = await useGetAllProvider(tableData)
+            console.log("data",response.data)
             if (response.data) {
                 setData(response.data)
                 setLoading(false)
@@ -201,6 +313,69 @@ const ViewAllProvider = () => {
                 onCheckBoxChange={handleRowSelect}
                 onIndeterminateCheckBoxChange={handleAllRowSelect}
             />
+
+
+            {
+                viewDialog && <Dialog
+                    isOpen={viewDialog}
+                    onClose={() => setViewDialog(false)}
+                    onRequestClose={() => setViewDialog(false)}
+                    width={1000}
+                    shouldCloseOnOverlayClick={false}
+                    shouldCloseOnEsc={false}
+                >
+                    <h5 className="mb-4">View Provider</h5>
+                    <div className="prose dark:prose-invert mx-auto">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Provider Name</td>
+                                    <td>{provider.name}</td>
+                                </tr>
+                                <tr>
+                                    <td>Provider Email</td>
+                                    <td>{provider.email}</td>
+
+                                </tr>
+                                <tr>
+                                    <td>Provider Address</td>
+                                    <td>{provider.address}</td>
+                                    <td>{data[0].Address}</td>
+                                </tr>
+                                <tr>
+                                    <td>Vader</td>
+                                    <td>Boulder, CO</td>
+                                    <td>Vader Bomb</td>
+                                </tr>
+                                <tr>
+                                    <td>Razor Ramon</td>
+                                    <td>Chuluota, FL</td>
+                                    <td>Razor's Edge</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div className="text-right mt-6">
+                        <Button
+                            className="ltr:mr-2 rtl:ml-2"
+                            variant="plain"
+                            onClick={() => setViewDialog(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button variant="solid" onClick={() => setViewDialog(false)}>
+                            Okay
+                        </Button>
+                    </div>
+                </Dialog>
+            }
+
         </>
     )
 }
