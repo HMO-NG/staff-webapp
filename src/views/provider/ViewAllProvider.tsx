@@ -9,6 +9,8 @@ import debounce from 'lodash/debounce'
 import Dropdown from '@/components/ui/Dropdown'
 import type { SyntheticEvent } from 'react'
 import Dialog from '@/components/ui/Dialog'
+import { FormItem, FormContainer } from '@/components/ui/Form'
+import { Field, Form, Formik } from 'formik'
 
 type Customer = {
     id: string;
@@ -87,7 +89,38 @@ const ViewAllProvider = () => {
             entered_by: "",
         })
 
-        
+    const [editProvider, setEditProvider] = useState<
+        {
+            id: string;
+            email: string,
+            address: string,
+            phone_number: string,
+            medical_director_name: string,
+            medical_director_phone_no: string,
+            modified_by: string,
+            created_at: string,
+            modified_at: string,
+            name: string;
+            state: string,
+            code: string;
+            user_id: string,
+            entered_by: string
+        }>({
+            id: "",
+            email: "",
+            address: "",
+            phone_number: "",
+            medical_director_name: "",
+            medical_director_phone_no: "",
+            modified_by: "",
+            created_at: "",
+            modified_at: "",
+            name: "",
+            state: "",
+            code: "",
+            user_id: "",
+            entered_by: "",
+        })
 
     const inputRef = useRef(null)
 
@@ -99,7 +132,7 @@ const ViewAllProvider = () => {
         { key: 'deactive', name: 'Deactive' },
     ]
 
-    const [dialogIsOpen, setIsOpen] = useState(false)
+    const [editDialog, setEditDialog] = useState(false)
     const [viewDialog, setViewDialog] = useState(false)
 
     const onDropdownClick = (e: SyntheticEvent) => {
@@ -124,7 +157,6 @@ const ViewAllProvider = () => {
     }
 
     const handleAction = async (cellProps: CellContext<Customer, unknown>, key: any) => {
-        console.log('Action clicked', cellProps.row.original.entered_by)
 
         switch (key) {
             case 'view':
@@ -151,6 +183,25 @@ const ViewAllProvider = () => {
                 break;
             case 'edit':
 
+                setEditProvider(
+                    {
+                        id: cellProps.row.original.id,
+                        email: cellProps.row.original.email,
+                        address: cellProps.row.original.address,
+                        phone_number: cellProps.row.original.phone_number,
+                        medical_director_name: cellProps.row.original.medical_director_name,
+                        medical_director_phone_no: cellProps.row.original.medical_director_phone_no,
+                        modified_by: cellProps.row.original.modified_by,
+                        created_at: cellProps.row.original.created_at,
+                        modified_at: cellProps.row.original.modified_at,
+                        name: cellProps.row.original.name,
+                        state: cellProps.row.original.state,
+                        code: cellProps.row.original.code,
+                        user_id: cellProps.row.original.user_id,
+                        entered_by: cellProps.row.original.entered_by
+                    }
+                )
+                setEditDialog(true)
                 break;
             case 'deactive':
                 // Code to execute if expression === value2
@@ -400,7 +451,108 @@ const ViewAllProvider = () => {
                                 >
                                     Cancel
                                 </Button>
-                                <Button variant="solid" onClick={() => setViewDialog(false)}>
+                            </div>
+                        </div>
+                    </div>
+                </Dialog>
+            }
+            {
+                editDialog && <Dialog
+                    isOpen={editDialog}
+                    onClose={() => setEditDialog(false)}
+                    onRequestClose={() => setEditDialog(false)}
+                    width={1000}
+                    shouldCloseOnOverlayClick={false}
+                    shouldCloseOnEsc={false}
+                >
+                    <div className="flex flex-col h-full justify-between">
+
+
+                        <h5 className="mb-4">Edit Provider</h5>
+                        <div className="max-h-96 overflow-y-auto">
+
+                            <div className="prose dark:prose-invert mx-auto">
+                                <Formik
+                                    initialValues={{
+                                        name: editProvider.name,
+                                        email: editProvider.email,
+                                        password: '',
+                                        rememberMe: false,
+                                    }}
+                                    onSubmit={(values, { resetForm, setSubmitting }) => {
+                                        setTimeout(() => {
+                                            alert(JSON.stringify(values, null, 2))
+                                            setSubmitting(false)
+                                            resetForm()
+                                        }, 400)
+                                    }}
+                                >
+                                    {({ touched, errors, resetForm }) => (
+                                        <Form>
+                                            <FormContainer>
+                                                <FormItem
+                                                    label="Name"
+                                                >
+                                                    <Field
+                                                        type="text"
+                                                        autoComplete="off"
+                                                        name="name"
+                                                        component={Input}
+                                                    />
+                                                </FormItem>
+                                                <FormItem
+                                                    label="Email"
+                                                >
+                                                    <Field
+                                                        type="text"
+                                                        autoComplete="off"
+                                                        name="email"
+                                                        component={Input}
+                                                    />
+                                                </FormItem>
+                                                <FormItem
+                                                    label="Password"
+                                                    invalid={errors.password && touched.password}
+                                                    errorMessage={errors.password}
+                                                >
+                                                    <Field
+                                                        type={""}
+                                                        suffix={""}
+                                                        autoComplete="off"
+                                                        name="password"
+                                                        placeholder="Password"
+                                                        component={Input}
+                                                    />
+                                                </FormItem>
+                                                <FormItem>
+
+                                                </FormItem>
+                                                <FormItem>
+                                                    <Button
+                                                        type="reset"
+                                                        className="ltr:mr-2 rtl:ml-2"
+                                                        onClick={() => resetForm()}
+                                                    >
+                                                        Reset
+                                                    </Button>
+                                                    <Button variant="solid" type="submit">
+                                                        Submit
+                                                    </Button>
+                                                </FormItem>
+                                            </FormContainer>
+                                        </Form>
+                                    )}
+                                </Formik>
+                            </div>
+                            <div className="text-right mt-6">
+                                <Button
+                                    className="ltr:mr-2 rtl:ml-2"
+                                    variant="plain"
+                                    onClick={() => setEditDialog(false)}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button variant="solid" onClick={() => setEditDialog(false)}>
                                     Okay
                                 </Button>
                             </div>
