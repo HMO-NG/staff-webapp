@@ -24,7 +24,7 @@ type Customer = {
     state: string,
     code: string;
     user_id: string,
-    created_by: string
+    entered_by: string
 
 }
 
@@ -69,7 +69,7 @@ const ViewAllProvider = () => {
             state: string,
             code: string;
             user_id: string,
-            created_by: string
+            entered_by: string
         }>({
             id: "",
             email: "",
@@ -84,8 +84,10 @@ const ViewAllProvider = () => {
             state: "",
             code: "",
             user_id: "",
-            created_by: "",
+            entered_by: "",
         })
+
+        
 
     const inputRef = useRef(null)
 
@@ -122,12 +124,10 @@ const ViewAllProvider = () => {
     }
 
     const handleAction = async (cellProps: CellContext<Customer, unknown>, key: any) => {
-        console.log('Action clicked', cellProps)
+        console.log('Action clicked', cellProps.row.original.entered_by)
 
         switch (key) {
             case 'view':
-                // const providerResponse = await useGetProviderByID(cellProps.row.original.id)
-                // console.log("provider Response", providerResponse)
                 setProvider(
                     {
                         id: cellProps.row.original.id,
@@ -143,14 +143,14 @@ const ViewAllProvider = () => {
                         state: cellProps.row.original.state,
                         code: cellProps.row.original.code,
                         user_id: cellProps.row.original.user_id,
-                        created_by: cellProps.row.original.created_by
+                        entered_by: cellProps.row.original.entered_by
                     }
                 )
 
                 setViewDialog(true)
                 break;
             case 'edit':
-                navigate('/provider/edit')
+
                 break;
             case 'deactive':
                 // Code to execute if expression === value2
@@ -181,7 +181,7 @@ const ViewAllProvider = () => {
             },
             {
                 header: 'Entered by',
-                accessorKey: 'entered by',
+                accessorKey: 'entered_by',
             },
             {
                 header: 'Address',
@@ -262,7 +262,7 @@ const ViewAllProvider = () => {
         const fetchData = async () => {
             setLoading(true)
             const response = await useGetAllProvider(tableData)
-            console.log("data",response.data)
+            console.log("data", response.data)
             if (response.data) {
                 setData(response.data)
                 setLoading(false)
@@ -324,54 +324,87 @@ const ViewAllProvider = () => {
                     shouldCloseOnOverlayClick={false}
                     shouldCloseOnEsc={false}
                 >
-                    <h5 className="mb-4">View Provider</h5>
-                    <div className="prose dark:prose-invert mx-auto">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Field</th>
-                                    <th>Details</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Provider Name</td>
-                                    <td>{provider.name}</td>
-                                </tr>
-                                <tr>
-                                    <td>Provider Email</td>
-                                    <td>{provider.email}</td>
+                    <div className="flex flex-col h-full justify-between">
 
-                                </tr>
-                                <tr>
-                                    <td>Provider Address</td>
-                                    <td>{provider.address}</td>
-                                    <td>{data[0].Address}</td>
-                                </tr>
-                                <tr>
-                                    <td>Vader</td>
-                                    <td>Boulder, CO</td>
-                                    <td>Vader Bomb</td>
-                                </tr>
-                                <tr>
-                                    <td>Razor Ramon</td>
-                                    <td>Chuluota, FL</td>
-                                    <td>Razor's Edge</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div className="text-right mt-6">
-                        <Button
-                            className="ltr:mr-2 rtl:ml-2"
-                            variant="plain"
-                            onClick={() => setViewDialog(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button variant="solid" onClick={() => setViewDialog(false)}>
-                            Okay
-                        </Button>
+
+                        <h5 className="mb-4">View Provider</h5>
+                        <div className="max-h-96 overflow-y-auto">
+
+
+                            <div className="prose dark:prose-invert mx-auto">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Field</th>
+                                            <th>Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Name</td>
+                                            <td><b>{provider.name}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Email</td>
+                                            <td><b>{provider.email}</b></td>
+
+                                        </tr>
+                                        <tr>
+                                            <td>Address</td>
+                                            <td><b>{provider.address}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Phone Number</td>
+                                            <td><b>{provider.phone_number}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>State</td>
+                                            <td><b>{provider.state}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Provider Code</td>
+                                            <td><b>{provider.code}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Medical Director Name</td>
+                                            <td><b>{provider.medical_director_name}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Medical Director Phone No.</td>
+                                            <td><b>{provider.medical_director_phone_no}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Entered By</td>
+                                            <td><b>{provider.entered_by}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Modified By</td>
+                                            <td><b>{provider.modified_by}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Modified At</td>
+                                            <td><b>{provider.modified_at}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Created At</td>
+                                            <td><b>{provider.created_at}</b></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="text-right mt-6">
+                                <Button
+                                    className="ltr:mr-2 rtl:ml-2"
+                                    variant="plain"
+                                    onClick={() => setViewDialog(false)}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button variant="solid" onClick={() => setViewDialog(false)}>
+                                    Okay
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </Dialog>
             }
