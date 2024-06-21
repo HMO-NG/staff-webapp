@@ -11,6 +11,8 @@ import type { SyntheticEvent } from 'react'
 import Dialog from '@/components/ui/Dialog'
 import { FormItem, FormContainer } from '@/components/ui/Form'
 import { Field, Form, Formik } from 'formik'
+import toast from '@/components/ui/toast'
+import Notification from '@/components/ui/Notification'
 
 type Customer = {
     id: string;
@@ -32,11 +34,12 @@ type Customer = {
 
 const ViewAllProvider = () => {
 
-    const { useGetAllProvider } = useProvider()
+    const { useGetAllProvider, useEditProviderById } = useProvider()
     const navigate = useNavigate()
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(false)
     const [selectedRows, setSelectedRows] = useState<string[]>([])
+    const [message, setMessage] = useState('')
     const [tableData, setTableData] = useState<{
         pageIndex: number
         pageSize: number
@@ -243,7 +246,8 @@ const ViewAllProvider = () => {
                 id: 'action',
                 cell: (props) => (
                     <div>
-                        <Dropdown>
+                        <Dropdown
+                            placement='bottom-start'>
                             {dropdownItems.map((item) => (
                                 <Dropdown.Item
                                     key={item.key}
@@ -309,11 +313,37 @@ const ViewAllProvider = () => {
         }
     }
 
+    const updateProvider = async (data: any) => {
+        const result = await useEditProviderById(data)
+
+        setMessage(result.message)
+
+        if (result.message) {
+            setTimeout(() => {
+                openNotification()
+            },
+                3000
+            )
+
+        }
+
+
+    }
+
+    const toastNotification = (
+        <Notification title="Mesasge">
+            {message}
+        </Notification>
+    )
+
+    function openNotification() {
+        toast.push(toastNotification)
+    }
+
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true)
             const response = await useGetAllProvider(tableData)
-            console.log("data", response.data)
             if (response.data) {
                 setData(response.data)
                 setLoading(false)
@@ -480,6 +510,7 @@ const ViewAllProvider = () => {
         user_id: string,
         entered_by: string */
                                     initialValues={{
+                                        id: editProvider.id,
                                         name: editProvider.name,
                                         email: editProvider.email,
                                         address: editProvider.address,
@@ -487,15 +518,19 @@ const ViewAllProvider = () => {
                                         medical_director_name: editProvider.medical_director_name,
                                         medical_director_phone_no: editProvider.medical_director_phone_no,
                                         state: editProvider.state,
+                                        user_id: editProvider.user_id
 
                                     }}
                                     onSubmit={(values, { resetForm, setSubmitting }) => {
-                                        setTimeout(() => {
-                                            alert(JSON.stringify(values, null, 2))
-                                            setSubmitting(false)
-                                            resetForm()
-                                        }, 400)
-                                    }}
+
+                                        // alert(JSON.stringify(values, null, 2))
+                                        // console.log(JSON.stringify(values, null, 2))
+                                        // setSubmitting(false)
+                                        // resetForm()
+                                        updateProvider(values)
+                                    }
+                                    }
+
                                 >
                                     {({ touched, errors, resetForm }) => (
                                         <Form>
@@ -568,7 +603,7 @@ const ViewAllProvider = () => {
                                                 </FormItem>
                                                 {/* state */}
                                                 <FormItem
-                                                    label="Name"
+                                                    label="State"
                                                 >
                                                     <Field
                                                         type="text"
@@ -599,7 +634,7 @@ const ViewAllProvider = () => {
                             </div>
                         </div>
                     </div>
-                </Dialog>
+                </Dialog >
             }
 
         </>

@@ -1,4 +1,9 @@
-import { createProvider, getProviderByID, getAllProvider } from "@/services/ProviderService";
+import {
+    createProvider,
+    getProviderByID,
+    getAllProvider,
+    editProviderByID
+} from "@/services/ProviderService";
 
 function useProvider() {
 
@@ -40,9 +45,18 @@ function useProvider() {
         try {
 
             const response = await getProviderByID(data)
-            console.log("Ddddd", response   )
             return response.data
 
+        } catch (error: any) {
+            return error
+        }
+    }
+
+    const useEditProviderById = async (data: any): Promise<{ message: string }> => {
+        try {
+            const result = await editProviderByID(data)
+
+            return result.data
         } catch (error: any) {
             return error
         }
@@ -51,7 +65,8 @@ function useProvider() {
     return {
         useCreateProvider,
         useGetAllProvider,
-        useGetProviderByID
+        useGetProviderByID,
+        useEditProviderById
     }
 }
 
