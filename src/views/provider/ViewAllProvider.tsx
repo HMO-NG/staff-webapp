@@ -473,11 +473,21 @@ const ViewAllProvider = () => {
 
                             <div className="prose dark:prose-invert mx-auto">
                                 <Formik
+                                    /*  id: string;
+        created_at: string,
+        modified_at: string,
+        code: string;
+        user_id: string,
+        entered_by: string */
                                     initialValues={{
                                         name: editProvider.name,
                                         email: editProvider.email,
-                                        password: '',
-                                        rememberMe: false,
+                                        address: editProvider.address,
+                                        phone_number: editProvider.phone_number,
+                                        medical_director_name: editProvider.medical_director_name,
+                                        medical_director_phone_no: editProvider.medical_director_phone_no,
+                                        state: editProvider.state,
+
                                     }}
                                     onSubmit={(values, { resetForm, setSubmitting }) => {
                                         setTimeout(() => {
@@ -490,6 +500,7 @@ const ViewAllProvider = () => {
                                     {({ touched, errors, resetForm }) => (
                                         <Form>
                                             <FormContainer>
+                                                {/* Name */}
                                                 <FormItem
                                                     label="Name"
                                                 >
@@ -500,6 +511,7 @@ const ViewAllProvider = () => {
                                                         component={Input}
                                                     />
                                                 </FormItem>
+                                                {/* Email */}
                                                 <FormItem
                                                     label="Email"
                                                 >
@@ -510,33 +522,65 @@ const ViewAllProvider = () => {
                                                         component={Input}
                                                     />
                                                 </FormItem>
+                                                {/* Address */}
                                                 <FormItem
-                                                    label="Password"
-                                                    invalid={errors.password && touched.password}
-                                                    errorMessage={errors.password}
+                                                    label="Address"
                                                 >
                                                     <Field
-                                                        type={""}
-                                                        suffix={""}
+                                                        type="text"
                                                         autoComplete="off"
-                                                        name="password"
-                                                        placeholder="Password"
+                                                        name="address"
                                                         component={Input}
                                                     />
                                                 </FormItem>
-                                                <FormItem>
-
+                                                {/* phone number */}
+                                                <FormItem
+                                                    label="Phone Number"
+                                                >
+                                                    <Field
+                                                        type="text"
+                                                        autoComplete="off"
+                                                        name="phone_number"
+                                                        component={Input}
+                                                    />
                                                 </FormItem>
+                                                {/* Medical Director's Name */}
+                                                <FormItem
+                                                    label="Medical Director's Name"
+                                                >
+                                                    <Field
+                                                        type="text"
+                                                        autoComplete="off"
+                                                        name="medical_director_name"
+                                                        component={Input}
+                                                    />
+                                                </FormItem>
+                                                {/*medical_director_phone_no*/}
+                                                <FormItem
+                                                    label="Medical Director's Phone No."
+                                                >
+                                                    <Field
+                                                        type="text"
+                                                        autoComplete="off"
+                                                        name="medical_director_phone_no"
+                                                        component={Input}
+                                                    />
+                                                </FormItem>
+                                                {/* state */}
+                                                <FormItem
+                                                    label="Name"
+                                                >
+                                                    <Field
+                                                        type="text"
+                                                        autoComplete="off"
+                                                        name="state"
+                                                        component={Input}
+                                                    />
+                                                </FormItem>
+
                                                 <FormItem>
-                                                    <Button
-                                                        type="reset"
-                                                        className="ltr:mr-2 rtl:ml-2"
-                                                        onClick={() => resetForm()}
-                                                    >
-                                                        Reset
-                                                    </Button>
                                                     <Button variant="solid" type="submit">
-                                                        Submit
+                                                        SAVE
                                                     </Button>
                                                 </FormItem>
                                             </FormContainer>
@@ -551,9 +595,6 @@ const ViewAllProvider = () => {
                                     onClick={() => setEditDialog(false)}
                                 >
                                     Cancel
-                                </Button>
-                                <Button variant="solid" onClick={() => setEditDialog(false)}>
-                                    Okay
                                 </Button>
                             </div>
                         </div>
