@@ -2,8 +2,10 @@ import {
     createProvider,
     getProviderByID,
     getAllProvider,
-    editProviderByID
+    editProviderByID,
+    updateProviderActivationStatus
 } from "@/services/ProviderService";
+import { string } from "yup";
 
 function useProvider() {
 
@@ -62,11 +64,21 @@ function useProvider() {
         }
     }
 
+    const useUpdateProviderActivationStatus = async (id: string, data: any): Promise<{ message: string }> => {
+        try {
+            const result = await updateProviderActivationStatus(id, data)
+            return result.data
+        } catch (error: any) {
+            return error
+        }
+    }
+
     return {
         useCreateProvider,
         useGetAllProvider,
         useGetProviderByID,
-        useEditProviderById
+        useEditProviderById,
+        useUpdateProviderActivationStatus
     }
 }
 

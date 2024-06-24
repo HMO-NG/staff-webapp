@@ -17,7 +17,7 @@ type ProviderResponse = {
 }
 
 type MessageResponse = {
-    message:string
+    message: string
 }
 
 /*
@@ -49,10 +49,19 @@ export async function getProviderByID(data: any) {
 }
 
 // update the entire record on db as specified by the data object
-export async function editProviderByID(data:any) {
+export async function editProviderByID(data: any) {
     return ApiService.fetchData<MessageResponse>({
-        url:'/provider/edit',
+        url: '/provider/edit',
         method: 'put',
+        data
+    })
+}
+
+//  update the activation status column in the db
+export async function updateProviderActivationStatus(id: string, data: any) {
+    return ApiService.fetchData<MessageResponse>({
+        url: '/provider/status/edit',
+        method: 'patch',
         data
     })
 }

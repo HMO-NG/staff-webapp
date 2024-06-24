@@ -13,6 +13,7 @@ import { FormItem, FormContainer } from '@/components/ui/Form'
 import { Field, Form, Formik } from 'formik'
 import toast from '@/components/ui/toast'
 import Notification from '@/components/ui/Notification'
+import Tag from '@/components/ui/Tag'
 
 type Customer = {
     id: string;
@@ -26,6 +27,7 @@ type Customer = {
     modified_at: string,
     name: string;
     state: string,
+    is_active: boolean
     code: string;
     user_id: string,
     entered_by: string
@@ -34,7 +36,7 @@ type Customer = {
 
 const ViewAllProvider = () => {
 
-    const { useGetAllProvider, useEditProviderById } = useProvider()
+    const { useGetAllProvider, useEditProviderById, useUpdateProviderActivationStatus } = useProvider()
     const navigate = useNavigate()
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(false)
@@ -124,19 +126,32 @@ const ViewAllProvider = () => {
             user_id: "",
             entered_by: "",
         })
+    const [providerStatus, setProviderStatus] = useState<
+        {
+            id: string;
+            is_active: boolean,
+            user_id: string,
+            name: string,
+        }>({
+            id: "",
+            is_active: false,
+            user_id: "",
+            name: "",
+        })
 
     const inputRef = useRef(null)
 
     const debounceFn = debounce(handleDebounceFn, 500)
 
     const dropdownItems = [
-        { key: 'view', name: 'view' },
+        { key: 'view', name: 'View' },
         { key: 'edit', name: 'Edit' },
-        { key: 'deactive', name: 'Deactive' },
+        { key: 'status', name: 'Set Status' },
     ]
 
     const [editDialog, setEditDialog] = useState(false)
     const [viewDialog, setViewDialog] = useState(false)
+    const [statusDialog, setStatusDialog] = useState(false)
 
     const onDropdownClick = (e: SyntheticEvent) => {
         console.log('Dropdown Clicked', e)
@@ -206,8 +221,17 @@ const ViewAllProvider = () => {
                 )
                 setEditDialog(true)
                 break;
-            case 'deactive':
-                // Code to execute if expression === value2
+            case 'status':
+                setProviderStatus(
+                    {
+                        id: cellProps.row.original.id,
+                        is_active: cellProps.row.original.is_active,
+                        name: cellProps.row.original.name,
+                        user_id: cellProps.row.original.user_id,
+
+                    }
+                )
+                setStatusDialog(true)
                 break;
             // ... more cases
             default:
@@ -238,8 +262,21 @@ const ViewAllProvider = () => {
                 accessorKey: 'entered_by',
             },
             {
-                header: 'Address',
-                accessorKey: 'email',
+                header: 'Status',
+                cell: (props) => (
+                    <div>
+                        {
+                            props.cell.row.original.is_active ?
+                                <Tag className='text-white bg-indigo-600 border-0'>
+                                    Active
+                                </Tag> :
+                                <Tag className='text-white bg-red-700 border-0'>
+                                    Inactive
+                                </Tag>
+
+                        }
+                    </div>
+                )
             },
             {
                 header: '',
@@ -331,13 +368,34 @@ const ViewAllProvider = () => {
     }
 
     const toastNotification = (
-        <Notification title="Mesasge">
+        <Notification title="Message">
             {message}
         </Notification>
     )
 
     function openNotification() {
         toast.push(toastNotification)
+    }
+
+    async function updateProviderStatus(providerId: string, data: any) {
+
+        let status;
+
+        if (data.is_active) {
+            status = false
+        } else {
+            status = true
+        }
+
+        data.is_active = status;
+
+        const response = await useUpdateProviderActivationStatus(providerId, data)
+
+        if (response) {
+            setStatusDialog(false)
+            window.location.reload();
+        }
+
     }
 
     useEffect(() => {
@@ -522,11 +580,6 @@ const ViewAllProvider = () => {
 
                                     }}
                                     onSubmit={(values, { resetForm, setSubmitting }) => {
-
-                                        // alert(JSON.stringify(values, null, 2))
-                                        // console.log(JSON.stringify(values, null, 2))
-                                        // setSubmitting(false)
-                                        // resetForm()
                                         updateProvider(values)
                                     }
                                     }
@@ -634,6 +687,38 @@ const ViewAllProvider = () => {
                             </div>
                         </div>
                     </div>
+                </Dialog >
+            }
+            {
+                statusDialog && <Dialog
+                    isOpen={statusDialog}
+                    onClose={() => setStatusDialog(false)}
+                    onRequestClose={() => setStatusDialog(false)}
+                    width={1000}
+                    shouldCloseOnOverlayClick={false}
+                    shouldCloseOnEsc={false}
+                >
+
+                    <h5 className="mb-4">Set Provider Status</h5>
+                    <p>
+                        {providerStatus.is_active ?
+                            `Deactivate ${providerStatus.name}` :
+                            `Activate ${providerStatus.name}`
+                        }
+                    </p>
+                    <div className="text-right mt-6">
+                        <Button
+                            className="ltr:mr-2 rtl:ml-2"
+                            variant="plain"
+                            onClick={() => setStatusDialog(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button variant="solid" onClick={() => updateProviderStatus(providerStatus.id, providerStatus)}>
+                            Okay
+                        </Button>
+                    </div>
+
                 </Dialog >
             }
 
