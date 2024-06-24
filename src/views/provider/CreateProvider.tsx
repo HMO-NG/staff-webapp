@@ -54,7 +54,8 @@ const CreateProvider = () => {
     const { useCreateProvider } = useProvider()
 
     const onCreateProvider = async (values: any,
-        setSubmitting: (isSubmitting: boolean) => void
+        setSubmitting: (isSubmitting: boolean) => void,
+        resetForm: () => void
     ) => {
 
         setSubmitting(true)
@@ -70,6 +71,7 @@ const CreateProvider = () => {
             setTimeout(() => {
                 setSuccessMessage(data.message)
                 setSubmitting(false)
+                resetForm()
             }, 3000)
 
         }
@@ -122,7 +124,7 @@ const CreateProvider = () => {
                     validationSchema={validationSchema}
 
                     onSubmit={(values, { setSubmitting, resetForm }) => {
-                        onCreateProvider(values, setSubmitting)
+                        onCreateProvider(values, setSubmitting, resetForm)
 
 
                     }}

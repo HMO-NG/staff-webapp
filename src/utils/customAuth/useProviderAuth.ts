@@ -1,4 +1,11 @@
-import { createProvider, getAllProvider } from "@/services/ProviderService";
+import {
+    createProvider,
+    getProviderByID,
+    getAllProvider,
+    editProviderByID,
+    updateProviderActivationStatus
+} from "@/services/ProviderService";
+import { string } from "yup";
 
 function useProvider() {
 
@@ -33,10 +40,45 @@ function useProvider() {
         }
     }
 
+    const useGetProviderByID = async (data: any): Promise<{
+        message: string,
+        data: any,
+    }> => {
+        try {
+
+            const response = await getProviderByID(data)
+            return response.data
+
+        } catch (error: any) {
+            return error
+        }
+    }
+
+    const useEditProviderById = async (data: any): Promise<{ message: string }> => {
+        try {
+            const result = await editProviderByID(data)
+
+            return result.data
+        } catch (error: any) {
+            return error
+        }
+    }
+
+    const useUpdateProviderActivationStatus = async (id: string, data: any): Promise<{ message: string }> => {
+        try {
+            const result = await updateProviderActivationStatus(id, data)
+            return result.data
+        } catch (error: any) {
+            return error
+        }
+    }
 
     return {
         useCreateProvider,
-        useGetAllProvider
+        useGetAllProvider,
+        useGetProviderByID,
+        useEditProviderById,
+        useUpdateProviderActivationStatus
     }
 }
 
