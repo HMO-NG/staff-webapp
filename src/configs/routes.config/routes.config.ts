@@ -39,9 +39,9 @@ export const protectedRoutes = [
     },
     /** Example purpose only, please remove */
     {
-        key: 'singleMenuItem',
-        path: '/single-menu-view',
-        component: lazy(() => import('@/views/demo/SingleMenuView')),
+        key: 'healthplan.category.create',
+        path: '/healthplan/category/create',
+        component: lazy(() => import('@/views/healthplan/CreateCategory')),
         authority: [],
     },
     {
