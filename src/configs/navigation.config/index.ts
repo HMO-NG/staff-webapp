@@ -58,8 +58,8 @@ const navigationConfig: NavigationTree[] = [
         subMenu:[
             {
                 key: 'healthplan.category.create',
-                path: '/healthplan/category/create',
-                title: 'Add Health Plan Category',
+                path: '/healthplan/create',
+                title: 'Add Health Plan',
                 translateKey: 'nav.healthplan.category.create',
                 icon: '',
                 type: NAV_ITEM_TYPE_ITEM,
