@@ -81,5 +81,4 @@ function useProvider() {
         useUpdateProviderActivationStatus
     }
 }
-
 export default useProvider

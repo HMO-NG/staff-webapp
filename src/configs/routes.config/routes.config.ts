@@ -37,13 +37,13 @@ export const protectedRoutes = [
         component: lazy(() => import('@/views/provider/EditProvider')),
         authority:[]
     },
-    /** Example purpose only, please remove */
     {
         key: 'healthplan.category.create',
-        path: '/healthplan/category/create',
-        component: lazy(() => import('@/views/healthplan/CreateCategory')),
+        path: '/healthplan/create',
+        component: lazy(() => import('@/views/healthplan/createHealthPlan')),
         authority: [],
     },
+    /** Example purpose only, please remove */
     {
         key: 'collapseMenu.item1',
         path: '/collapse-menu-item-view-1',
