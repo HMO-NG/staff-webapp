@@ -18,13 +18,13 @@ const navigationConfig: NavigationTree[] = [
     },
     {
         key: 'provider',
-        path:'',
-        title:'Provider Menu',
+        path: '',
+        title: 'Provider Menu',
         translateKey: 'nav.provider.create',
-        icon:'singleMenu',
+        icon: 'singleMenu',
         type: NAV_ITEM_TYPE_COLLAPSE,
-        authority:[],
-        subMenu:[
+        authority: [],
+        subMenu: [
             {
                 key: 'provider.create',
                 path: '/provider/create',
@@ -37,7 +37,7 @@ const navigationConfig: NavigationTree[] = [
             },
             {
                 key: 'provider.view',
-                path:'/provider/view',
+                path: '/provider/view',
                 title: 'View Provider',
                 translateKey: 'nav.provider.view',
                 icon: 'groupCollapseMenu',
@@ -49,13 +49,13 @@ const navigationConfig: NavigationTree[] = [
     },
     {
         key: 'healthplan',
-        path:'',
-        title:'Health Plan Menu',
+        path: '',
+        title: 'Health Plan Menu',
         translateKey: 'nav.healthplan.create',
-        icon:'menu',
+        icon: 'menu',
         type: NAV_ITEM_TYPE_COLLAPSE,
-        authority:[],
-        subMenu:[
+        authority: [],
+        subMenu: [
             {
                 key: 'healthplan.category.create',
                 path: '/healthplan/create',
@@ -67,10 +67,20 @@ const navigationConfig: NavigationTree[] = [
                 subMenu: []
             },
             {
-                key: 'healthplan.category.service',
-                path:'/healthplan/service/create',
+                key: 'nhia.healthplan.service.create',
+                path: 'nhia/healthplan/service.create',
                 title: 'Add Health Plan Service',
-                translateKey: 'nav.healthplan.service.create',
+                translateKey: 'nhia.healthplan.service.create',
+                icon: 'groupCollapseMenu',
+                type: NAV_ITEM_TYPE_ITEM,
+                authority: [],
+                subMenu: []
+            },
+            {
+                key: 'nhia.healthplan.drugs.create',
+                path: 'nhia/healthplan/drugs.create',
+                title: 'Add Health Plan Drugs',
+                translateKey: 'nhia.healthplan.drugs.create',
                 icon: 'groupCollapseMenu',
                 type: NAV_ITEM_TYPE_ITEM,
                 authority: [],

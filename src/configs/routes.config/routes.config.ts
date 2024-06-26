@@ -38,9 +38,21 @@ export const protectedRoutes = [
         authority:[]
     },
     {
-        key: 'healthplan.category.create',
+        key: 'healthplan.create',
         path: '/healthplan/create',
         component: lazy(() => import('@/views/healthplan/createHealthPlan')),
+        authority: [],
+    },
+    {
+        key: 'nhia.healthplan.service.create',
+        path: 'nhia/healthplan/service.create',
+        component: lazy(() => import('@/views/nhis/CreateService')),
+        authority: [],
+    },
+    {
+        key: 'nhia.healthplan.drugs.create',
+        path: 'nhia/healthplan/drugs.create',
+        component: lazy(() => import('@/views/nhis/CreateDrugs')),
         authority: [],
     },
     /** Example purpose only, please remove */

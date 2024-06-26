@@ -29,20 +29,17 @@ type FormModel = {
 
 const validationSchema = Yup.object().shape({
 
-    type: Yup.string().required('Please providers state!'),
-    service_name: Yup.string().required('provider name Required'),
-    code: Yup.string().required('address name Required'),
-    price: Yup.string()
-        .matches(/^[0-9]{10}$/, 'Phone number must be 11 digits and contain only numbers')
-        .required('Provider Phone number is required'),
+    drug_name: Yup.string().required('service name Required'),
+    code: Yup.string().required('NHIA service code required'),
+    dosage: Yup.string().required('Please specify the type'),
+    strengths: Yup.string().required('Please specify the type'),
+    presentation: Yup.string().required('Please specify the type'),
+    price: Yup.string().required('service price required'),
 })
 
-/*
-code
-            service_name,
-            price
-            type */
-const createService = () => {
+
+
+const createDrugs = () => {
 
     const [errorMessage, setErrorMessage] = useTimeOutMessage()
     const [successMessage, setSuccessMessage] = useTimeOutMessage()
@@ -94,27 +91,25 @@ const createService = () => {
                 )
             }
             <Card
-                header="Add Providers"
+                header="Add NHIA Drugs"
             >
                 <p>
-                    When adding providers, ensure that all fields are completed with the accurate information. Ensure that the you click on save when done.
+                    When adding NHIA Drugs, ensure that all fields are completed with the accurate information. Ensure that the you click on <b>Add NHIA Drugs</b> when done.
                 </p>
             </Card>
 
-            <div>
+            <div
+                className='pt-5'>
                 <Formik
                     enableReinitialize
                     initialValues={{
 
-                        name: '',
-                        email: '',
-                        address: '',
-                        phone_number: '',
-                        medical_director_name: '',
-                        state: '',
+                        service_name: '',
                         code: '',
-                        user_id: '',
-                        medical_director_phone_no: ''
+                        dosage: '',
+                        strengths: '',
+                        presentation: '',
+                        price: '',
 
                     }}
                     validationSchema={validationSchema}
@@ -132,118 +127,88 @@ const createService = () => {
                                 <FormItem
                                     asterisk
                                     label="Name"
-                                    invalid={errors.name && touched.name}
-                                    errorMessage={errors.name}
+                                    invalid={errors.service_name && touched.service_name}
+                                    errorMessage={errors.service_name}
                                 >
                                     <Field
                                         type="text"
                                         autoComplete="off"
                                         name="name"
-                                        placeholder="Provider Name"
-                                        component={Input}
-                                    />
-                                </FormItem>
-                                <FormItem
-                                    asterisk
-                                    label="Email"
-                                    invalid={errors.email && touched.email}
-                                    errorMessage={errors.email}
-                                >
-                                    <Field
-                                        type="text"
-                                        autoComplete="off"
-                                        name="email"
-                                        placeholder="Provider Email"
-                                        component={Input}
-                                    />
-                                </FormItem>
-                                <FormItem
-                                    asterisk
-                                    label="Address"
-                                    invalid={errors.address && touched.address}
-                                    errorMessage={errors.address}
-                                >
-                                    <Field
-                                        type="text"
-                                        autoComplete="off"
-                                        name="address"
-                                        placeholder="Provider Address"
+                                        placeholder="Drug Name eg: Morphine"
                                         component={Input}
                                     />
                                 </FormItem>
 
                                 <FormItem
                                     asterisk
-                                    label="Provider Phone number"
-                                    invalid={errors.phone_number && touched.phone_number}
-                                    errorMessage={errors.phone_number}
+                                    label="code"
+                                    invalid={errors.code && touched.code}
+                                    errorMessage={errors.code}
+                                >
+                                    <Field
+                                        type="text"
+                                        autoComplete="off"
+                                        name="Code"
+                                        placeholder="Drug Code eg: NHIS-01-03-01"
+                                        component={Input}
+                                    />
+                                </FormItem>
+
+                                <FormItem
+
+                                    asterisk
+                                    label="Dosage"
+                                    invalid={errors.dosage && touched.dosage}
+                                    errorMessage={errors.dosage}
+                                >
+                                    <Field
+                                        type="text"
+                                        autoComplete="off"
+                                        name="type"
+                                        placeholder="Dosage eg: Injection, Tablets etc."
+                                        component={Input}
+                                    />
+                                </FormItem>
+                                <FormItem
+
+                                    asterisk
+                                    label="Drug Strength"
+                                    invalid={errors.strengths && touched.strengths}
+                                    errorMessage={errors.strengths}
+                                >
+                                    <Field
+                                        type="text"
+                                        autoComplete="off"
+                                        name="strengths"
+                                        placeholder="Drug Strengths eg: 0.5mg/amp, 5mg/ml in 2 ml etc."
+                                        component={Input}
+                                    />
+                                </FormItem>
+                                <FormItem
+                                    asterisk
+                                    label="presentation"
+                                    invalid={errors.strengths && touched.strengths}
+                                    errorMessage={errors.strengths}
+                                >
+                                    <Field
+                                        type="text"
+                                        autoComplete="off"
+                                        name="presentation"
+                                        placeholder="Drug Presentation eg:Amp., Capsule, Tablet etc."
+                                        component={Input}
+                                    />
+                                </FormItem>
+                                <FormItem
+                                    asterisk
+                                    label="Price"
+                                    invalid={errors.price && touched.price}
+                                    errorMessage={errors.price}
                                 >
                                     <Field
                                         type="number"
                                         autoComplete="off"
-                                        name="phone_number"
-                                        placeholder="Phone Number"
-                                        component={Input}
-                                    />
-                                </FormItem>
-
-                                <FormItem
-
-                                    asterisk
-                                    label="Medical Director Name"
-                                    invalid={errors.medical_director_name && touched.medical_director_name}
-                                    errorMessage={errors.medical_director_name}
-                                >
-                                    <Field
-
-                                        type="text"
-                                        autoComplete="off"
-                                        name="medical_director_name"
-                                        placeholder="Medical Director Name"
-                                        component={Input}
-                                    />
-                                </FormItem>
-
-                                <FormItem
-                                    asterisk
-                                    label="State"
-                                    invalid={errors.state && touched.state}
-                                    errorMessage={errors.state}
-                                >
-                                    <Field name="state">
-                                        {({ field, form }: FieldProps<FormModel>) => (
-                                            <Select
-                                                field={field}
-                                                form={form}
-                                                options={NigerianState}
-                                                value={NigerianState.filter(
-                                                    (option) =>
-                                                        option.label ===
-                                                        values.state
-                                                )}
-                                                onChange={(option) =>
-                                                    form.setFieldValue(
-                                                        field.name,
-                                                        option?.label
-                                                    )
-                                                }
-                                            />
-                                        )}
-                                    </Field>
-
-                                </FormItem>
-
-                                <FormItem
-                                    asterisk
-                                    label="Medical Director Phone number"
-                                    invalid={errors.medical_director_phone_no && touched.medical_director_phone_no}
-                                    errorMessage={errors.medical_director_phone_no}
-                                >
-                                    <Field
-                                        type="number"
-                                        autoComplete="off"
-                                        name="medical_director_phone_no"
-                                        placeholder="Phone Number"
+                                        name="price"
+                                        placeholder="price"
                                         component={Input}
                                     />
                                 </FormItem>
@@ -252,9 +217,9 @@ const createService = () => {
                                     <Button variant="solid" type="submit"
                                         loading={isSubmitting}>
                                         {isSubmitting ?
-                                            "Generating Provider Code"
+                                            "Saving..."
                                             :
-                                            "Add Provider"
+                                            "Add NHIA Drug"
                                         }
 
                                     </Button>
@@ -269,4 +234,4 @@ const createService = () => {
     )
 }
 
-export default createService
+export default createDrugs

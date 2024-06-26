@@ -39,7 +39,6 @@ function useAuth() {
             const resp = await apiSignIn(values)
             if (resp.data) {
                 const { token } = resp.data
-                console.log(resp.data.user)
                 dispatch(signInSuccess(token))
                 if (resp.data.user) {
                     dispatch(
@@ -57,7 +56,6 @@ function useAuth() {
                     setItem("user",resp.data.user.user_id)
                 }
                 const redirectUrl = query.get(REDIRECT_URL_KEY)
-                console.log(redirectUrl)
                 navigate(
                     redirectUrl ? redirectUrl : appConfig.authenticatedEntryPath
                 )
