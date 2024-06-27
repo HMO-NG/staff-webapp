@@ -45,14 +45,20 @@ export const protectedRoutes = [
     },
     {
         key: 'nhia.healthplan.service.create',
-        path: 'nhia/healthplan/service.create',
+        path: 'nhia/healthplan/service/create',
         component: lazy(() => import('@/views/nhis/CreateService')),
         authority: [],
     },
     {
         key: 'nhia.healthplan.drugs.create',
-        path: 'nhia/healthplan/drugs.create',
+        path: 'nhia/healthplan/drugs/create',
         component: lazy(() => import('@/views/nhis/CreateDrugs')),
+        authority: [],
+    },
+    {
+        key: 'nhia.healthplan.service.view',
+        path: 'nhia/healthplan/service/view',
+        component: lazy(() => import('@/views/nhis/ViewService')),
         authority: [],
     },
     /** Example purpose only, please remove */

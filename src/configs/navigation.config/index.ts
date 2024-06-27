@@ -66,11 +66,21 @@ const navigationConfig: NavigationTree[] = [
                 authority: [],
                 subMenu: []
             },
+            // {
+            //     key: 'nhia.healthplan.service.create',
+            //     path: 'nhia/healthplan/service.create',
+            //     title: 'Add Health Plan Service',
+            //     translateKey: 'nhia.healthplan.service.create',
+            //     icon: 'groupCollapseMenu',
+            //     type: NAV_ITEM_TYPE_ITEM,
+            //     authority: [],
+            //     subMenu: []
+            // },
             {
-                key: 'nhia.healthplan.service.create',
-                path: 'nhia/healthplan/service.create',
-                title: 'Add Health Plan Service',
-                translateKey: 'nhia.healthplan.service.create',
+                key: 'nhia.healthplan.service.view',
+                path: 'nhia/healthplan/service/view',
+                title: 'View NHIA Services',
+                translateKey: 'nhia.healthplan.service.view',
                 icon: 'groupCollapseMenu',
                 type: NAV_ITEM_TYPE_ITEM,
                 authority: [],
