@@ -18,7 +18,7 @@ function viewService() {
     };
 
     const handleFileUpload = async () => {
-        const { useCreateNhiaService } = useNhia()
+        const { useCreateNhiaService, useCreateNhiaServiceBulkUpload } = useNhia()
 
         if (!file) return;
 
@@ -33,21 +33,8 @@ function viewService() {
 
                 console.log(jsonData)
 
-                // Send the data to the backend
-                try {
-                    // await axios.post('/api/upload', jsonData);
+                await useCreateNhiaServiceBulkUpload(jsonData)
 
-                    for (let i = 0; i < jsonData.length; i++) {
-
-                        const data = await useCreateNhiaService(jsonData[i])
-                        alert(data);
-                    }
-
-
-                } catch (error) {
-                    console.error('Error uploading data:', error);
-                    alert('Error uploading data');
-                }
             }
         };
         reader.readAsBinaryString(file);
