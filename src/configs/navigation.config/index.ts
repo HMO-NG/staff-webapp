@@ -66,16 +66,16 @@ const navigationConfig: NavigationTree[] = [
                 authority: [],
                 subMenu: []
             },
-            // {
-            //     key: 'nhia.healthplan.service.create',
-            //     path: 'nhia/healthplan/service.create',
-            //     title: 'Add Health Plan Service',
-            //     translateKey: 'nhia.healthplan.service.create',
-            //     icon: 'groupCollapseMenu',
-            //     type: NAV_ITEM_TYPE_ITEM,
-            //     authority: [],
-            //     subMenu: []
-            // },
+            {
+                key: 'nhia.healthplan.service.create',
+                path: 'nhia/healthplan/service.create',
+                title: 'Add Health Plan Service',
+                translateKey: 'nhia.healthplan.service.create',
+                icon: 'groupCollapseMenu',
+                type: NAV_ITEM_TYPE_ITEM,
+                authority: [],
+                subMenu: []
+            },
             {
                 key: 'nhia.healthplan.service.view',
                 path: 'nhia/healthplan/service/view',
@@ -88,7 +88,7 @@ const navigationConfig: NavigationTree[] = [
             },
             {
                 key: 'nhia.healthplan.drugs.create',
-                path: 'nhia/healthplan/drugs.create',
+                path: 'nhia/healthplan/drugs/create',
                 title: 'Add Health Plan Drugs',
                 translateKey: 'nhia.healthplan.drugs.create',
                 icon: 'groupCollapseMenu',
@@ -98,6 +98,27 @@ const navigationConfig: NavigationTree[] = [
             },
         ]
     },
+    {
+        key: 'nhis-title',
+        path: '',
+        title: '',
+        translateKey: 'nhis services',
+        icon: '',
+        type: NAV_ITEM_TYPE_TITLE,
+        authority: [],
+        subMenu: [
+            {
+                key: 'nhia.healthplan.service.create',
+                path: 'nhia/healthplan/service/create',
+                title: 'Add Health Plan Service',
+                translateKey: 'nhia.healthplan.service.create',
+                icon: 'groupCollapseMenu',
+                type: NAV_ITEM_TYPE_ITEM,
+                authority: [],
+                subMenu: []
+            },
+        ],
+    }
 
     /** Example purpose only, please remove */
     // {
