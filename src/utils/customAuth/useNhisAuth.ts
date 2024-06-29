@@ -1,4 +1,8 @@
-import { createNhiaService } from "@/services/NhisService"
+import {
+    createNhiaService,
+    getAllAndSearchNhiaService
+} from "@/services/NhisService"
+import { retry } from "@reduxjs/toolkit/dist/query"
 import { ErrorMessage } from "formik"
 
 type Status = 'success' | 'failed'
@@ -38,8 +42,8 @@ function useNhia() {
                 for (let i = 0; i < data.length; i += BATCH_SIZE) {
                     const batch = data.slice(i, i + BATCH_SIZE);
                     try {
-                       const k = await Promise.all(batch.map(item => createNhiaService(item)));
-                       console.log(k)
+                        const k = await Promise.all(batch.map(item => createNhiaService(item)));
+                        console.log(k)
                         console.log(`Processed batch ${i / BATCH_SIZE + 1}`);
                     } catch (error) {
                         console.error(`Error processing batch ${i / BATCH_SIZE + 1}:`, error);
@@ -68,9 +72,34 @@ function useNhia() {
         }
     }
 
+    const getAllAndSearchNhiaProcedureService = async (data: any): Promise<{
+        message: string,
+        data?: any,
+        status: Status
+        total: any
+    } | undefined> => {
+        try {
+            const response = await getAllAndSearchNhiaService(data)
+
+            return {
+                message: response.data.message,
+                data: response.data.data,
+                status: 'success',
+                total:response.data.total
+            }
+        } catch (error: any) {
+            return {
+                status: 'failed',
+                message: error?.response?.data?.message || error.toString(),
+                total: 0
+            }
+        }
+    }
+
     return {
         useCreateNhiaService,
-        useCreateNhiaServiceBulkUpload
+        useCreateNhiaServiceBulkUpload,
+        getAllAndSearchNhiaProcedureService
     }
 }
 
