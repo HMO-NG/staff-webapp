@@ -47,76 +47,153 @@ const navigationConfig: NavigationTree[] = [
             },
         ]
     },
-    {
-        key: 'healthplan',
-        path: '',
-        title: 'Health Plan Menu',
-        translateKey: 'nav.healthplan.create',
-        icon: 'menu',
-        type: NAV_ITEM_TYPE_COLLAPSE,
-        authority: [],
-        subMenu: [
-            {
-                key: 'healthplan.category.create',
-                path: '/healthplan/create',
-                title: 'Add Health Plan',
-                translateKey: 'nav.healthplan.category.create',
-                icon: '',
-                type: NAV_ITEM_TYPE_ITEM,
-                authority: [],
-                subMenu: []
-            },
-            {
-                key: 'nhia.healthplan.service.create',
-                path: 'nhia/healthplan/service.create',
-                title: 'Add Health Plan Service',
-                translateKey: 'nhia.healthplan.service.create',
-                icon: 'groupCollapseMenu',
-                type: NAV_ITEM_TYPE_ITEM,
-                authority: [],
-                subMenu: []
-            },
-            {
-                key: 'nhia.healthplan.service.view',
-                path: 'nhia/healthplan/service/view',
-                title: 'View NHIA Services',
-                translateKey: 'nhia.healthplan.service.view',
-                icon: 'groupCollapseMenu',
-                type: NAV_ITEM_TYPE_ITEM,
-                authority: [],
-                subMenu: []
-            },
-            {
-                key: 'nhia.healthplan.drugs.create',
-                path: 'nhia/healthplan/drugs/create',
-                title: 'Add Health Plan Drugs',
-                translateKey: 'nhia.healthplan.drugs.create',
-                icon: 'groupCollapseMenu',
-                type: NAV_ITEM_TYPE_ITEM,
-                authority: [],
-                subMenu: []
-            },
-        ]
-    },
+    // health plan
     {
         key: 'nhis-title',
         path: '',
         title: '',
-        translateKey: 'nhis services',
+        translateKey: 'Health Plan',
         icon: '',
         type: NAV_ITEM_TYPE_TITLE,
         authority: [],
         subMenu: [
             {
-                key: 'nhia.healthplan.service.create',
-                path: 'nhia/healthplan/service/create',
-                title: 'Add Health Plan Service',
-                translateKey: 'nhia.healthplan.service.create',
-                icon: 'groupCollapseMenu',
-                type: NAV_ITEM_TYPE_ITEM,
+                key: 'healthplan',
+                path: '',
+                title: 'Health Plan Menu',
+                translateKey: 'nav.healthplan.create',
+                icon: 'menu',
+                type: NAV_ITEM_TYPE_COLLAPSE,
                 authority: [],
-                subMenu: []
+                subMenu: [
+                    {
+                        key: 'healthplan.category.create',
+                        path: '/healthplan/create',
+                        title: 'Add Health Plan',
+                        translateKey: 'nav.healthplan.category.create',
+                        icon: '',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [],
+                        subMenu: []
+                    },
+                    // view health plan benefits
+                    {
+                        key: 'healthplan.benefits.view',
+                        path: '/healthplan/benefits/view',
+                        title: 'View Benefits',
+                        translateKey: 'healthplan.benefits.view',
+                        icon: 'groupCollapseMenu',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [],
+                        subMenu: []
+                    },
+                    {
+                        key: 'nhia.healthplan.service.view',
+                        path: 'nhia/healthplan/service/view',
+                        title: 'View NHIA Services',
+                        translateKey: 'nhia.healthplan.service.view',
+                        icon: 'groupCollapseMenu',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [],
+                        subMenu: []
+                    },
+                    {
+                        key: 'nhia.healthplan.drugs.create',
+                        path: 'nhia/healthplan/drugs/create',
+                        title: 'Add Health Plan Drugs',
+                        translateKey: 'nhia.healthplan.drugs.create',
+                        icon: 'groupCollapseMenu',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [],
+                        subMenu: []
+                    },
+                ]
             },
+        ],
+    },
+
+    // nhis
+    {
+        key: 'nhis-title',
+        path: '',
+        title: '',
+        translateKey: 'nhis',
+        icon: '',
+        type: NAV_ITEM_TYPE_TITLE,
+        authority: [],
+        subMenu: [
+            {
+                key: 'nhia.service',
+                path: '',
+                title: 'Services',
+                translateKey: 'nhia.service',
+                icon: 'groupCollapseMenu',
+                type: NAV_ITEM_TYPE_COLLAPSE,
+                authority: [],
+                subMenu: [
+                    {
+                        key: 'nhia.service.procedure.create',
+                        path: 'nhia/services/procedures/view',
+                        title: 'View Procedures',
+                        translateKey: 'nhia.service.procedure.create',
+                        icon: 'groupCollapseMenu',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [],
+                        subMenu: []
+                    },
+                    {
+                        key: 'nhia.service.investigation.create',
+                        path: 'nhia/service/investigation/create',
+                        title: 'View Investigations',
+                        translateKey: 'nhia.service.investigation.create',
+                        icon: 'groupCollapseMenu',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [],
+                        subMenu: []
+                    },
+                    {
+                        key: 'nhia.service.drug.create',
+                        path: 'nhia/service/drug/create',
+                        title: 'View Drugs',
+                        translateKey: 'nhia.service.procedure.create',
+                        icon: 'groupCollapseMenu',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [],
+                        subMenu: []
+                    },
+                ]
+            },
+            {
+                key: 'nhia.claims',
+                path: '',
+                title: 'Claims',
+                translateKey: 'nhia.claims',
+                icon: 'groupCollapseMenu',
+                type: NAV_ITEM_TYPE_COLLAPSE,
+                authority: [],
+                subMenu: [
+                    {
+                        key: 'nhia.claim.create',
+                        path: 'nhia/claim/create',
+                        title: 'Create Claims',
+                        translateKey: 'nhia.claim.create',
+                        icon: 'groupCollapseMenu',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [],
+                        subMenu: []
+                    },
+                    {
+                        key: 'nhia.claim.code.create',
+                        path: 'nhia/claim/code/create',
+                        title: 'Get PA Codes',
+                        translateKey: 'nhia.claim.code.create',
+                        icon: 'groupCollapseMenu',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [],
+                        subMenu: []
+                    },
+                ]
+            }
         ],
     }
 

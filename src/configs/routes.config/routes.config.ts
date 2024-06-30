@@ -4,12 +4,12 @@ import type { Routes } from '@/@types/routes'
 import { components } from 'react-select'
 
 export const publicRoutes: Routes = [...authRoute,
-    {
-      key: 'test',
-      path: '/test',
-      component: lazy(() =>import('@/views/Home')),
-      authority: []
-    }
+{
+    key: 'test',
+    path: '/test',
+    component: lazy(() => import('@/views/Home')),
+    authority: []
+}
 ]
 
 export const protectedRoutes = [
@@ -21,21 +21,21 @@ export const protectedRoutes = [
     },
     {
         key: 'provider.create',
-        path:'/provider/create',
+        path: '/provider/create',
         component: lazy(() => import('@/views/provider/CreateProvider')),
-        authority:[]
+        authority: []
     },
     {
         key: 'provider.view',
-        path:'/provider/view',
+        path: '/provider/view',
         component: lazy(() => import('@/views/provider/ViewAllProvider')),
-        authority:[]
+        authority: []
     },
     {
         key: 'provider.edit',
-        path:'/provider/edit',
+        path: '/provider/edit',
         component: lazy(() => import('@/views/provider/EditProvider')),
-        authority:[]
+        authority: []
     },
     {
         key: 'healthplan.create',
@@ -43,10 +43,18 @@ export const protectedRoutes = [
         component: lazy(() => import('@/views/healthplan/createHealthPlan')),
         authority: [],
     },
+    // view health plan benefits
     {
-        key: 'nhia.healthplan.service.create',
-        path: 'nhia/healthplan/service/create',
-        component: lazy(() => import('@/views/nhis/CreateService')),
+        key: 'healthplan.benefits.view',
+        path: '/healthplan/benefits/view',
+        component: lazy(() => import('@/views/healthplan/ViewBenefits')),
+        authority: [],
+    },
+    // create health plan benefits
+    {
+        key: 'healthplan.benefits.create',
+        path: '/healthplan/benefits/create',
+        component: lazy(() => import('@/views/healthplan/CreateBenefits')),
         authority: [],
     },
     {
@@ -59,6 +67,13 @@ export const protectedRoutes = [
         key: 'nhia.healthplan.service.view',
         path: 'nhia/healthplan/service/view',
         component: lazy(() => import('@/views/nhis/ViewService')),
+        authority: [],
+    },
+    // to view the Nhis procedures
+    {
+        key: 'nhia.services.procedures.view',
+        path: 'nhia/services/procedures/view',
+        component: lazy(() => import('@/views/nhis/viewProcedure')),
         authority: [],
     },
     /** Example purpose only, please remove */
