@@ -1,11 +1,23 @@
 import {
     createHealthPlanService,
     ViewBenefits,
-    createBenefits
+    createBenefits,
+    getAllHealthPlanCategoryService
 } from "@/services/HealthPlanService"
 
 type Status = 'success' | 'failed'
 
+// export type PlanCategory = {
+//     name: string,
+//     id: string
+// }
+export type PlanCategory = {
+    readonly value: string;
+    readonly label: string;
+    readonly color: string;
+    readonly isFixed?: boolean;
+    readonly isDisabled?: boolean;
+}
 function useHealthPlan() {
 
     const useCreateHealthPlan = async (data: any): Promise<{
@@ -20,6 +32,33 @@ function useHealthPlan() {
         } catch (error: any) {
 
             return error
+
+        }
+    }
+
+    const useGetHealthPlanCategory = async (): Promise<{
+        message: string,
+        data?: PlanCategory[],
+        status: Status
+    }> => {
+        try {
+            const response = await getAllHealthPlanCategoryService()
+
+            return {
+                message: response.data.message,
+                data: response.data.data?.map((d: { name: any; }) =>{
+                    return { value: d.name, label: d.name, color: "#00B8D9"}
+                }),
+                status: 'success'
+            }
+
+        } catch (error: any) {
+
+            return {
+                status: 'failed',
+                message: error?.response?.data?.message || error.toString(),
+
+            }
 
         }
     }
@@ -113,7 +152,8 @@ function useHealthPlan() {
         useCreateHealthPlan,
         useCreateBenefitAuth,
         useViewBenefitAuth,
-        useBenefitBulkUploadAuth
+        useBenefitBulkUploadAuth,
+        useGetHealthPlanCategory
     }
 }
 
