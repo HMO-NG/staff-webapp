@@ -12,6 +12,7 @@ export async function createHealthPlanService(data: any) {
         data
     })
 }
+
 export async function getAllHealthPlanCategoryService() {
     return ApiService.fetchData<Response>({
         url: '/healthplan/category/get',
@@ -26,6 +27,7 @@ export async function createBenefits(data: any) {
         data
     })
 }
+
 export async function ViewBenefits(data: any) {
     return ApiService.fetchData<{
         message: string,
@@ -33,6 +35,31 @@ export async function ViewBenefits(data: any) {
         total: any
     }>({
         url: '/healthplan/benefit/view',
+        method: 'post',
+        data
+    })
+
+}
+
+export async function ViewHealthPlanCategoryService(data: any) {
+    return ApiService.fetchData<{
+        message: string,
+        data: any,
+        total: any
+    }>({
+        url: '/healthplan/category/view',
+        method: 'post',
+        data
+    })
+}
+
+export async function ViewHealthPlanService(data: any) {
+    return ApiService.fetchData<{
+        message: string,
+        data: any,
+        total: any
+    }>({
+        url: '/healthplan/view',
         method: 'post',
         data
     })

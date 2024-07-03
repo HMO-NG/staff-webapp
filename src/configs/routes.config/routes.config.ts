@@ -1,15 +1,15 @@
-import { lazy } from 'react'
+import {lazy} from 'react'
 import authRoute from './authRoute'
-import type { Routes } from '@/@types/routes'
-import { components } from 'react-select'
+import type {Routes} from '@/@types/routes'
+import {components} from 'react-select'
 
 export const publicRoutes: Routes = [...authRoute,
-{
-    key: 'test',
-    path: '/test',
-    component: lazy(() => import('@/views/Home')),
-    authority: []
-}
+    {
+        key: 'test',
+        path: '/test',
+        component: lazy(() => import('@/views/Home')),
+        authority: []
+    }
 ]
 
 export const protectedRoutes = [
@@ -40,9 +40,17 @@ export const protectedRoutes = [
     {
         key: 'healthplan.create',
         path: '/healthplan/create',
-        component: lazy(() => import('@/views/healthplan/createHealthPlan')),
+        component: lazy(() => import('@/views/healthplan/CreateHealthPlan')),
         authority: [],
     },
+    // view health plans
+    {
+        key: 'healthplan.view',
+        path: '/healthplan/view',
+        component: lazy(() => import('@/views/healthplan/ViewHealthPlan')),
+        authority: [],
+    },
+
     // view health plan benefits
     {
         key: 'healthplan.benefits.view',
@@ -55,6 +63,20 @@ export const protectedRoutes = [
         key: 'healthplan.benefits.create',
         path: '/healthplan/benefits/create',
         component: lazy(() => import('@/views/healthplan/CreateBenefits')),
+        authority: [],
+    },
+    // view plan category
+    {
+        key: 'healthplan.category.view',
+        path: '/healthplan/category/view',
+        component: lazy(() => import('@/views/healthplan/ViewPlanCategory')),
+        authority: [],
+    },
+    // create health plan category
+    {
+        key: 'healthplan.category.create',
+        path: '/healthplan/category/create',
+        component: lazy(() => import('@/views/healthplan/CreatePlanCategory')),
         authority: [],
     },
     {

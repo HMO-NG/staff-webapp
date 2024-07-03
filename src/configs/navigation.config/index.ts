@@ -3,7 +3,7 @@ import {
     NAV_ITEM_TYPE_ITEM,
     NAV_ITEM_TYPE_COLLAPSE
 } from '@/constants/navigation.constant'
-import type { NavigationTree } from '@/@types/navigation'
+import type {NavigationTree} from '@/@types/navigation'
 
 const navigationConfig: NavigationTree[] = [
     {
@@ -49,7 +49,7 @@ const navigationConfig: NavigationTree[] = [
     },
     // health plan
     {
-        key: 'nhis-title',
+        key: 'healthplan-title',
         path: '',
         title: '',
         translateKey: 'Health Plan',
@@ -57,8 +57,9 @@ const navigationConfig: NavigationTree[] = [
         type: NAV_ITEM_TYPE_TITLE,
         authority: [],
         subMenu: [
+            // health plan menu
             {
-                key: 'healthplan',
+                key: 'healthplan-menu',
                 path: '',
                 title: 'Health Plan Menu',
                 translateKey: 'nav.healthplan.create',
@@ -66,11 +67,23 @@ const navigationConfig: NavigationTree[] = [
                 type: NAV_ITEM_TYPE_COLLAPSE,
                 authority: [],
                 subMenu: [
+                    // view health plan category
                     {
-                        key: 'healthplan.category.create',
-                        path: '/healthplan/create',
-                        title: 'Add Health Plan',
-                        translateKey: 'nav.healthplan.category.create',
+                        key: 'healthplan.category.view',
+                        path: '/healthplan/category/view',
+                        title: 'View Plan Category',
+                        translateKey: 'nav.healthplan.category.view',
+                        icon: '',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [],
+                        subMenu: []
+                    },
+                    // view health plan
+                    {
+                        key: 'healthplan.view',
+                        path: '/healthplan/view',
+                        title: 'View Plan',
+                        translateKey: 'nav.healthplan.view',
                         icon: '',
                         type: NAV_ITEM_TYPE_ITEM,
                         authority: [],
@@ -82,26 +95,6 @@ const navigationConfig: NavigationTree[] = [
                         path: '/healthplan/benefits/view',
                         title: 'View Benefits',
                         translateKey: 'healthplan.benefits.view',
-                        icon: 'groupCollapseMenu',
-                        type: NAV_ITEM_TYPE_ITEM,
-                        authority: [],
-                        subMenu: []
-                    },
-                    {
-                        key: 'nhia.healthplan.service.view',
-                        path: 'nhia/healthplan/service/view',
-                        title: 'View NHIA Services',
-                        translateKey: 'nhia.healthplan.service.view',
-                        icon: 'groupCollapseMenu',
-                        type: NAV_ITEM_TYPE_ITEM,
-                        authority: [],
-                        subMenu: []
-                    },
-                    {
-                        key: 'nhia.healthplan.drugs.create',
-                        path: 'nhia/healthplan/drugs/create',
-                        title: 'Add Health Plan Drugs',
-                        translateKey: 'nhia.healthplan.drugs.create',
                         icon: 'groupCollapseMenu',
                         type: NAV_ITEM_TYPE_ITEM,
                         authority: [],

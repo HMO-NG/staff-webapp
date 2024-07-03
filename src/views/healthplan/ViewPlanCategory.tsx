@@ -1,33 +1,33 @@
-import { useState, useEffect, useMemo, useRef, ChangeEvent } from 'react'
+import {useState, useEffect, useMemo, useRef, ChangeEvent} from 'react'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import DataTable from '@/components/shared/DataTable'
-import { useNavigate } from 'react-router-dom'
-import type { ColumnDef, OnSortParam, CellContext, Row } from '@/components/shared/DataTable'
+import {useNavigate} from 'react-router-dom'
+import type {ColumnDef, OnSortParam, CellContext, Row} from '@/components/shared/DataTable'
 import debounce from 'lodash/debounce'
 import Dropdown from '@/components/ui/Dropdown'
-import type { SyntheticEvent } from 'react'
+import type {SyntheticEvent} from 'react'
 import Dialog from '@/components/ui/Dialog'
-import { FormItem, FormContainer } from '@/components/ui/Form'
-import { Field, Form, Formik } from 'formik'
+import {FormItem, FormContainer} from '@/components/ui/Form'
+import {Field, Form, Formik} from 'formik'
 import toast from '@/components/ui/toast'
 import Notification from '@/components/ui/Notification'
+import Tag from '@/components/ui/Tag'
 import useHealthPlan from '@/utils/customAuth/useHealthPlanAuth'
-import { HiPlus } from "react-icons/hi";
+import {HiPlus} from "react-icons/hi";
 
-type Benefits = {
-    id: string;
-    benefit_name: string;
-    sub_category: string,
-    category: string,
-    created_at: string,
-    user_id: string,
-    entered_by: string
+type PlanCategory = {
+    id: '',
+    name: '',
+    description: '',
+    band: '',
+    user_id: '',
+    entered_by: ''
 }
 
-const ViewBenefit = () => {
+const ViewPlanCategory = () => {
 
-    const { useViewBenefitAuth } = useHealthPlan()
+    const {useViewHealthPlanCategoryAuth} = useHealthPlan()
     const navigate = useNavigate()
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(false)
@@ -52,6 +52,7 @@ const ViewBenefit = () => {
             key: '',
         },
     })
+    // TODO DELETE IF NOT USED
     const [provider, setProvider] = useState<
         {
             id: string;
@@ -69,22 +70,23 @@ const ViewBenefit = () => {
             user_id: string,
             entered_by: string
         }>({
-            id: "",
-            email: "",
-            address: "",
-            phone_number: "",
-            medical_director_name: "",
-            medical_director_phone_no: "",
-            modified_by: "",
-            created_at: "",
-            modified_at: "",
-            name: "",
-            state: "",
-            code: "",
-            user_id: "",
-            entered_by: "",
-        })
+        id: "",
+        email: "",
+        address: "",
+        phone_number: "",
+        medical_director_name: "",
+        medical_director_phone_no: "",
+        modified_by: "",
+        created_at: "",
+        modified_at: "",
+        name: "",
+        state: "",
+        code: "",
+        user_id: "",
+        entered_by: "",
+    })
 
+    // TODO MAKE USE OF
     const [editProvider, setEditProvider] = useState<
         {
             id: string;
@@ -102,21 +104,22 @@ const ViewBenefit = () => {
             user_id: string,
             entered_by: string
         }>({
-            id: "",
-            email: "",
-            address: "",
-            phone_number: "",
-            medical_director_name: "",
-            medical_director_phone_no: "",
-            modified_by: "",
-            created_at: "",
-            modified_at: "",
-            name: "",
-            state: "",
-            code: "",
-            user_id: "",
-            entered_by: "",
-        })
+        id: "",
+        email: "",
+        address: "",
+        phone_number: "",
+        medical_director_name: "",
+        medical_director_phone_no: "",
+        modified_by: "",
+        created_at: "",
+        modified_at: "",
+        name: "",
+        state: "",
+        code: "",
+        user_id: "",
+        entered_by: "",
+    })
+    // TODO DELETE.
     const [providerStatus, setProviderStatus] = useState<
         {
             id: string;
@@ -124,20 +127,20 @@ const ViewBenefit = () => {
             user_id: string,
             name: string,
         }>({
-            id: "",
-            is_active: false,
-            user_id: "",
-            name: "",
-        })
+        id: "",
+        is_active: false,
+        user_id: "",
+        name: "",
+    })
 
     const inputRef = useRef(null)
 
     const debounceFn = debounce(handleDebounceFn, 500)
 
     const dropdownItems = [
-        { key: 'view', name: 'View' },
-        { key: 'edit', name: 'Edit' },
-        { key: 'status', name: 'Set Status' },
+        {key: 'view', name: 'View'},
+        {key: 'edit', name: 'Edit'},
+        {key: 'delete', name: 'Delete'},
     ]
 
     const [editDialog, setEditDialog] = useState(false)
@@ -156,7 +159,7 @@ const ViewBenefit = () => {
         if (typeof val === 'string' && (val.length > 1 || val.length === 0)) {
             setTableData((prevData) => ({
                 ...prevData,
-                ...{ query: val, pageIndex: 1 },
+                ...{query: val, pageIndex: 1},
             }))
         }
     }
@@ -165,7 +168,7 @@ const ViewBenefit = () => {
         debounceFn(e.target.value)
     }
 
-    const handleAction = async (cellProps: CellContext<Benefits, unknown>, key: any) => {
+    const handleAction = async (cellProps: CellContext<ViewPlanCategory, unknown>, key: any) => {
 
         switch (key) {
             case 'view':
@@ -234,19 +237,23 @@ const ViewBenefit = () => {
         console.log('selectedRows', selectedRows)
     }
 
-    const columns: ColumnDef<Benefits>[] = useMemo(() => (
+    const columns: ColumnDef<PlanCategory>[] = useMemo(() => (
         [
             {
-                header: 'Benefit Name',
-                accessorKey: 'benefit_name',
+                header: 'Name',
+                accessorKey: 'name',
             },
             {
-                header: 'Sub Category',
-                accessorKey: 'sub_category',
+                header: 'Status',
+                accessorKey: 'is_active',
             },
             {
-                header: 'Category',
-                accessorKey: 'category',
+                header: 'Code',
+                accessorKey: 'health_plan_code',
+            },
+            {
+                header: 'Band',
+                accessorKey: 'band',
             },
             {
                 header: 'Entered by',
@@ -277,21 +284,21 @@ const ViewBenefit = () => {
     ), [])
 
     const handlePaginationChange = (pageIndex: number) => {
-        setTableData((prevData) => ({ ...prevData, ...{ pageIndex } }))
+        setTableData((prevData) => ({...prevData, ...{pageIndex}}))
     }
 
     const handleSelectChange = (pageSize: number) => {
-        setTableData((prevData) => ({ ...prevData, ...{ pageSize } }))
+        setTableData((prevData) => ({...prevData, ...{pageSize}}))
     }
 
-    const handleSort = ({ order, key }: OnSortParam) => {
+    const handleSort = ({order, key}: OnSortParam) => {
         setTableData((prevData) => ({
             ...prevData,
-            ...{ sort: { order, key } },
+            ...{sort: {order, key}},
         }))
     }
 
-    const handleRowSelect = (checked: boolean, row: Benefits) => {
+    const handleRowSelect = (checked: boolean, row: ViewPlanCategory) => {
         console.log('row', row)
         if (checked) {
             setSelectedRows((prevData) => {
@@ -310,7 +317,7 @@ const ViewBenefit = () => {
         }
     }
 
-    const handleAllRowSelect = (checked: boolean, rows: Row<Benefits>[]) => {
+    const handleAllRowSelect = (checked: boolean, rows: Row<ViewPlanCategory>[]) => {
         console.log('rows', rows)
         if (checked) {
             const originalRows = rows.map((row) => row.original)
@@ -325,14 +332,14 @@ const ViewBenefit = () => {
     }
 
     const updateProvider = async (data: any) => {
-        const result = await useEditProviderById(data)
+        const result = await useViewHealthPlanCategoryAuth(data)
 
         setMessage(result.message)
 
         if (result.message) {
             setTimeout(() => {
-                openNotification()
-            },
+                    openNotification()
+                },
                 3000
             )
 
@@ -375,13 +382,14 @@ const ViewBenefit = () => {
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true)
-            const response = await useViewBenefitAuth(tableData)
+            // eslint-disable-next-line react-hooks/rules-of-hooks
+            const response = await useViewHealthPlanCategoryAuth(tableData)
             if (response?.status === 'success') {
                 setData(response.data)
                 setLoading(false)
                 setTableData((prevData) => ({
                     ...prevData,
-                    ...{ total: response.total[0]['count(*)'] },
+                    ...{total: response.total[0]['count(*)']},
                 }))
             }
         }
@@ -404,15 +412,15 @@ const ViewBenefit = () => {
                 </div>
             )}
 
-            {/* Add benefit btn */}
+            {/* Add health plan category btn */}
             <div>
                 <Button
                     className="mr-2"
                     variant="solid"
-                    onClick={() => navigate('/healthplan/benefits/create')}
-                    icon={<HiPlus />}
+                    onClick={() => navigate('/healthplan/category/create')}
+                    icon={<HiPlus/>}
                 >
-                    <span>Add Benefits</span>
+                    <span>Add Health Plan Category</span>
                 </Button>
             </div>
             <div className="flex justify-end mb-4">
@@ -425,7 +433,7 @@ const ViewBenefit = () => {
                 />
             </div>
 
-            <DataTable<Benefits>
+            <DataTable<PlanCategory>
                 selectable
                 columns={columns}
                 data={data}
@@ -458,61 +466,61 @@ const ViewBenefit = () => {
                             <div className="prose dark:prose-invert mx-auto">
                                 <table>
                                     <thead>
-                                        <tr>
-                                            <th>Field</th>
-                                            <th>Details</th>
-                                        </tr>
+                                    <tr>
+                                        <th>Field</th>
+                                        <th>Details</th>
+                                    </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td>Name</td>
-                                            <td><b>{provider.name}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Email</td>
-                                            <td><b>{provider.email}</b></td>
+                                    <tr>
+                                        <td>Name</td>
+                                        <td><b>{provider.name}</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Email</td>
+                                        <td><b>{provider.email}</b></td>
 
-                                        </tr>
-                                        <tr>
-                                            <td>Address</td>
-                                            <td><b>{provider.address}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Phone Number</td>
-                                            <td><b>{provider.phone_number}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>State</td>
-                                            <td><b>{provider.state}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Provider Code</td>
-                                            <td><b>{provider.code}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Medical Director Name</td>
-                                            <td><b>{provider.medical_director_name}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Medical Director Phone No.</td>
-                                            <td><b>{provider.medical_director_phone_no}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Entered By</td>
-                                            <td><b>{provider.entered_by}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Modified By</td>
-                                            <td><b>{provider.modified_by}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Modified At</td>
-                                            <td><b>{provider.modified_at}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Created At</td>
-                                            <td><b>{provider.created_at}</b></td>
-                                        </tr>
+                                    </tr>
+                                    <tr>
+                                        <td>Address</td>
+                                        <td><b>{provider.address}</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Phone Number</td>
+                                        <td><b>{provider.phone_number}</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td>State</td>
+                                        <td><b>{provider.state}</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Provider Code</td>
+                                        <td><b>{provider.code}</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Medical Director Name</td>
+                                        <td><b>{provider.medical_director_name}</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Medical Director Phone No.</td>
+                                        <td><b>{provider.medical_director_phone_no}</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Entered By</td>
+                                        <td><b>{provider.entered_by}</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Modified By</td>
+                                        <td><b>{provider.modified_by}</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Modified At</td>
+                                        <td><b>{provider.modified_at}</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Created At</td>
+                                        <td><b>{provider.created_at}</b></td>
+                                    </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -546,12 +554,7 @@ const ViewBenefit = () => {
 
                             <div className="prose dark:prose-invert mx-auto">
                                 <Formik
-                                    /*  id: string;
-        created_at: string,
-        modified_at: string,
-        code: string;
-        user_id: string,
-        entered_by: string */
+
                                     initialValues={{
                                         id: editProvider.id,
                                         name: editProvider.name,
@@ -564,13 +567,13 @@ const ViewBenefit = () => {
                                         user_id: editProvider.user_id
 
                                     }}
-                                    onSubmit={(values, { resetForm, setSubmitting }) => {
+                                    onSubmit={(values, {resetForm, setSubmitting}) => {
                                         updateProvider(values)
                                     }
                                     }
 
                                 >
-                                    {({ touched, errors, resetForm }) => (
+                                    {({touched, errors, resetForm}) => (
                                         <Form>
                                             <FormContainer>
                                                 {/* Name */}
@@ -672,7 +675,7 @@ const ViewBenefit = () => {
                             </div>
                         </div>
                     </div>
-                </Dialog >
+                </Dialog>
             }
             {
                 statusDialog && <Dialog
@@ -704,11 +707,11 @@ const ViewBenefit = () => {
                         </Button>
                     </div>
 
-                </Dialog >
+                </Dialog>
             }
 
         </>
     )
 }
 
-export default ViewBenefit
+export default ViewPlanCategory

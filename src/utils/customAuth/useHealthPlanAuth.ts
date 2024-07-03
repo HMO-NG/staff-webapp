@@ -2,36 +2,40 @@ import {
     createHealthPlanService,
     ViewBenefits,
     createBenefits,
-    getAllHealthPlanCategoryService
+    getAllHealthPlanCategoryService,
+    ViewHealthPlanCategoryService,
+    ViewHealthPlanService
 } from "@/services/HealthPlanService"
 
 type Status = 'success' | 'failed'
 
-// export type PlanCategory = {
-//     name: string,
-//     id: string
-// }
 export type PlanCategory = {
-    readonly value: string;
-    readonly label: string;
-    readonly color: string;
-    readonly isFixed?: boolean;
-    readonly isDisabled?: boolean;
+    value: string,
+    label: string,
 }
+
 function useHealthPlan() {
 
-    const useCreateHealthPlan = async (data: any): Promise<{
+    const useCreateHealthPlanAuth = async (): Promise<{
         message: string,
-        data: any,
+        data?: any,
+        status: Status
     }> => {
         try {
             const response = await createHealthPlanService(data)
 
-            return response.data;
+            return {
+                message: response.data.message,
+                data: response.data.data,
+                status: "success"
+            }
 
         } catch (error: any) {
 
-            return error
+            return {
+                status: 'failed',
+                message: error?.response?.data?.message || error.toString(),
+            }
 
         }
     }
@@ -46,8 +50,10 @@ function useHealthPlan() {
 
             return {
                 message: response.data.message,
-                data: response.data.data?.map((d: { name: any; }) =>{
-                    return { value: d.name, label: d.name, color: "#00B8D9"}
+                data: response.data.data.map((i: { name: any; id: any }) => {
+                    return {
+                        label: i.name, value: i.id
+                    }
                 }),
                 status: 'success'
             }
@@ -88,6 +94,7 @@ function useHealthPlan() {
         }
 
     }
+
     const useViewBenefitAuth = async (data: any): Promise<{
         message: string,
         data?: any,
@@ -96,6 +103,60 @@ function useHealthPlan() {
     }> => {
         try {
             const response = await ViewBenefits(data)
+
+            return {
+                message: response.data.message,
+                data: response.data.data,
+                status: 'success',
+                total: response.data.total
+            }
+
+        } catch (error: any) {
+
+            return {
+                status: 'failed',
+                message: error?.response?.data?.message || error.toString(),
+                total: 0
+            }
+        }
+
+    }
+
+    const useViewHealthPlanCategoryAuth = async (data: any): Promise<{
+        message: string,
+        data?: any,
+        status: Status,
+        total?: any
+    }> => {
+        try {
+            const response = await ViewHealthPlanCategoryService(data)
+
+            return {
+                message: response.data.message,
+                data: response.data.data,
+                status: 'success',
+                total: response.data.total
+            }
+
+        } catch (error: any) {
+
+            return {
+                status: 'failed',
+                message: error?.response?.data?.message || error.toString(),
+                total: 0
+            }
+        }
+
+    }
+
+    const useViewHealthPlanAuth = async (data: any): Promise<{
+        message: string,
+        data?: any,
+        status: Status,
+        total?: any
+    }> => {
+        try {
+            const response = await ViewHealthPlanService(data)
 
             return {
                 message: response.data.message,
@@ -149,11 +210,13 @@ function useHealthPlan() {
     }
 
     return {
-        useCreateHealthPlan,
+        useCreateHealthPlanAuth,
         useCreateBenefitAuth,
         useViewBenefitAuth,
         useBenefitBulkUploadAuth,
-        useGetHealthPlanCategory
+        useGetHealthPlanCategory,
+        useViewHealthPlanCategoryAuth,
+        useViewHealthPlanAuth
     }
 }
 
