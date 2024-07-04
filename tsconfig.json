@@ -19,6 +19,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "src/views/healthplan/CreateHealthPlan.tsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
