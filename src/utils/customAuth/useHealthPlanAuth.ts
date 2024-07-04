@@ -16,7 +16,7 @@ export type PlanCategory = {
 
 function useHealthPlan() {
 
-    const useCreateHealthPlanAuth = async (): Promise<{
+    const useCreateHealthPlanAuth = async (data:any): Promise<{
         message: string,
         data?: any,
         status: Status

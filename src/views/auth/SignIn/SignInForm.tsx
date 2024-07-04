@@ -92,7 +92,7 @@ const SignInForm = (props: SignInFormProps) => {
                             >
                                 <Field
                                     type="email"
-                                    autoComplete="off"
+                                    autoComplete="on"
                                     name="email"
                                     placeholder="email"
                                     component={Input}
