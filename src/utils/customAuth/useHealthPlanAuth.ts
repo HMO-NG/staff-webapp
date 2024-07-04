@@ -40,7 +40,7 @@ function useHealthPlan() {
         }
     }
 
-    const useGetHealthPlanCategory = async (): Promise<{
+    const useGetHealthPlanCategoryAuth = async (): Promise<{
         message: string,
         data?: PlanCategory[],
         status: Status
@@ -214,7 +214,7 @@ function useHealthPlan() {
         useCreateBenefitAuth,
         useViewBenefitAuth,
         useBenefitBulkUploadAuth,
-        useGetHealthPlanCategory,
+        useGetHealthPlanCategoryAuth,
         useViewHealthPlanCategoryAuth,
         useViewHealthPlanAuth
     }

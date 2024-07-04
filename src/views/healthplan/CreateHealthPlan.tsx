@@ -77,7 +77,7 @@ const CreatePlan = () => {
 
     const [planCategoryData, setPlanCategoryData] = useState<PlanCategory[]>()
 
-    const { useCreateHealthPlanAuth, useGetHealthPlanCategory } = useHealthPlan()
+    const { useCreateHealthPlanAuth, useGetHealthPlanCategoryAuth } = useHealthPlan()
 
     const { getItem } = useLocalStorage()
 
@@ -111,7 +111,7 @@ const CreatePlan = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const response = await useGetHealthPlanCategory()
+            const response = await useGetHealthPlanCategoryAuth()
             if (response.status === 'success') {
                 setPlanCategoryData(response.data)
             }

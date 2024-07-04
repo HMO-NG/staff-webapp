@@ -76,7 +76,7 @@ export const protectedRoutes = [
     {
         key: 'healthplan.category.create',
         path: '/healthplan/category/create',
-        component: lazy(() => import('@/views/healthplan/CreatePlanCategory')),
+        component: lazy(() => import('@/views/healthplan/CreateHealthPlanCategory')),
         authority: [],
     },
     {

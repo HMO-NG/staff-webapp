@@ -42,22 +42,18 @@ const planCategoryValidationSchema = Yup.object().shape({
     band: Yup.string().required('band required'),
 })
 
-const CreatePlanCategory = () => {
+const CreateHealthPlanCategory = () => {
 
 
     const [errorMessage, setErrorMessage] = useTimeOutMessage()
     const [successMessage, setSuccessMessage] = useTimeOutMessage()
-    const [planCategoryData, setPlanCategoryData] = useState<PlanCategory[]>()
-
-    const [currentTab, setCurrentTab] = useState('tab1')
-
 
     const {useCreateHealthPlan, useGetHealthPlanCategory} = useHealthPlan()
 
     const {TabNav, TabList, TabContent} = Tabs
     const {getItem} = useLocalStorage()
 
-    const onCreateHealthPlan = async (values: any,
+    const onCreateHealthPlanCategory = async (values: any,
                                       setSubmitting: (isSubmitting: boolean) => void,
                                       resetForm: () => void
     ) => {
@@ -137,7 +133,7 @@ const CreatePlanCategory = () => {
                     validationSchema={planCategoryValidationSchema}
 
                     onSubmit={(values, {setSubmitting, resetForm}) => {
-                        onCreateHealthPlan(values, setSubmitting, resetForm)
+                        onCreateHealthPlanCategory(values, setSubmitting, resetForm)
                     }}
                 >
                     {({values, touched, errors, isSubmitting}) =>
@@ -211,4 +207,4 @@ const CreatePlanCategory = () => {
     )
 }
 
-export default CreatePlanCategory
+export default CreateHealthPlanCategory
