@@ -1,24 +1,21 @@
 import Card from '@/components/ui/Card'
-import {HiCheckCircle} from 'react-icons/hi'
-import {NigerianState} from '@/data/NigerianStates'
-import {Option} from '@/data/NigerianStates'
-import {FormItem, FormContainer} from '@/components/ui/Form'
+import { HiCheckCircle } from 'react-icons/hi'
+import { NigerianState } from '@/data/NigerianStates'
+import { Option } from '@/data/NigerianStates'
+import { FormItem, FormContainer } from '@/components/ui/Form'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import Select from '@/components/ui/Select'
 import useTimeOutMessage from '@/utils/hooks/useTimeOutMessage'
-import {Field, Form, Formik} from 'formik'
+import { Field, Form, Formik } from 'formik'
 import Alert from '@/components/ui/Alert'
 import * as Yup from 'yup'
-import type {FieldProps} from 'formik'
-import useHealthPlan, {PlanCategory} from '@/utils/customAuth/useHealthPlanAuth'
-import {useLocalStorage} from '@/utils/localStorage'
+import type { FieldProps } from 'formik'
+import useHealthPlan from '@/utils/customAuth/useHealthPlanAuth'
+import { useLocalStorage } from '@/utils/localStorage'
 import Tabs from '@/components/ui/Tabs'
-import {HiUserAdd, HiOutlineDocumentAdd, HiUserGroup} from 'react-icons/hi'
-import {useEffect, useState} from 'react'
-import AsyncSelect from 'react-select/async'
-import {it} from "node:test";
-import createHealthPlan from "@/views/healthplan/CreateHealthPlan";
+import { HiUserAdd, HiOutlineDocumentAdd, HiUserGroup } from 'react-icons/hi'
+import { useEffect, useState } from 'react'
 
 
 type FormModel = {
@@ -48,31 +45,32 @@ const CreateHealthPlanCategory = () => {
     const [errorMessage, setErrorMessage] = useTimeOutMessage()
     const [successMessage, setSuccessMessage] = useTimeOutMessage()
 
-    const {useCreateHealthPlan, useGetHealthPlanCategory} = useHealthPlan()
+    const { useCreateHealthPlanCategoryAuth } = useHealthPlan()
 
-    const {TabNav, TabList, TabContent} = Tabs
-    const {getItem} = useLocalStorage()
+    const { getItem } = useLocalStorage()
 
-    const onCreateHealthPlanCategory = async (values: any,
-                                      setSubmitting: (isSubmitting: boolean) => void,
-                                      resetForm: () => void
+    const onCreateHealthPlanCategory = async (
+        values: any,
+        setSubmitting: (isSubmitting: boolean) => void,
+        resetForm: () => void
     ) => {
 
         setSubmitting(true)
 
         values.user_id = getItem("user")
 
-        const data = await useCreateHealthPlan(values)
+        const data = await useCreateHealthPlanCategoryAuth(values)
 
 
-        if (data) {
+        if (data.status === 'success') {
+            setSuccessMessage(data.message)
+            setSubmitting(false)
+            resetForm()
+        }
 
-            setTimeout(() => {
-                setSuccessMessage(data.message)
-                setSubmitting(false)
-                resetForm()
-            }, 2000)
-
+        if(data.status  === 'failed'){
+            setErrorMessage(data.message)
+            setSubmitting(false)
         }
 
     }
@@ -80,10 +78,7 @@ const CreateHealthPlanCategory = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const response = await useGetHealthPlanCategory()
-            if (response?.status === 'success') {
-                setPlanCategoryData(response.data)
-            }
+            console.log("useEffect for createHealthPlanCategory called!")
         }
 
         fetchData()
@@ -102,11 +97,11 @@ const CreateHealthPlanCategory = () => {
             {
                 successMessage && (
                     <Alert closable
-                           showIcon
-                           type="success"
-                           customIcon={<HiCheckCircle/>}
-                           title='Successfully'
-                           duration={10000}>
+                        showIcon
+                        type="success"
+                        customIcon={<HiCheckCircle />}
+                        title='Successfully'
+                        duration={10000}>
                         {successMessage}
                     </Alert>
                 )
@@ -132,12 +127,12 @@ const CreateHealthPlanCategory = () => {
                     }}
                     validationSchema={planCategoryValidationSchema}
 
-                    onSubmit={(values, {setSubmitting, resetForm}) => {
+                    onSubmit={(values, { setSubmitting, resetForm }) => {
                         onCreateHealthPlanCategory(values, setSubmitting, resetForm)
                     }}
                 >
-                    {({values, touched, errors, isSubmitting}) =>
-                        (
+                    {({ values, touched, errors, isSubmitting }) =>
+                    (
                         <Form>
                             <FormContainer>
 
@@ -189,7 +184,7 @@ const CreateHealthPlanCategory = () => {
 
                                 <FormItem>
                                     <Button variant="solid" type="submit"
-                                            loading={isSubmitting}>
+                                        loading={isSubmitting}>
                                         {isSubmitting ?
                                             "Saving"
                                             :
