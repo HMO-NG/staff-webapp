@@ -13,6 +13,14 @@ export async function createHealthPlanService(data: any) {
     })
 }
 
+export async function createHealthPlanCategoryService(data: any) {
+    return ApiService.fetchData<Response>({
+        url: '/healthplan/category/create',
+        method: 'post',
+        data
+    })
+}
+
 export async function getAllHealthPlanCategoryService() {
     return ApiService.fetchData<Response>({
         url: '/healthplan/category/get',

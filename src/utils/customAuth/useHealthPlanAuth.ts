@@ -4,7 +4,8 @@ import {
     createBenefits,
     getAllHealthPlanCategoryService,
     ViewHealthPlanCategoryService,
-    ViewHealthPlanService
+    ViewHealthPlanService,
+    createHealthPlanCategoryService
 } from "@/services/HealthPlanService"
 
 type Status = 'success' | 'failed'
@@ -16,13 +17,37 @@ export type PlanCategory = {
 
 function useHealthPlan() {
 
-    const useCreateHealthPlanAuth = async (data:any): Promise<{
+    const useCreateHealthPlanAuth = async (data: any): Promise<{
         message: string,
         data?: any,
         status: Status
     }> => {
         try {
             const response = await createHealthPlanService(data)
+
+            return {
+                message: response.data.message,
+                data: response.data.data,
+                status: "success"
+            }
+
+        } catch (error: any) {
+
+            return {
+                status: 'failed',
+                message: error?.response?.data?.message || error.toString(),
+            }
+
+        }
+    }
+
+    const useCreateHealthPlanCategoryAuth = async (data: any): Promise<{
+        message: string,
+        data?: any,
+        status: Status
+    }> => {
+        try {
+            const response = await createHealthPlanCategoryService(data)
 
             return {
                 message: response.data.message,
@@ -216,7 +241,8 @@ function useHealthPlan() {
         useBenefitBulkUploadAuth,
         useGetHealthPlanCategoryAuth,
         useViewHealthPlanCategoryAuth,
-        useViewHealthPlanAuth
+        useViewHealthPlanAuth,
+        useCreateHealthPlanCategoryAuth
     }
 }
 

@@ -1,33 +1,34 @@
-import {useState, useEffect, useMemo, useRef, ChangeEvent} from 'react'
+import { useState, useEffect, useMemo, useRef, ChangeEvent } from 'react'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import DataTable from '@/components/shared/DataTable'
-import {useNavigate} from 'react-router-dom'
-import type {ColumnDef, OnSortParam, CellContext, Row} from '@/components/shared/DataTable'
+import { useNavigate } from 'react-router-dom'
+import type { ColumnDef, OnSortParam, CellContext, Row } from '@/components/shared/DataTable'
 import debounce from 'lodash/debounce'
 import Dropdown from '@/components/ui/Dropdown'
-import type {SyntheticEvent} from 'react'
+import type { SyntheticEvent } from 'react'
 import Dialog from '@/components/ui/Dialog'
-import {FormItem, FormContainer} from '@/components/ui/Form'
-import {Field, Form, Formik} from 'formik'
+import { FormItem, FormContainer } from '@/components/ui/Form'
+import { Field, Form, Formik } from 'formik'
 import toast from '@/components/ui/toast'
 import Notification from '@/components/ui/Notification'
 import Tag from '@/components/ui/Tag'
 import useHealthPlan from '@/utils/customAuth/useHealthPlanAuth'
-import {HiPlus} from "react-icons/hi";
+import { HiPlus } from "react-icons/hi";
 
 type PlanCategory = {
     id: '',
     name: '',
     description: '',
     band: '',
+    is_active: '',
     user_id: '',
     entered_by: ''
 }
 
 const ViewPlanCategory = () => {
 
-    const {useViewHealthPlanCategoryAuth} = useHealthPlan()
+    const { useViewHealthPlanCategoryAuth } = useHealthPlan()
     const navigate = useNavigate()
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(false)
@@ -52,95 +53,15 @@ const ViewPlanCategory = () => {
             key: '',
         },
     })
-    // TODO DELETE IF NOT USED
-    const [provider, setProvider] = useState<
-        {
-            id: string;
-            email: string,
-            address: string,
-            phone_number: string,
-            medical_director_name: string,
-            medical_director_phone_no: string,
-            modified_by: string,
-            created_at: string,
-            modified_at: string,
-            name: string;
-            state: string,
-            code: string;
-            user_id: string,
-            entered_by: string
-        }>({
-        id: "",
-        email: "",
-        address: "",
-        phone_number: "",
-        medical_director_name: "",
-        medical_director_phone_no: "",
-        modified_by: "",
-        created_at: "",
-        modified_at: "",
-        name: "",
-        state: "",
-        code: "",
-        user_id: "",
-        entered_by: "",
-    })
-
-    // TODO MAKE USE OF
-    const [editProvider, setEditProvider] = useState<
-        {
-            id: string;
-            email: string,
-            address: string,
-            phone_number: string,
-            medical_director_name: string,
-            medical_director_phone_no: string,
-            modified_by: string,
-            created_at: string,
-            modified_at: string,
-            name: string;
-            state: string,
-            code: string;
-            user_id: string,
-            entered_by: string
-        }>({
-        id: "",
-        email: "",
-        address: "",
-        phone_number: "",
-        medical_director_name: "",
-        medical_director_phone_no: "",
-        modified_by: "",
-        created_at: "",
-        modified_at: "",
-        name: "",
-        state: "",
-        code: "",
-        user_id: "",
-        entered_by: "",
-    })
-    // TODO DELETE.
-    const [providerStatus, setProviderStatus] = useState<
-        {
-            id: string;
-            is_active: boolean,
-            user_id: string,
-            name: string,
-        }>({
-        id: "",
-        is_active: false,
-        user_id: "",
-        name: "",
-    })
 
     const inputRef = useRef(null)
 
     const debounceFn = debounce(handleDebounceFn, 500)
 
     const dropdownItems = [
-        {key: 'view', name: 'View'},
-        {key: 'edit', name: 'Edit'},
-        {key: 'delete', name: 'Delete'},
+        { key: 'view', name: 'View' },
+        { key: 'edit', name: 'Edit' },
+        { key: 'delete', name: 'Delete' },
     ]
 
     const [editDialog, setEditDialog] = useState(false)
@@ -159,7 +80,7 @@ const ViewPlanCategory = () => {
         if (typeof val === 'string' && (val.length > 1 || val.length === 0)) {
             setTableData((prevData) => ({
                 ...prevData,
-                ...{query: val, pageIndex: 1},
+                ...{ query: val, pageIndex: 1 },
             }))
         }
     }
@@ -168,7 +89,7 @@ const ViewPlanCategory = () => {
         debounceFn(e.target.value)
     }
 
-    const handleAction = async (cellProps: CellContext<ViewPlanCategory, unknown>, key: any) => {
+    const handleAction = async (cellProps: CellContext<PlanCategory, unknown>, key: any) => {
 
         switch (key) {
             case 'view':
@@ -245,7 +166,20 @@ const ViewPlanCategory = () => {
             },
             {
                 header: 'Status',
-                accessorKey: 'is_active',
+                cell: (props) => (
+                    <div>
+                        {
+                            props.cell.row.original.is_active ?
+                                <Tag className='text-white bg-indigo-600 border-0'>
+                                    Active
+                                </Tag> :
+                                <Tag className='text-white bg-red-700 border-0'>
+                                    Inactive
+                                </Tag>
+
+                        }
+                    </div>
+                )
             },
             {
                 header: 'Code',
@@ -284,17 +218,17 @@ const ViewPlanCategory = () => {
     ), [])
 
     const handlePaginationChange = (pageIndex: number) => {
-        setTableData((prevData) => ({...prevData, ...{pageIndex}}))
+        setTableData((prevData) => ({ ...prevData, ...{ pageIndex } }))
     }
 
     const handleSelectChange = (pageSize: number) => {
-        setTableData((prevData) => ({...prevData, ...{pageSize}}))
+        setTableData((prevData) => ({ ...prevData, ...{ pageSize } }))
     }
 
-    const handleSort = ({order, key}: OnSortParam) => {
+    const handleSort = ({ order, key }: OnSortParam) => {
         setTableData((prevData) => ({
             ...prevData,
-            ...{sort: {order, key}},
+            ...{ sort: { order, key } },
         }))
     }
 
@@ -338,8 +272,8 @@ const ViewPlanCategory = () => {
 
         if (result.message) {
             setTimeout(() => {
-                    openNotification()
-                },
+                openNotification()
+            },
                 3000
             )
 
@@ -389,7 +323,7 @@ const ViewPlanCategory = () => {
                 setLoading(false)
                 setTableData((prevData) => ({
                     ...prevData,
-                    ...{total: response.total[0]['count(*)']},
+                    ...{ total: response.total[0]['count(*)'] },
                 }))
             }
         }
@@ -418,7 +352,7 @@ const ViewPlanCategory = () => {
                     className="mr-2"
                     variant="solid"
                     onClick={() => navigate('/healthplan/category/create')}
-                    icon={<HiPlus/>}
+                    icon={<HiPlus />}
                 >
                     <span>Add Health Plan Category</span>
                 </Button>
@@ -466,61 +400,61 @@ const ViewPlanCategory = () => {
                             <div className="prose dark:prose-invert mx-auto">
                                 <table>
                                     <thead>
-                                    <tr>
-                                        <th>Field</th>
-                                        <th>Details</th>
-                                    </tr>
+                                        <tr>
+                                            <th>Field</th>
+                                            <th>Details</th>
+                                        </tr>
                                     </thead>
                                     <tbody>
-                                    <tr>
-                                        <td>Name</td>
-                                        <td><b>{provider.name}</b></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Email</td>
-                                        <td><b>{provider.email}</b></td>
+                                        <tr>
+                                            <td>Name</td>
+                                            <td><b>{provider.name}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Email</td>
+                                            <td><b>{provider.email}</b></td>
 
-                                    </tr>
-                                    <tr>
-                                        <td>Address</td>
-                                        <td><b>{provider.address}</b></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Phone Number</td>
-                                        <td><b>{provider.phone_number}</b></td>
-                                    </tr>
-                                    <tr>
-                                        <td>State</td>
-                                        <td><b>{provider.state}</b></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Provider Code</td>
-                                        <td><b>{provider.code}</b></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Medical Director Name</td>
-                                        <td><b>{provider.medical_director_name}</b></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Medical Director Phone No.</td>
-                                        <td><b>{provider.medical_director_phone_no}</b></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Entered By</td>
-                                        <td><b>{provider.entered_by}</b></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Modified By</td>
-                                        <td><b>{provider.modified_by}</b></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Modified At</td>
-                                        <td><b>{provider.modified_at}</b></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Created At</td>
-                                        <td><b>{provider.created_at}</b></td>
-                                    </tr>
+                                        </tr>
+                                        <tr>
+                                            <td>Address</td>
+                                            <td><b>{provider.address}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Phone Number</td>
+                                            <td><b>{provider.phone_number}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>State</td>
+                                            <td><b>{provider.state}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Provider Code</td>
+                                            <td><b>{provider.code}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Medical Director Name</td>
+                                            <td><b>{provider.medical_director_name}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Medical Director Phone No.</td>
+                                            <td><b>{provider.medical_director_phone_no}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Entered By</td>
+                                            <td><b>{provider.entered_by}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Modified By</td>
+                                            <td><b>{provider.modified_by}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Modified At</td>
+                                            <td><b>{provider.modified_at}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Created At</td>
+                                            <td><b>{provider.created_at}</b></td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -567,13 +501,13 @@ const ViewPlanCategory = () => {
                                         user_id: editProvider.user_id
 
                                     }}
-                                    onSubmit={(values, {resetForm, setSubmitting}) => {
+                                    onSubmit={(values, { resetForm, setSubmitting }) => {
                                         updateProvider(values)
                                     }
                                     }
 
                                 >
-                                    {({touched, errors, resetForm}) => (
+                                    {({ touched, errors, resetForm }) => (
                                         <Form>
                                             <FormContainer>
                                                 {/* Name */}
