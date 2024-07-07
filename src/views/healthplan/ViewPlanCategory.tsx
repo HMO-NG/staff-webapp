@@ -53,7 +53,83 @@ const ViewPlanCategory = () => {
             key: '',
         },
     })
+    const [provider, setProvider] = useState<
+        {
+            id: string;
+            email: string,
+            address: string,
+            phone_number: string,
+            medical_director_name: string,
+            medical_director_phone_no: string,
+            modified_by: string,
+            created_at: string,
+            modified_at: string,
+            name: string;
+            state: string,
+            code: string;
+            user_id: string,
+            entered_by: string
+        }>({
+            id: "",
+            email: "",
+            address: "",
+            phone_number: "",
+            medical_director_name: "",
+            medical_director_phone_no: "",
+            modified_by: "",
+            created_at: "",
+            modified_at: "",
+            name: "",
+            state: "",
+            code: "",
+            user_id: "",
+            entered_by: "",
+        })
 
+    const [editProvider, setEditProvider] = useState<
+        {
+            id: string;
+            email: string,
+            address: string,
+            phone_number: string,
+            medical_director_name: string,
+            medical_director_phone_no: string,
+            modified_by: string,
+            created_at: string,
+            modified_at: string,
+            name: string;
+            state: string,
+            code: string;
+            user_id: string,
+            entered_by: string
+        }>({
+            id: "",
+            email: "",
+            address: "",
+            phone_number: "",
+            medical_director_name: "",
+            medical_director_phone_no: "",
+            modified_by: "",
+            created_at: "",
+            modified_at: "",
+            name: "",
+            state: "",
+            code: "",
+            user_id: "",
+            entered_by: "",
+        })
+    const [providerStatus, setProviderStatus] = useState<
+        {
+            id: string;
+            is_active: boolean,
+            user_id: string,
+            name: string,
+        }>({
+            id: "",
+            is_active: false,
+            user_id: "",
+            name: "",
+        })
     const inputRef = useRef(null)
 
     const debounceFn = debounce(handleDebounceFn, 500)
@@ -89,30 +165,33 @@ const ViewPlanCategory = () => {
         debounceFn(e.target.value)
     }
 
+    // when you click on the actions eg. view, edit, delete.
     const handleAction = async (cellProps: CellContext<PlanCategory, unknown>, key: any) => {
 
         switch (key) {
             case 'view':
-                setProvider(
-                    {
-                        id: cellProps.row.original.id,
-                        email: cellProps.row.original.email,
-                        address: cellProps.row.original.address,
-                        phone_number: cellProps.row.original.phone_number,
-                        medical_director_name: cellProps.row.original.medical_director_name,
-                        medical_director_phone_no: cellProps.row.original.medical_director_phone_no,
-                        modified_by: cellProps.row.original.modified_by,
-                        created_at: cellProps.row.original.created_at,
-                        modified_at: cellProps.row.original.modified_at,
-                        name: cellProps.row.original.name,
-                        state: cellProps.row.original.state,
-                        code: cellProps.row.original.code,
-                        user_id: cellProps.row.original.user_id,
-                        entered_by: cellProps.row.original.entered_by
-                    }
-                )
-
+                // setProvider(
+                //     {
+                //         id: cellProps.row.original.id,
+                //         email: cellProps.row.original.email,
+                //         address: cellProps.row.original.address,
+                //         phone_number: cellProps.row.original.phone_number,
+                //         medical_director_name: cellProps.row.original.medical_director_name,
+                //         medical_director_phone_no: cellProps.row.original.medical_director_phone_no,
+                //         modified_by: cellProps.row.original.modified_by,
+                //         created_at: cellProps.row.original.created_at,
+                //         modified_at: cellProps.row.original.modified_at,
+                //         name: cellProps.row.original.name,
+                //         state: cellProps.row.original.state,
+                //         code: cellProps.row.original.code,
+                //         user_id: cellProps.row.original.user_id,
+                //         entered_by: cellProps.row.original.entered_by
+                //     }
+                // )
+                const id = cellProps.row.original.id;
+                navigate('/healthplan/category/singleview',{state:{id}})
                 setViewDialog(true)
+
                 break;
             case 'edit':
 
@@ -232,7 +311,7 @@ const ViewPlanCategory = () => {
         }))
     }
 
-    const handleRowSelect = (checked: boolean, row: ViewPlanCategory) => {
+    const handleRowSelect = (checked: boolean, row: PlanCategory) => {
         console.log('row', row)
         if (checked) {
             setSelectedRows((prevData) => {
@@ -251,7 +330,7 @@ const ViewPlanCategory = () => {
         }
     }
 
-    const handleAllRowSelect = (checked: boolean, rows: Row<ViewPlanCategory>[]) => {
+    const handleAllRowSelect = (checked: boolean, rows: Row<PlanCategory>[]) => {
         console.log('rows', rows)
         if (checked) {
             const originalRows = rows.map((row) => row.original)
@@ -316,7 +395,6 @@ const ViewPlanCategory = () => {
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true)
-            // eslint-disable-next-line react-hooks/rules-of-hooks
             const response = await useViewHealthPlanCategoryAuth(tableData)
             if (response?.status === 'success') {
                 setData(response.data)

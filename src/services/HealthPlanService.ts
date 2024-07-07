@@ -72,3 +72,14 @@ export async function ViewHealthPlanService(data: any) {
         data
     })
 }
+
+export async function GetSingleHealthPlanCategoryService(data: any) {
+    return ApiService.fetchData<{
+        message: string,
+        data: any,
+    }>({
+        url: '/healthplan/category/get',
+        method: 'post',
+        data
+    })
+}
