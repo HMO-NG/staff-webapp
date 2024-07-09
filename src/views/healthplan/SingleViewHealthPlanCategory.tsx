@@ -63,23 +63,6 @@ const SingleViewHealthPlanCategory = () => {
     if (!healthPlanCategoryData) return <div>No data available</div>;
 
     return (
-
-        // id
-        // :
-        // "39a8fc05-3b47-4d21-aa6f-56b8562d7062"
-
-        // is_user_account_active
-        // :
-        // 0
-        // user_email
-        // user_id
-        // :
-        // "0aa468ea-bee8-4475-9e99-334f9dededf2"
-        // user_last_active_at
-        // :
-        // "2024-06-25T18:41:31.000Z"
-
-
         <>
             <div>
                 <Table>
@@ -148,7 +131,6 @@ const SingleViewHealthPlanCategory = () => {
                 </Table>
             </div>
         </>
-
     );
 
 }

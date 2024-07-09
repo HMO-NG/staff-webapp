@@ -86,6 +86,13 @@ export const protectedRoutes = [
         component: lazy(() => import('@/views/healthplan/SingleViewHealthPlanCategory')),
         authority: [],
     },
+    // attach health plan benefits
+    {
+        key: 'healthplan.benefit.attach',
+        path: '/healthplan/benefits/attach',
+        component: lazy(() => import('@/views/healthplan/AttachHealthPlanBenefit')),
+        authority: [],
+    },
     {
         key: 'nhia.healthplan.drugs.create',
         path: 'nhia/healthplan/drugs/create',

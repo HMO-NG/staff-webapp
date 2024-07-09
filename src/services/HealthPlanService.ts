@@ -83,3 +83,15 @@ export async function GetSingleHealthPlanCategoryService(data: any) {
         data
     })
 }
+
+// get all benefits
+export async function GetAllBenefitListService() {
+    return ApiService.fetchData<{
+        message: string,
+        data: any,
+    }>({
+        url: '/healthplan/benefit/get',
+        method: 'get',
+
+    })
+}

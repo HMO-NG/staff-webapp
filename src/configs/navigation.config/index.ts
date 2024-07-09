@@ -100,6 +100,17 @@ const navigationConfig: NavigationTree[] = [
                         authority: [],
                         subMenu: []
                     },
+                    // attach health plan benefits
+                    {
+                        key: 'healthplan.benefits.attach',
+                        path: '/healthplan/benefits/attach',
+                        title: 'Attach Benefits',
+                        translateKey: 'healthplan.benefits.attach',
+                        icon: 'groupCollapseMenu',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [],
+                        subMenu: []
+                    },
                 ]
             },
         ],

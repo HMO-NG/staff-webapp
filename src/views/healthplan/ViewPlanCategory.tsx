@@ -53,83 +53,7 @@ const ViewPlanCategory = () => {
             key: '',
         },
     })
-    const [provider, setProvider] = useState<
-        {
-            id: string;
-            email: string,
-            address: string,
-            phone_number: string,
-            medical_director_name: string,
-            medical_director_phone_no: string,
-            modified_by: string,
-            created_at: string,
-            modified_at: string,
-            name: string;
-            state: string,
-            code: string;
-            user_id: string,
-            entered_by: string
-        }>({
-            id: "",
-            email: "",
-            address: "",
-            phone_number: "",
-            medical_director_name: "",
-            medical_director_phone_no: "",
-            modified_by: "",
-            created_at: "",
-            modified_at: "",
-            name: "",
-            state: "",
-            code: "",
-            user_id: "",
-            entered_by: "",
-        })
 
-    const [editProvider, setEditProvider] = useState<
-        {
-            id: string;
-            email: string,
-            address: string,
-            phone_number: string,
-            medical_director_name: string,
-            medical_director_phone_no: string,
-            modified_by: string,
-            created_at: string,
-            modified_at: string,
-            name: string;
-            state: string,
-            code: string;
-            user_id: string,
-            entered_by: string
-        }>({
-            id: "",
-            email: "",
-            address: "",
-            phone_number: "",
-            medical_director_name: "",
-            medical_director_phone_no: "",
-            modified_by: "",
-            created_at: "",
-            modified_at: "",
-            name: "",
-            state: "",
-            code: "",
-            user_id: "",
-            entered_by: "",
-        })
-    const [providerStatus, setProviderStatus] = useState<
-        {
-            id: string;
-            is_active: boolean,
-            user_id: string,
-            name: string,
-        }>({
-            id: "",
-            is_active: false,
-            user_id: "",
-            name: "",
-        })
     const inputRef = useRef(null)
 
     const debounceFn = debounce(handleDebounceFn, 500)
@@ -141,7 +65,6 @@ const ViewPlanCategory = () => {
     ]
 
     const [editDialog, setEditDialog] = useState(false)
-    const [viewDialog, setViewDialog] = useState(false)
     const [statusDialog, setStatusDialog] = useState(false)
 
     const onDropdownClick = (e: SyntheticEvent) => {
@@ -170,28 +93,8 @@ const ViewPlanCategory = () => {
 
         switch (key) {
             case 'view':
-                // setProvider(
-                //     {
-                //         id: cellProps.row.original.id,
-                //         email: cellProps.row.original.email,
-                //         address: cellProps.row.original.address,
-                //         phone_number: cellProps.row.original.phone_number,
-                //         medical_director_name: cellProps.row.original.medical_director_name,
-                //         medical_director_phone_no: cellProps.row.original.medical_director_phone_no,
-                //         modified_by: cellProps.row.original.modified_by,
-                //         created_at: cellProps.row.original.created_at,
-                //         modified_at: cellProps.row.original.modified_at,
-                //         name: cellProps.row.original.name,
-                //         state: cellProps.row.original.state,
-                //         code: cellProps.row.original.code,
-                //         user_id: cellProps.row.original.user_id,
-                //         entered_by: cellProps.row.original.entered_by
-                //     }
-                // )
                 const id = cellProps.row.original.id;
-                navigate('/healthplan/category/singleview',{state:{id}})
-                setViewDialog(true)
-
+                navigate('/healthplan/category/singleview', { state: { id } })
                 break;
             case 'edit':
 
@@ -406,7 +309,6 @@ const ViewPlanCategory = () => {
             }
         }
         fetchData()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
 
     }, [tableData.pageIndex, tableData.sort, tableData.pageSize, tableData.query, tableData.total])
 
@@ -458,97 +360,6 @@ const ViewPlanCategory = () => {
                 onIndeterminateCheckBoxChange={handleAllRowSelect}
             />
 
-
-            {
-                viewDialog && <Dialog
-                    isOpen={viewDialog}
-                    onClose={() => setViewDialog(false)}
-                    onRequestClose={() => setViewDialog(false)}
-                    width={1000}
-                    shouldCloseOnOverlayClick={false}
-                    shouldCloseOnEsc={false}
-                >
-                    <div className="flex flex-col h-full justify-between">
-
-
-                        <h5 className="mb-4">View Provider</h5>
-                        <div className="max-h-96 overflow-y-auto">
-
-
-                            <div className="prose dark:prose-invert mx-auto">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Field</th>
-                                            <th>Details</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>Name</td>
-                                            <td><b>{provider.name}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Email</td>
-                                            <td><b>{provider.email}</b></td>
-
-                                        </tr>
-                                        <tr>
-                                            <td>Address</td>
-                                            <td><b>{provider.address}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Phone Number</td>
-                                            <td><b>{provider.phone_number}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>State</td>
-                                            <td><b>{provider.state}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Provider Code</td>
-                                            <td><b>{provider.code}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Medical Director Name</td>
-                                            <td><b>{provider.medical_director_name}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Medical Director Phone No.</td>
-                                            <td><b>{provider.medical_director_phone_no}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Entered By</td>
-                                            <td><b>{provider.entered_by}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Modified By</td>
-                                            <td><b>{provider.modified_by}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Modified At</td>
-                                            <td><b>{provider.modified_at}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Created At</td>
-                                            <td><b>{provider.created_at}</b></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div className="text-right mt-6">
-                                <Button
-                                    className="ltr:mr-2 rtl:ml-2"
-                                    variant="plain"
-                                    onClick={() => setViewDialog(false)}
-                                >
-                                    Cancel
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </Dialog>
-            }
             {
                 editDialog && <Dialog
                     isOpen={editDialog}
