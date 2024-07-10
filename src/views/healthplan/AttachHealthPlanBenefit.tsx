@@ -17,8 +17,8 @@ import { benefitList } from '@/utils/customAuth/useHealthPlanAuth'
 
 
 type FormModel = {
-    users: {
-        name: string
+    benefit_limit: {
+        benefit_name: string
         limit_type: string
     }[]
 }
@@ -38,7 +38,7 @@ const AttachHealthPlanBenefit = () => {
 
     const [isLoading, setIsLoading] = useState(true)
 
-    const { useGetHealthPlanAuth, useGetAllBenefitListAuth } = useHealthPlan()
+    const { useGetHealthPlanAuth, useGetAllBenefitListAuth, useCreateAttachedBenefitAuth } = useHealthPlan()
 
     const validationSchema = Yup.object({
         benefit_limit: Yup.array().of(
@@ -57,6 +57,27 @@ const AttachHealthPlanBenefit = () => {
             errorMessage: error || '',
             invalid: typeof touch === 'undefined' ? false : error && touch,
         }
+    }
+
+    const onCreateAttachBenefit = (data: any, userId: string, benefitId: string, healthPlanId: string, healthPlanName: string) => {
+
+        // const extractData: any[] = values.benefit_limit;
+
+        const newData = {
+            data: data,
+            userId: userId,
+            benefitId: benefitId,
+            healthPlanId: healthPlanId,
+            healthPlanName: healthPlanName
+
+
+        }
+
+
+        // alert(JSON.stringify(i, null, 2))
+
+        useCreateAttachedBenefitAuth(newData)
+
     }
 
     useEffect(() => {
@@ -113,18 +134,17 @@ const AttachHealthPlanBenefit = () => {
                                 header="Detailed Information"
                                 headerBorder={false}>
                                 <div className='grid grid-cols-3 gap-4'>
-                                    <span className="text-xl text-slate-500 font-mono mb-3 dark:text-slate-400"> Plan Name: <span className='font-black'>{selectedHealthPlan.label}</span></span>
-                                    <span className='text-xl text-slate-500 font-mono mb-3 dark:text-slate-400'>Plan Type: <span className='font-black'>{selectedHealthPlan.plan_type}</span></span>
-                                    <span className='text-xl text-slate-500 font-mono mb-3 dark:text-slate-400'>Does this plan allow dependent?:{selectedHealthPlan.allow_dependent ? <Tag className='text-white bg-indigo-600 border-0'>Yes</Tag> : <Tag className='text-white bg-red-700 border-0'>No</Tag>}</span>
-                                    <span className='text-xl text-slate-500 font-mono mb-3 dark:text-slate-400'>Maximum Dependant: <span className='font-black'>{selectedHealthPlan.max_dependant}</span></span>
-                                    <span className='text-xl text-slate-500 font-mono mb-3 dark:text-slate-400'>Plan Age Limit: <span className='font-black'>{selectedHealthPlan.plan_age_limit}</span></span>
-                                    <span className='text-xl text-slate-500 font-mono mb-3 dark:text-slate-400'>Plan Cost: <span className='font-black'>{selectedHealthPlan.plan_cost}</span></span>
-                                    <span className='text-xl text-slate-500 font-mono mb-3 dark:text-slate-400'>Plan Create at: <span className='font-black'>{selectedHealthPlan.created_at}</span></span>
-                                    <span className='text-xl text-slate-500 font-mono mb-3 dark:text-slate-400'>Plan Category:
-                                        <span className='font-black'>{selectedHealthPlan.health_plan_category_name}</span></span>
-                                    <span className='text-xl text-slate-500 font-mono mb-3 dark:text-slate-400'>Plan Category Code: <span className='font-black'>{selectedHealthPlan.health_plan_category_code}</span></span>
-                                    <span className='text-xl text-slate-500 font-mono mb-3 dark:text-slate-400'>Plan Category Band: <span className='font-black'>{selectedHealthPlan.health_plan_category_band}</span></span>
-                                    <span className='text-xl text-slate-500 font-mono mb-3 dark:text-slate-400'>Plan Created by: <span className='font-bold'>{selectedHealthPlan.entered_by}</span></span>
+                                    <span> Plan Name: {selectedHealthPlan.label}</span>
+                                    <span>Plan Type: {selectedHealthPlan.plan_type}</span>
+                                    <span>Does this plan allow dependent?:{selectedHealthPlan.allow_dependent ? <Tag className='text-white bg-indigo-600 border-0'>Yes</Tag> : <Tag className='text-white bg-red-700 border-0'>No</Tag>}</span>
+                                    <span>Maximum Dependant: {selectedHealthPlan.max_dependant}</span>
+                                    <span>Plan Age Limit: {selectedHealthPlan.plan_age_limit}</span>
+                                    <span>Plan Cost: {selectedHealthPlan.plan_cost}</span>
+                                    <span>Plan Create at: {selectedHealthPlan.created_at}</span>
+                                    <span>Plan Category:{selectedHealthPlan.health_plan_category_name}</span>
+                                    <span>Plan Category Code: {selectedHealthPlan.health_plan_category_code}</span>
+                                    <span>Plan Category Band: {selectedHealthPlan.health_plan_category_band}</span>
+                                    <span>Plan Created by:{selectedHealthPlan.entered_by}</span>
                                 </div>
                             </Card>
                         </div>
@@ -144,14 +164,14 @@ const AttachHealthPlanBenefit = () => {
                                                     limit_value: ''
                                                 }
                                             ],
-                                        }}
-                                        onSubmit={(values) => alert(JSON.stringify(values, null, 2))}
+                                        }} //data, userId, benefitId, healthPlanId, healthPlanName
+                                        onSubmit={(values) => onCreateAttachBenefit(values, selectedHealthPlan.label,)}
                                     >
                                         {({ touched, errors, values }) => {
                                             const benefit_limit = values.benefit_limit
                                             return (
                                                 <Form>
-                                                    <FormContainer layout="inline">
+                                                    <FormContainer layout="horizontal">
                                                         <div>
                                                             <div className="mb-10">
                                                                 <h5 className="mb-4">Benefit List</h5>
@@ -320,14 +340,9 @@ const AttachHealthPlanBenefit = () => {
                             </Card>
                         </div>
                     </div>
-
                 }
             </div>
-
-
         }
-
-
         </>
     )
 }

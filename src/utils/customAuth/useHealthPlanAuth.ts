@@ -7,7 +7,8 @@ import {
     ViewHealthPlanService,
     createHealthPlanCategoryService,
     GetSingleHealthPlanCategoryService,
-    GetAllBenefitListService
+    GetAllBenefitListService,
+    CreateAttachedBenefitService
 } from "@/services/HealthPlanService"
 
 type Status = 'success' | 'failed'
@@ -365,6 +366,32 @@ function useHealthPlan() {
 
     }
 
+    const useCreateAttachedBenefitAuth = async (data: any): Promise<{
+        message: string,
+        data?: any,
+        status: Status
+    }> => {
+        try {
+            const response = await CreateAttachedBenefitService(data)
+
+            return {
+                message: response.data.message,
+                data: response.data.data,
+                status: 'success'
+
+            }
+
+
+        } catch (error: any) {
+
+            return {
+                status: 'failed',
+                message: error?.response?.data?.message || error.toString(),
+            }
+        }
+
+    }
+
     return {
         useCreateHealthPlanAuth,
         useCreateBenefitAuth,
@@ -376,7 +403,8 @@ function useHealthPlan() {
         useCreateHealthPlanCategoryAuth,
         useGetSingleHealthPlanCategoryAuth,
         useGetHealthPlanAuth,
-        useGetAllBenefitListAuth
+        useGetAllBenefitListAuth,
+        useCreateAttachedBenefitAuth
     }
 }
 

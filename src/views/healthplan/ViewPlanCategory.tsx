@@ -97,37 +97,9 @@ const ViewPlanCategory = () => {
                 navigate('/healthplan/category/singleview', { state: { id } })
                 break;
             case 'edit':
-
-                setEditProvider(
-                    {
-                        id: cellProps.row.original.id,
-                        email: cellProps.row.original.email,
-                        address: cellProps.row.original.address,
-                        phone_number: cellProps.row.original.phone_number,
-                        medical_director_name: cellProps.row.original.medical_director_name,
-                        medical_director_phone_no: cellProps.row.original.medical_director_phone_no,
-                        modified_by: cellProps.row.original.modified_by,
-                        created_at: cellProps.row.original.created_at,
-                        modified_at: cellProps.row.original.modified_at,
-                        name: cellProps.row.original.name,
-                        state: cellProps.row.original.state,
-                        code: cellProps.row.original.code,
-                        user_id: cellProps.row.original.user_id,
-                        entered_by: cellProps.row.original.entered_by
-                    }
-                )
                 setEditDialog(true)
                 break;
             case 'status':
-                setProviderStatus(
-                    {
-                        id: cellProps.row.original.id,
-                        is_active: cellProps.row.original.is_active,
-                        name: cellProps.row.original.name,
-                        user_id: cellProps.row.original.user_id,
-
-                    }
-                )
                 setStatusDialog(true)
                 break;
             // ... more cases
