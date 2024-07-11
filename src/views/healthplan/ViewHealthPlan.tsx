@@ -13,7 +13,7 @@ import { Field, Form, Formik } from 'formik'
 import toast from '@/components/ui/toast'
 import Notification from '@/components/ui/Notification'
 import useHealthPlan from '@/utils/customAuth/useHealthPlanAuth'
-import { HiPlus } from "react-icons/hi"
+import { HiPlus, HiDocumentAdd, HiOutlineDocumentDownload } from "react-icons/hi"
 import Tag from '@/components/ui/Tag'
 
 type HealthPlan = {
@@ -440,7 +440,7 @@ const ViewHealthPlan = () => {
             )}
 
             {/* Add benefit btn */}
-            <div>
+            <div className='flex justify-evenly pb-10'>
                 <Button
                     className="mr-2"
                     variant="solid"
@@ -448,6 +448,24 @@ const ViewHealthPlan = () => {
                     icon={<HiPlus />}
                 >
                     <span>Create HealthPlan</span>
+                </Button>
+                {/* attach benefit btn */}
+                <Button
+                    className="mr-2"
+                    variant="solid"
+                    onClick={() => navigate('/healthplan/benefits/attach')}
+                    icon={<HiOutlineDocumentDownload />}
+                >
+                    <span>Attach Benefit to Health Plan</span>
+                </Button>
+                {/* Edit benefit btn */}
+                <Button
+                    className="mr-2"
+                    variant="solid"
+                    onClick={() => navigate('/healthplan/benefits/attach/edit')}
+                    icon={<HiDocumentAdd />}
+                >
+                    <span>Edit Attached Benefit</span>
                 </Button>
             </div>
             <div className="flex justify-end mb-4">
