@@ -1,8 +1,7 @@
 import Select from '@/components/ui/Select'
 import useHealthPlan from '@/utils/customAuth/useHealthPlanAuth'
 import { useEffect, useState } from 'react'
-import { string } from 'yup'
-import { healthPlan } from '@/utils/customAuth/useHealthPlanAuth'
+import { healthPlan, benefitList } from '@/utils/customAuth/useHealthPlanAuth'
 import { Card, Tag } from '@/components/ui'
 import Spinner from '@/components/ui/Spinner'
 import { Field, FieldArray, Form, Formik, getIn, FieldProps } from 'formik'
@@ -12,7 +11,7 @@ import Button from '@/components/ui/Button'
 import { HiMinus } from 'react-icons/hi'
 import * as Yup from 'yup'
 import type { FormikProps } from 'formik'
-import { benefitList } from '@/utils/customAuth/useHealthPlanAuth'
+import { useLocalStorage } from '@/utils/localStorage'
 
 
 
@@ -32,13 +31,15 @@ const limit_type = [
 const AttachHealthPlanBenefit = () => {
 
     const [healthPlan, setHealthPlan] = useState<healthPlan[]>([])
-    const [benefitList, setBenefitList] = useState<benefitList[]>([])
+    const [selectedBenefitList, setSelectedBenefitList] = useState<benefitList[]>([])
 
     const [selectedHealthPlan, setSelectedHealthPlan] = useState<healthPlan>()
 
     const [isLoading, setIsLoading] = useState(true)
 
     const { useGetHealthPlanAuth, useGetAllBenefitListAuth, useCreateAttachedBenefitAuth } = useHealthPlan()
+
+    const { getItem } = useLocalStorage()
 
     const validationSchema = Yup.object({
         benefit_limit: Yup.array().of(
@@ -59,14 +60,13 @@ const AttachHealthPlanBenefit = () => {
         }
     }
 
-    const onCreateAttachBenefit = (data: any, userId: string, benefitId: string, healthPlanId: string, healthPlanName: string) => {
+    const onCreateAttachBenefit = (data: any, userId: string, healthPlanId: string, healthPlanName: string) => {
 
         // const extractData: any[] = values.benefit_limit;
 
         const newData = {
             data: data,
             userId: userId,
-            benefitId: benefitId,
             healthPlanId: healthPlanId,
             healthPlanName: healthPlanName
 
@@ -92,7 +92,7 @@ const AttachHealthPlanBenefit = () => {
                 }
 
                 if (benefitResponse.status === 'success' && benefitResponse.data) {
-                    setBenefitList(benefitResponse.data)
+                    setSelectedBenefitList(benefitResponse.data)
                     console.log(benefitResponse.data)
                     setIsLoading(false)
                 }
@@ -104,7 +104,7 @@ const AttachHealthPlanBenefit = () => {
             }
         }
         fetchData()
-        console.log(benefitList)
+        console.log(selectedBenefitList)
         console.log(healthPlan)
     }, [])
     return (
@@ -161,11 +161,14 @@ const AttachHealthPlanBenefit = () => {
                                                 {
                                                     benefit_name: '',
                                                     limit_type: '',
-                                                    limit_value: ''
+                                                    limit_value: '',
+                                                    benefit_id: '',
                                                 }
                                             ],
-                                        }} //data, userId, benefitId, healthPlanId, healthPlanName
-                                        onSubmit={(values) => onCreateAttachBenefit(values, selectedHealthPlan.label,)}
+                                        }}
+                                        onSubmit={(values) => {
+                                            onCreateAttachBenefit(values, getItem("user"), selectedHealthPlan.value, selectedHealthPlan.label)
+                                        }}
                                     >
                                         {({ touched, errors, values }) => {
                                             const benefit_limit = values.benefit_limit
@@ -204,9 +207,6 @@ const AttachHealthPlanBenefit = () => {
                                                                                             errorMessage={
                                                                                                 nameFeedBack.errorMessage
                                                                                             }
-
-
-
                                                                                         >
                                                                                             <Field
                                                                                                 name={`benefit_limit[${index}].benefit_name`}
@@ -215,18 +215,29 @@ const AttachHealthPlanBenefit = () => {
                                                                                                     <Select
                                                                                                         field={field}
                                                                                                         form={form}
-                                                                                                        options={benefitList}
+                                                                                                        options={selectedBenefitList}
                                                                                                         placeholder="select appropriate benefit"
-                                                                                                        value={benefitList?.filter(
+                                                                                                        value={selectedBenefitList?.filter(
                                                                                                             (items) =>
-                                                                                                                items.value === _.benefit_name
+                                                                                                                items.label === _.benefit_name
                                                                                                         )}
 
-                                                                                                        onChange={(items) =>
+                                                                                                        onChange={(items) => {
                                                                                                             form.setFieldValue(
                                                                                                                 field.name,
-                                                                                                                items?.value
+                                                                                                                items?.label
                                                                                                             )
+
+                                                                                                            if (items?.value) {
+
+                                                                                                                values.benefit_limit[index].benefit_id = items?.value
+                                                                                                            } else {
+                                                                                                                values.benefit_limit[index].benefit_id = ''
+                                                                                                            }
+
+                                                                                                        }
+
+
                                                                                                         }
                                                                                                     />
                                                                                                 )}
