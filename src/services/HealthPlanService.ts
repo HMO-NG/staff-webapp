@@ -108,3 +108,15 @@ export async function CreateAttachedBenefitService(data:any) {
 
     })
 }
+
+export async function GetAttachedBenefitServiceByHealthPlanID(data:any) {
+    return ApiService.fetchData<{
+        message: string,
+        data: any,
+    }>({
+        url: '/healthplan/benefit/attach/get',
+        method: 'post',
+        data
+
+    })
+}

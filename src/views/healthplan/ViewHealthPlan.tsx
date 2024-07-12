@@ -440,7 +440,8 @@ const ViewHealthPlan = () => {
             )}
 
             {/* Add benefit btn */}
-            <div className='flex justify-evenly pb-10'>
+            {/* grid-row-{1} */}
+            <div className=' flex  justify-evenly pb-10'>
                 <Button
                     className="mr-2"
                     variant="solid"

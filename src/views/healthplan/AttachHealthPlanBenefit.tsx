@@ -62,7 +62,6 @@ const AttachHealthPlanBenefit = () => {
 
     const onCreateAttachBenefit = (data: any, userId: string, healthPlanId: string, healthPlanName: string) => {
 
-        // const extractData: any[] = values.benefit_limit;
 
         const newData = {
             data: data,
@@ -72,9 +71,6 @@ const AttachHealthPlanBenefit = () => {
 
 
         }
-
-
-        // alert(JSON.stringify(i, null, 2))
 
         useCreateAttachedBenefitAuth(newData)
 
@@ -107,9 +103,10 @@ const AttachHealthPlanBenefit = () => {
         console.log(selectedBenefitList)
         console.log(healthPlan)
     }, [])
+
     return (
         <> {isLoading ?
-            <div>
+            <div className='flex justify-center'>
                 <Spinner size="3.25rem" />
             </div>
             :
