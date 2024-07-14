@@ -120,3 +120,26 @@ export async function GetAttachedBenefitServiceByHealthPlanID(data:any) {
 
     })
 }
+
+export async function UpdateAttachedBenefitService(data:any) {
+    return ApiService.fetchData<{
+        message: string,
+        data: any,
+    }>({
+        url: '/healthplan/benefit/attach/update',
+        method: 'post',
+        data
+
+    })
+}
+
+export async function DeleteAttachedBenefitService(data:any) {
+    return ApiService.fetchData<{
+        message: string,
+        data: any,
+    }>({
+        url: `/healthplan/benefit/attach/delete/${data}`,
+        method: 'delete',
+        data
+    })
+}

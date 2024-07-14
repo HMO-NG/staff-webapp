@@ -9,7 +9,10 @@ import {
     GetSingleHealthPlanCategoryService,
     GetAllBenefitListService,
     CreateAttachedBenefitService,
-    GetAttachedBenefitServiceByHealthPlanID
+    GetAttachedBenefitServiceByHealthPlanID,
+    UpdateAttachedBenefitService,
+    DeleteAttachedBenefitService
+
 } from "@/services/HealthPlanService"
 
 type Status = 'success' | 'failed'
@@ -417,6 +420,58 @@ function useHealthPlan() {
         }
 
     }
+    
+    const useUpdateAttachedBenefitAuth = async (data: any): Promise<{
+        message: string,
+        data?: any,
+        status: Status
+    }> => {
+        try {
+            const response = await UpdateAttachedBenefitService(data)
+
+            return {
+                message: response.data.message,
+                data: response.data.data,
+                status: 'success'
+
+            }
+
+
+        } catch (error: any) {
+
+            return {
+                status: 'failed',
+                message: error?.response?.data?.message || error.toString(),
+            }
+        }
+
+    }
+
+    const useDeleteAttachedBenefitAuth = async (data: any): Promise<{
+        message: string,
+        data?: any,
+        status: Status
+    }> => {
+        try {
+            const response = await DeleteAttachedBenefitService(data)
+
+            return {
+                message: response.data.message,
+                data: response.data.data,
+                status: 'success'
+
+            }
+
+
+        } catch (error: any) {
+
+            return {
+                status: 'failed',
+                message: error?.response?.data?.message || error.toString(),
+            }
+        }
+
+    }
 
     return {
         useCreateHealthPlanAuth,
@@ -431,7 +486,9 @@ function useHealthPlan() {
         useGetHealthPlanAuth,
         useGetAllBenefitListAuth,
         useCreateAttachedBenefitAuth,
-        useGetAttachedBenefitByHealthPlanIdAuth
+        useGetAttachedBenefitByHealthPlanIdAuth,
+        useUpdateAttachedBenefitAuth,
+        useDeleteAttachedBenefitAuth
     }
 }
 
