@@ -12,7 +12,8 @@ import { HiMinus } from 'react-icons/hi'
 import * as Yup from 'yup'
 import type { FormikProps } from 'formik'
 import { useLocalStorage } from '@/utils/localStorage'
-
+import Notification from '@/components/ui/Notification'
+import toast from '@/components/ui/toast'
 
 
 type FormModel = {
@@ -60,7 +61,19 @@ const AttachHealthPlanBenefit = () => {
         }
     }
 
-    const onCreateAttachBenefit = (data: any, userId: string, healthPlanId: string, healthPlanName: string) => {
+    function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
+        toast.push(
+            <Notification
+                title="Warning!"
+                type={notificationType}>
+
+                {msg}
+            </Notification>, {
+            placement: 'top-center'
+        })
+    }
+
+    const onCreateAttachBenefit = async (data: any, userId: string, healthPlanId: string, healthPlanName: string, resetForm: () => void) => {
 
 
         const newData = {
@@ -72,9 +85,21 @@ const AttachHealthPlanBenefit = () => {
 
         }
 
-        useCreateAttachedBenefitAuth(newData)
+        const isDataSaved = await useCreateAttachedBenefitAuth(newData)
+
+        if (isDataSaved.status === 'success') {
+            openNotification(isDataSaved.message, 'success')
+        }
+
+        if (isDataSaved.status === 'failed') {
+            openNotification(isDataSaved.message, 'danger')
+
+        }
+
+        resetForm()
 
     }
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -163,8 +188,8 @@ const AttachHealthPlanBenefit = () => {
                                                 }
                                             ],
                                         }}
-                                        onSubmit={(values) => {
-                                            onCreateAttachBenefit(values, getItem("user"), selectedHealthPlan.value, selectedHealthPlan.label)
+                                        onSubmit={(values, { resetForm }) => {
+                                            onCreateAttachBenefit(values, getItem("user"), selectedHealthPlan.value, selectedHealthPlan.label, resetForm)
                                         }}
                                     >
                                         {({ touched, errors, values }) => {

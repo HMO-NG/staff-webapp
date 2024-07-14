@@ -6,7 +6,6 @@ import { Card, Tag } from '@/components/ui'
 import Spinner from '@/components/ui/Spinner'
 import Button from '@/components/ui/Button'
 import { HiMinus } from 'react-icons/hi'
-import Alert from '@/components/ui/Alert'
 import Dialog from '@/components/ui/Dialog'
 import toast from '@/components/ui/toast'
 import Input from '@/components/ui/Input'
@@ -58,7 +57,6 @@ function EditAttachHealthPlanBenefit() {
     const [isLoading, setIsLoading] = useState(true)
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
     const [isAttachedBenefitLoaded, setIsAttachedBenefitLoaded] = useState(false)
-    const [message, setMessage] = useState("")
 
     const [idToDelete, setIdToDelete] = useState("")
 
@@ -85,7 +83,7 @@ function EditAttachHealthPlanBenefit() {
         }
 
         if (result.status === 'failed') {
-            setMessage(result.message)
+            openNotification(result.message, 'danger')
         }
     }
 
@@ -110,9 +108,6 @@ function EditAttachHealthPlanBenefit() {
 
     // update the attach benefit
     const updateAttachedBenefit = async (id: string, data: {}) => {
-
-        // clear the data in this state
-        setMessage("")
 
         /*
         !id: id is null or undefined.
@@ -172,7 +167,7 @@ function EditAttachHealthPlanBenefit() {
             }
 
             if (response.status === 'failed' || benefitResponse.status === 'failed') {
-                setMessage(response.message || benefitResponse.message)
+                openNotification(response.message || benefitResponse.message, 'info')
                 setIsLoading(false)
             }
 
