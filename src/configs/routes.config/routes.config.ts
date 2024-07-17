@@ -112,11 +112,18 @@ export const protectedRoutes = [
         component: lazy(() => import('@/views/nhis/ViewService')),
         authority: [],
     },
-    // to view the Nhis procedures
+    // to view the Nhis Tarrif Service
     {
-        key: 'nhia.services.procedures.view',
-        path: 'nhia/services/procedures/view',
-        component: lazy(() => import('@/views/nhis/viewProcedure')),
+        key: 'nhia.tarrif.services.view',
+        path: 'nhia/tarrif/services/view',
+        component: lazy(() => import('@/views/nhis/viewServiceTarrif')),
+        authority: [],
+    },
+    // create Nhis Tarrif Service
+    {
+        key: 'nhia.tarrif.services.create',
+        path: 'nhia/tarrif/services/create',
+        component: lazy(() => import('@/views/nhis/CreateServiceTarrif')),
         authority: [],
     },
     /** Example purpose only, please remove */

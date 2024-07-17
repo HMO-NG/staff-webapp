@@ -5,9 +5,9 @@ type Response = {
     data: any
 }
 
-export async function createNhiaService(data: any) {
+export async function createNhiaServiceTarrifService(data: any) {
     return ApiService.fetchData<Response>({
-        url: '/nhis/services/create',
+        url: '/nhis/service/tarrif/create',
         method: 'post',
         data
     })

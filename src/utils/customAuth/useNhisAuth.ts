@@ -1,5 +1,5 @@
 import {
-    createNhiaService,
+    createNhiaServiceTarrifService,
     getAllAndSearchNhiaService
 } from "@/services/NhisService"
 import { retry } from "@reduxjs/toolkit/dist/query"
@@ -9,14 +9,14 @@ type Status = 'success' | 'failed'
 
 function useNhia() {
 
-    const useCreateNhiaService = async (data: any): Promise<{
+    const useCreateNhiaServiceTarrifAuth = async (data: any): Promise<{
         status: Status,
         message: string,
         data?: any,
     } | undefined> => {
         try {
 
-            const response = await createNhiaService(data)
+            const response = await createNhiaServiceTarrifService(data)
 
             return {
                 status: 'success',
@@ -42,7 +42,7 @@ function useNhia() {
                 for (let i = 0; i < data.length; i += BATCH_SIZE) {
                     const batch = data.slice(i, i + BATCH_SIZE);
                     try {
-                        const k = await Promise.all(batch.map(item => createNhiaService(item)));
+                        const k = await Promise.all(batch.map(item => createNhiaServiceTarrifService(item)));
                         console.log(k)
                         console.log(`Processed batch ${i / BATCH_SIZE + 1}`);
                     } catch (error) {
@@ -97,7 +97,7 @@ function useNhia() {
     }
 
     return {
-        useCreateNhiaService,
+        useCreateNhiaServiceTarrifAuth,
         useCreateNhiaServiceBulkUpload,
         getAllAndSearchNhiaProcedureService
     }

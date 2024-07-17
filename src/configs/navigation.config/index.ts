@@ -3,7 +3,7 @@ import {
     NAV_ITEM_TYPE_ITEM,
     NAV_ITEM_TYPE_COLLAPSE
 } from '@/constants/navigation.constant'
-import type {NavigationTree} from '@/@types/navigation'
+import type { NavigationTree } from '@/@types/navigation'
 
 const navigationConfig: NavigationTree[] = [
     {
@@ -130,17 +130,17 @@ const navigationConfig: NavigationTree[] = [
             {
                 key: 'nhia.service',
                 path: '',
-                title: 'Services',
+                title: 'Tarrif',
                 translateKey: 'nhia.service',
                 icon: 'groupCollapseMenu',
                 type: NAV_ITEM_TYPE_COLLAPSE,
                 authority: [],
                 subMenu: [
                     {
-                        key: 'nhia.service.procedure.create',
-                        path: 'nhia/services/procedures/view',
-                        title: 'View Procedures',
-                        translateKey: 'nhia.service.procedure.create',
+                        key: 'nhia.tarrif.services.view',
+                        path: 'nhia/tarrif/services/view',
+                        title: 'View Services',
+                        translateKey: 'nhia.tarrif.services.view',
                         icon: 'groupCollapseMenu',
                         type: NAV_ITEM_TYPE_ITEM,
                         authority: [],
