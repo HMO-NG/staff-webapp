@@ -1,17 +1,19 @@
 import Card from '@/components/ui/Card'
 import { HiCheckCircle } from 'react-icons/hi'
-import { NigerianState } from '@/data/NigerianStates'
 import { FormItem, FormContainer } from '@/components/ui/Form'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import Select from '@/components/ui/Select'
-import useTimeOutMessage from '@/utils/hooks/useTimeOutMessage'
+import useHealthPlan, { healthPlan } from '@/utils/customAuth/useHealthPlanAuth'
 import { Field, Form, Formik } from 'formik'
-import Alert from '@/components/ui/Alert'
 import * as Yup from 'yup'
 import type { FieldProps } from 'formik'
-import useProvider from '@/utils/customAuth/useProviderAuth'
 import { useLocalStorage } from '@/utils/localStorage'
+import useNhia from '@/utils/customAuth/useNhisAuth'
+import Notification from '@/components/ui/Notification'
+import toast from '@/components/ui/toast'
+import { useState, useEffect} from 'react'
+
 
 type FormModel = {
     input: string
@@ -27,69 +29,101 @@ type FormModel = {
     upload: File[];
 }
 
-const validationSchema = Yup.object().shape({
+type NhiaDrugTarrif = {
+    id: string;
+    name: string;
+    tarrif_type: string,
+    service_type: string,
+    sub_category: string,
+    category: string,
+    nhia_code: string;
+    price: number,
+    plan_name: string,
+    created_at: string,
+    user_id: string,
+    entered_by: string
+}
 
-    drug_name: Yup.string().required('service name Required'),
-    code: Yup.string().required('NHIA service code required'),
-    dosage: Yup.string().required('Please specify the type'),
-    strengths: Yup.string().required('Please specify the type'),
+const validationSchema = Yup.object().shape({
+    name_of_drug: Yup.string().required('service name Required'),
+    nhia_code: Yup.string().required('NHIA service code required'),
+    dosage_form: Yup.string().required('Please specify the type'),
+    strength: Yup.string().required('Please specify the type'),
     presentation: Yup.string().required('Please specify the type'),
+    category: Yup.string().required('Please specify the type'),
+    plan_type: Yup.string().required('Please specify the type'),
     price: Yup.string().required('service price required'),
 })
 
-
-
 const createDrugs = () => {
 
-    const [errorMessage, setErrorMessage] = useTimeOutMessage()
-    const [successMessage, setSuccessMessage] = useTimeOutMessage()
+    const [healthPlan, setHealthPlan] = useState<healthPlan[]>([])
 
-    const { useCreateProvider } = useProvider()
+    const { useCreateNhiaDrugTarrifAuth } = useNhia()
+
+    const { useGetHealthPlanAuth } = useHealthPlan()
+
+    function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
+        toast.push(
+            <Notification
+                title={notificationType.toString()}
+                type={notificationType}>
+
+                {msg}
+            </Notification>, {
+            placement: 'top-center'
+        })
+    }
 
     const onCreateProvider = async (values: any,
-        setSubmitting: (isSubmitting: boolean) => void,
-        resetForm: () => void
+        setSubmitting?: (isSubmitting: boolean) => void,
+        resetForm?: () => void
     ) => {
 
-        setSubmitting(true)
+        if (setSubmitting !== undefined) {
+            setSubmitting(true)
+        }
 
         const { getItem } = useLocalStorage()
 
         values.user_id = getItem("user")
 
-        const data = await useCreateProvider(values)
+        const data = await useCreateNhiaDrugTarrifAuth(values)
 
-        if (data?.data) {
+        if (data?.status === 'success') {
 
-            setTimeout(() => {
-                setSuccessMessage(data.message)
-                setSubmitting(false)
+            openNotification(data.message, 'warning')
+
+            if (setSubmitting !== undefined) {
+                setSubmitting(true)
+            }
+
+            if (resetForm !== undefined) {
                 resetForm()
-            }, 3000)
+            }
 
         }
 
     }
 
+    useEffect(() => {
+        const fetchData = async () => {
+            const response = await useGetHealthPlanAuth({ sort: { order: 'asc' } })
+
+            if (response.status === 'success' && response.data) {
+                setHealthPlan(response.data)
+            }
+
+            if (response.status === 'failed') {
+                openNotification(response.message, 'danger')
+            }
+        }
+        fetchData()
+    }, [])
+
     return (
         <div>
-            {errorMessage && (
-                <Alert showIcon className="mb-4" type="danger">
-                    {errorMessage}
-                </Alert>
-            )}
-            {
-                successMessage && (
-                    <Alert closable
-                        showIcon
-                        type="success"
-                        customIcon={<HiCheckCircle />}
-                        title='Successfully'
-                        duration={10000}>
-                        {successMessage}
-                    </Alert>
-                )
-            }
+
             <Card
                 header="Add NHIA Drugs"
             >
@@ -104,11 +138,13 @@ const createDrugs = () => {
                     enableReinitialize
                     initialValues={{
 
-                        service_name: '',
-                        code: '',
-                        dosage: '',
-                        strengths: '',
+                        name_of_drug: '',
+                        nhia_code: '',
+                        dosage_form: '',
+                        strength: '',
                         presentation: '',
+                        category: '',
+                        plan_type: '',
                         price: '',
 
                     }}
@@ -116,79 +152,84 @@ const createDrugs = () => {
 
                     onSubmit={(values, { setSubmitting, resetForm }) => {
                         onCreateProvider(values, setSubmitting, resetForm)
-
-
                     }}
                 >
                     {({ values, touched, errors, isSubmitting }) => (
                         <Form>
                             <FormContainer>
 
+                                {/* Name of drug */}
                                 <FormItem
                                     asterisk
                                     label="Name"
-                                    invalid={errors.service_name && touched.service_name}
-                                    errorMessage={errors.service_name}
+                                    invalid={errors.name_of_drug && touched.name_of_drug}
+                                    errorMessage={errors.name_of_drug}
                                 >
                                     <Field
                                         type="text"
                                         autoComplete="off"
-                                        name="name"
+                                        name="name_of_drug"
                                         placeholder="Drug Name eg: Morphine"
                                         component={Input}
                                     />
                                 </FormItem>
 
+                                {/* nhia code */}
                                 <FormItem
                                     asterisk
-                                    label="code"
-                                    invalid={errors.code && touched.code}
-                                    errorMessage={errors.code}
+                                    label="NHIA Code"
+                                    invalid={errors.nhia_code && touched.nhia_code}
+                                    errorMessage={errors.nhia_code}
                                 >
                                     <Field
                                         type="text"
                                         autoComplete="off"
-                                        name="Code"
+                                        name="nhia_code"
                                         placeholder="Drug Code eg: NHIS-01-03-01"
                                         component={Input}
                                     />
                                 </FormItem>
 
+                                {/* dosage_form */}
                                 <FormItem
 
                                     asterisk
                                     label="Dosage"
-                                    invalid={errors.dosage && touched.dosage}
-                                    errorMessage={errors.dosage}
+                                    invalid={errors.dosage_form && touched.dosage_form}
+                                    errorMessage={errors.dosage_form}
                                 >
                                     <Field
                                         type="text"
                                         autoComplete="off"
-                                        name="type"
+                                        name="dosage_form"
                                         placeholder="Dosage eg: Injection, Tablets etc."
                                         component={Input}
                                     />
                                 </FormItem>
+
+                                {/* strength */}
                                 <FormItem
 
                                     asterisk
                                     label="Drug Strength"
-                                    invalid={errors.strengths && touched.strengths}
-                                    errorMessage={errors.strengths}
+                                    invalid={errors.strength && touched.strength}
+                                    errorMessage={errors.strength}
                                 >
                                     <Field
                                         type="text"
                                         autoComplete="off"
-                                        name="strengths"
+                                        name="strength"
                                         placeholder="Drug Strengths eg: 0.5mg/amp, 5mg/ml in 2 ml etc."
                                         component={Input}
                                     />
                                 </FormItem>
+
+                                {/* presentation */}
                                 <FormItem
                                     asterisk
                                     label="presentation"
-                                    invalid={errors.strengths && touched.strengths}
-                                    errorMessage={errors.strengths}
+                                    invalid={errors.presentation && touched.presentation}
+                                    errorMessage={errors.presentation}
                                 >
                                     <Field
                                         type="text"
@@ -198,6 +239,37 @@ const createDrugs = () => {
                                         component={Input}
                                     />
                                 </FormItem>
+
+                                {/* plan_type */}
+                                <FormItem
+                                    asterisk
+                                    label="Plan Type"
+                                    invalid={errors.plan_type && touched.plan_type}
+                                    errorMessage={errors.plan_type}
+                                >
+                                    <Field
+
+                                        name="plan_type">
+                                        {({ field, form }: FieldProps<FormModel>) => (
+
+                                            <Select
+                                                options={healthPlan}
+                                                placeholder={"Select Health Plan Name"}
+                                                value={healthPlan.filter((item) =>
+                                                    item.value === values.plan_type
+                                                )}
+                                                onChange={(data) => {
+                                                    form.setFieldValue(
+                                                        field.name,
+                                                        data?.value
+                                                    )
+                                                }}
+                                            />
+                                        )}
+                                    </Field>
+                                </FormItem>
+
+                                {/* price */}
                                 <FormItem
                                     asterisk
                                     label="Price"
@@ -219,7 +291,7 @@ const createDrugs = () => {
                                         {isSubmitting ?
                                             "Saving..."
                                             :
-                                            "Add NHIA Drug"
+                                            "Add NHIA Drug Tarrif"
                                         }
 
                                     </Button>

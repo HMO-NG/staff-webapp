@@ -100,10 +100,18 @@ export const protectedRoutes = [
         component: lazy(() => import('@/views/healthplan/EditAttachHealthPlanBenefit')),
         authority: [],
     },
+    // create nhia drug tarrif
     {
-        key: 'nhia.healthplan.drugs.create',
-        path: 'nhia/healthplan/drugs/create',
+        key: 'nhia.tarrif.drugs.create',
+        path: 'nhia/tarrif/drugs/create',
         component: lazy(() => import('@/views/nhis/CreateDrugs')),
+        authority: [],
+    },
+    // view nhia drug tarrif
+    {
+        key: 'nhia.tarrif.drugs.view',
+        path: 'nhia/tarrif/drugs/view',
+        component: lazy(() => import('@/views/nhis/ViewDrugsTarrif')),
         authority: [],
     },
     {

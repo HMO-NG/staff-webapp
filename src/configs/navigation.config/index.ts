@@ -146,21 +146,12 @@ const navigationConfig: NavigationTree[] = [
                         authority: [],
                         subMenu: []
                     },
+                    // view nhia drug tarrif
                     {
-                        key: 'nhia.service.investigation.create',
-                        path: 'nhia/service/investigation/create',
-                        title: 'View Investigations',
-                        translateKey: 'nhia.service.investigation.create',
-                        icon: 'groupCollapseMenu',
-                        type: NAV_ITEM_TYPE_ITEM,
-                        authority: [],
-                        subMenu: []
-                    },
-                    {
-                        key: 'nhia.service.drug.create',
-                        path: 'nhia/service/drug/create',
+                        key: 'nhia.tarrif.drugs.view',
+                        path: 'nhia/tarrif/drugs/view',
                         title: 'View Drugs',
-                        translateKey: 'nhia.service.procedure.create',
+                        translateKey: 'nhia.tarrif.drugs.view',
                         icon: 'groupCollapseMenu',
                         type: NAV_ITEM_TYPE_ITEM,
                         authority: [],

@@ -24,3 +24,11 @@ export async function getAllAndSearchNhiaService(data: any) {
         data
     })
 }
+
+export async function createNhiaDrugTarrifService(data: any) {
+    return ApiService.fetchData<Response>({
+        url: '/nhis/drug/tarrif/create',
+        method: 'post',
+        data
+    })
+}
