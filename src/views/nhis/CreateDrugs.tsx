@@ -1,5 +1,5 @@
 import Card from '@/components/ui/Card'
-import { HiCheckCircle } from 'react-icons/hi'
+import { HiCheckCircle, HiCloudUpload } from 'react-icons/hi'
 import { FormItem, FormContainer } from '@/components/ui/Form'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
@@ -12,7 +12,10 @@ import { useLocalStorage } from '@/utils/localStorage'
 import useNhia from '@/utils/customAuth/useNhisAuth'
 import Notification from '@/components/ui/Notification'
 import toast from '@/components/ui/toast'
-import { useState, useEffect} from 'react'
+import { useState, useEffect } from 'react'
+import Upload from '@/components/ui/Upload'
+import * as XLSX from 'xlsx'
+
 
 
 type FormModel = {
@@ -27,21 +30,6 @@ type FormModel = {
     switcher: boolean
     segment: string[];
     upload: File[];
-}
-
-type NhiaDrugTarrif = {
-    id: string;
-    name: string;
-    tarrif_type: string,
-    service_type: string,
-    sub_category: string,
-    category: string,
-    nhia_code: string;
-    price: number,
-    plan_name: string,
-    created_at: string,
-    user_id: string,
-    entered_by: string
 }
 
 const validationSchema = Yup.object().shape({
@@ -92,7 +80,7 @@ const createDrugs = () => {
 
         if (data?.status === 'success') {
 
-            openNotification(data.message, 'warning')
+            openNotification(data.message, 'success')
 
             if (setSubmitting !== undefined) {
                 setSubmitting(true)
@@ -106,6 +94,55 @@ const createDrugs = () => {
 
     }
 
+    const beforeUpload = (files: FileList | null, fileList: File[]) => {
+        let valid: string | boolean = true
+
+        const allowedFileType = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']
+
+        if (files) {
+            for (const f of files) {
+                if (!allowedFileType.includes(f.type)) {
+                    valid = 'Please upload a .xlsx or .xls file!'
+                }
+            }
+        }
+        return valid
+    }
+
+    const handleFileUpload = async (file: File[], fileList: File[]) => {
+        try {
+
+            if (!file[0]) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const data = e.target?.result;
+                if (data) {
+                    const workbook = XLSX.read(data, { type: 'binary' });
+                    const sheetName = workbook.SheetNames[0];
+                    const sheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+                    const BATCH_SIZE = 10;
+                    let response;
+
+                    for (let i = 0; i < jsonData.length; i += BATCH_SIZE) {
+                        const batch = jsonData.slice(i, i + BATCH_SIZE);
+                        response = await Promise.all(batch.map((item: any) => useCreateNhiaDrugTarrifAuth(item)));
+
+                        openNotification(`uploaded batch ${i / BATCH_SIZE + 1}`, 'success')
+                    }
+
+                }
+            };
+            reader.readAsBinaryString(file[0]);
+
+        } catch (error: any) {
+
+            openNotification(error?.response?.data?.message || error.toString(), 'danger')
+        }
+
+    };
     useEffect(() => {
         const fetchData = async () => {
             const response = await useGetHealthPlanAuth({ sort: { order: 'asc' } })
@@ -123,6 +160,16 @@ const createDrugs = () => {
 
     return (
         <div>
+            <div className='my-5'>
+                <Upload
+                    beforeUpload={beforeUpload}
+                    onChange={handleFileUpload}
+                >
+                    <Button variant="solid" icon={<HiCloudUpload />}>
+                        Upload your file
+                    </Button>
+                </Upload>
+            </div>
 
             <Card
                 header="Add NHIA Drugs"
@@ -236,6 +283,22 @@ const createDrugs = () => {
                                         autoComplete="off"
                                         name="presentation"
                                         placeholder="Drug Presentation eg:Amp., Capsule, Tablet etc."
+                                        component={Input}
+                                    />
+                                </FormItem>
+
+                                {/* category */}
+                                <FormItem
+                                    asterisk
+                                    label="category"
+                                    invalid={errors.category && touched.category}
+                                    errorMessage={errors.category}
+                                >
+                                    <Field
+                                        type="text"
+                                        autoComplete="off"
+                                        name="category"
+                                        placeholder="Drug Category eg: Pain relieve"
                                         component={Input}
                                     />
                                 </FormItem>

@@ -18,18 +18,19 @@ import { HiPlus, HiOutlinePencil, HiOutlineTrash } from "react-icons/hi"
 
 type NhiaServiceTarrif = {
     id: string;
-    name: string;
-    tarrif_type: string,
-    service_type: string,
-    sub_category: string,
-    category: string,
+    name_of_drug: string,
+    dosage_form: string,
+    strength: string,
     nhia_code: string;
+    presentation: string,
+    category: string,
     price: number,
-    plan_name: string,
-    created_at: string,
-    user_id: string,
+    plan_type: string,
     entered_by: string
+    tarrif_type: string,
+    created_at: string,
 }
+
 const ViewDrugsTarrif = () => {
 
     const { getAllAndSearchNhiaProcedureService } = useNhia()
