@@ -33,7 +33,7 @@ type NhiaServiceTarrif = {
 
 const ViewDrugsTarrif = () => {
 
-    const { getAllAndSearchNhiaProcedureService } = useNhia()
+    const { getAllAndSearchNhiaDrugTarrifAuth } = useNhia()
     const navigate = useNavigate()
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(false)
@@ -199,19 +199,23 @@ const ViewDrugsTarrif = () => {
         [
             {
                 header: 'Name',
-                accessorKey: 'name',
+                accessorKey: 'name_of_drug',
             },
             {
-                header: 'Tarrif Type',
-                accessorKey: 'tarrif_type',
+                header: 'Dosage Form',
+                accessorKey: 'dosage_form',
             },
             {
                 header: 'Code',
                 accessorKey: 'nhia_code',
             },
             {
-                header: 'Service Type',
-                accessorKey: 'service_type',
+                header: 'Drug Strength',
+                accessorKey: 'strength',
+            },
+            {
+                header: 'Drug Presentation',
+                accessorKey: 'presentation',
             },
             {
                 header: 'Price',
@@ -331,7 +335,8 @@ const ViewDrugsTarrif = () => {
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true)
-            const response = await getAllAndSearchNhiaProcedureService(tableData)
+            const response = await getAllAndSearchNhiaDrugTarrifAuth(tableData)
+
             if (response?.status === 'success') {
                 setData(response.data)
                 setLoading(false)

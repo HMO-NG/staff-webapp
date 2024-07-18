@@ -129,8 +129,8 @@ const createDrugs = () => {
                     for (let i = 0; i < jsonData.length; i += BATCH_SIZE) {
                         const batch = jsonData.slice(i, i + BATCH_SIZE);
                         response = await Promise.all(batch.map((item: any) => useCreateNhiaDrugTarrifAuth(item)));
-
-                        openNotification(`uploaded batch ${i / BATCH_SIZE + 1}`, 'success')
+                        console.log(response)
+                        openNotification(`uploading batch ${i / BATCH_SIZE + 1}`, 'info')
                     }
 
                 }

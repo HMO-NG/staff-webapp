@@ -32,3 +32,15 @@ export async function createNhiaDrugTarrifService(data: any) {
         data
     })
 }
+
+export async function getAllAndSearchNhiaDrugTarrifService(data: any) {
+    return ApiService.fetchData<{
+        message: string,
+        data: any,
+        total: number
+    }>({
+        url: '/nhis/drug/tarrif/search',
+        method: 'post',
+        data
+    })
+}
