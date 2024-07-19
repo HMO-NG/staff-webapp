@@ -134,6 +134,20 @@ export const protectedRoutes = [
         component: lazy(() => import('@/views/nhis/CreateServiceTarrif')),
         authority: [],
     },
+    // view nhia enrollee
+    {
+        key: 'nhia.enrollee.view',
+        path: 'nhia/enrollee/view',
+        component: lazy(() => import('@/views/enrollee/ViewNHIAEnrollee')),
+        authority: [],
+    },
+    // create nhia enrollee
+    {
+        key: 'nhia.enrollee.create',
+        path: 'nhia/enrollee/create',
+        component: lazy(() => import('@/views/enrollee/CreateNHIAEnrollee')),
+        authority: [],
+    },
     /** Example purpose only, please remove */
     {
         key: 'collapseMenu.item1',

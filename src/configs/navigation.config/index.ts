@@ -116,7 +116,40 @@ const navigationConfig: NavigationTree[] = [
             },
         ],
     },
-
+    // enrollee
+    {
+        key: 'enrollee-title',
+        path: '',
+        title: '',
+        translateKey: 'Enrollment',
+        icon: '',
+        type: NAV_ITEM_TYPE_TITLE,
+        authority: [],
+        subMenu: [
+            {
+                key: 'enrollee-nhia',
+                path: '',
+                title: 'Create Enrollees',
+                translateKey: 'enrollee-nhia',
+                icon: 'hiIdentification',
+                type: NAV_ITEM_TYPE_COLLAPSE,
+                authority: [],
+                subMenu: [
+                    // create nhia enrollees
+                    {
+                        key: 'nhia.enrollee.create',
+                        path: 'nhia/enrollee/create',
+                        title: 'View NHIA Enrollees',
+                        translateKey: 'nhia.enrollee.create',
+                        icon: 'groupCollapseMenu',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [],
+                        subMenu: []
+                    },
+                ]
+            },
+        ],
+    },
     // nhis
     {
         key: 'nhis-title',
