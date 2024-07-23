@@ -1,415 +1,416 @@
-import { useState, useEffect, useMemo, useRef, ChangeEvent } from 'react'
+import Card from '@/components/ui/Card'
+import { HiCheckCircle, HiCloudUpload } from 'react-icons/hi'
+import { FormItem, FormContainer } from '@/components/ui/Form'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
-import DataTable from '@/components/shared/DataTable'
-import { useNavigate } from 'react-router-dom'
-import type { ColumnDef, OnSortParam, CellContext, Row } from '@/components/shared/DataTable'
-import debounce from 'lodash/debounce'
-import Dropdown from '@/components/ui/Dropdown'
-import type { SyntheticEvent } from 'react'
-import Dialog from '@/components/ui/Dialog'
-import { FormItem, FormContainer } from '@/components/ui/Form'
-import useThemeClass from '@/utils/hooks/useThemeClass'
-import toast from '@/components/ui/toast'
+import Select from '@/components/ui/Select'
+import DatePicker from '@/components/ui/DatePicker'
+import { Field, Form, Formik } from 'formik'
+import * as Yup from 'yup'
+import type { FieldProps } from 'formik'
+import { useLocalStorage } from '@/utils/localStorage'
+import useEnrollee from '@/utils/customAuth/useEnrolleeAuth'
+import useHealthCheck from '@/utils/customAuth/useHealthCheckerAuth'
 import Notification from '@/components/ui/Notification'
-import { HiOutlineSearch } from 'react-icons/hi'
-import useNhia from '@/utils/customAuth/useNhisAuth'
-import { HiPlus, HiOutlinePencil, HiOutlineTrash } from "react-icons/hi"
+import toast from '@/components/ui/toast'
+import { useState, useEffect } from 'react'
+import Upload from '@/components/ui/Upload'
+import * as XLSX from 'xlsx'
 
-type NhiaServiceTarrif = {
-    id: string;
-    name_of_drug: string,
-    dosage_form: string,
-    strength: string,
-    nhia_code: string;
-    presentation: string,
-    category: string,
-    price: number,
-    plan_type: string,
-    entered_by: string
-    tarrif_type: string,
-    created_at: string,
+
+type FormModel = {
+    input: string
+    select: string
+    multipleSelect: string[]
+    date: Date | null
+    time: Date | null
+    singleCheckbox: boolean
+    multipleCheckbox: Array<string | number>
+    radio: string
+    switcher: boolean
+    segment: string[];
+    upload: File[];
 }
+
+const sex = [
+    { value: "M", label: "Male", color: '#5243AA' },
+    { value: "F", label: "Female", color: '#0052CC' },
+]
+
+const validationSchema = Yup.object().shape({
+    policy_id: Yup.string().required('Policy ID Required'),
+    surname: Yup.string().required('Enrollee Surname Required'),
+    other_names: Yup.string().required('Enrollee Other Names Required'),
+    dob: Yup.date().required('Date of Birth Reqired'),
+    sex: Yup.string().required('Sex of Enrollee Required'),
+    provider_id: Yup.string().required('Please specify the provider ID'),
+    provider_name: Yup.string().required('Please specify the provider Name'),
+})
 
 const CreateNHIAEnrollee = () => {
 
-    const { getAllAndSearchNhiaDrugTarrifAuth } = useNhia()
-    const navigate = useNavigate()
-    const [data, setData] = useState([])
-    const [loading, setLoading] = useState(false)
-    const [selectedRows, setSelectedRows] = useState<string[]>([])
-    const [message, setMessage] = useState('')
-    const [tableData, setTableData] = useState<{
-        pageIndex: number
-        pageSize: number
-        sort: {
-            order: '' | 'asc' | 'desc'
-            key: string | number;
-        };
-        query: string
-        total: number
-    }>({
-        total: 0,
-        pageIndex: 1,
-        pageSize: 10,
-        query: '',
-        sort: {
-            order: 'asc',
-            key: '',
-        },
-    })
+    const { useCreateNhiaEnrolleeAuth } = useEnrollee()
+    const { useHealthCheckAuth } = useHealthCheck()
 
-    const inputRef = useRef(null)
+    function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
+        toast.push(
+            <Notification
+                title={notificationType.toString()}
+                type={notificationType}>
 
-    const debounceFn = debounce(handleDebounceFn, 500)
-
-    const dropdownItems = [
-        { key: 'view', name: 'View' },
-        { key: 'edit', name: 'Edit' },
-        { key: 'status', name: 'Set Status' },
-    ]
-
-    const [editDialog, setEditDialog] = useState(false)
-    const [viewDialog, setViewDialog] = useState(false)
-    const [statusDialog, setStatusDialog] = useState(false)
-
-    const onDropdownClick = (e: SyntheticEvent) => {
-        console.log('Dropdown Clicked', e)
+                {msg}
+            </Notification>, {
+            placement: 'top-center'
+        })
     }
 
-    const onDropdownItemClick = (eventKey: string, e: SyntheticEvent) => {
-        console.log('Dropdown Item Clicked', eventKey, e)
-    }
+    const onCreateEnrollee = async (values: any,
+        setSubmitting?: (isSubmitting: boolean) => void,
+        resetForm?: () => void
+    ) => {
 
-    function handleDebounceFn(val: string) {
-        if (typeof val === 'string' && (val.length > 1 || val.length === 0)) {
-            setTableData((prevData) => ({
-                ...prevData,
-                ...{ query: val, pageIndex: 1 },
-            }))
-        }
-    }
-
-    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-        debounceFn(e.target.value)
-    }
-
-    const handleAction = async (cellProps: CellContext<NhiaServiceTarrif, unknown>, key: any) => {
-
-        switch (key) {
-            case 'view':
-                setProvider(
-                    {
-                        id: cellProps.row.original.id,
-                        email: cellProps.row.original.email,
-                        address: cellProps.row.original.address,
-                        phone_number: cellProps.row.original.phone_number,
-                        medical_director_name: cellProps.row.original.medical_director_name,
-                        medical_director_phone_no: cellProps.row.original.medical_director_phone_no,
-                        modified_by: cellProps.row.original.modified_by,
-                        created_at: cellProps.row.original.created_at,
-                        modified_at: cellProps.row.original.modified_at,
-                        name: cellProps.row.original.name,
-                        state: cellProps.row.original.state,
-                        code: cellProps.row.original.code,
-                        user_id: cellProps.row.original.user_id,
-                        entered_by: cellProps.row.original.entered_by
-                    }
-                )
-
-                setViewDialog(true)
-                break;
-            case 'edit':
-
-                setEditProvider(
-                    {
-                        id: cellProps.row.original.id,
-                        email: cellProps.row.original.email,
-                        address: cellProps.row.original.address,
-                        phone_number: cellProps.row.original.phone_number,
-                        medical_director_name: cellProps.row.original.medical_director_name,
-                        medical_director_phone_no: cellProps.row.original.medical_director_phone_no,
-                        modified_by: cellProps.row.original.modified_by,
-                        created_at: cellProps.row.original.created_at,
-                        modified_at: cellProps.row.original.modified_at,
-                        name: cellProps.row.original.name,
-                        state: cellProps.row.original.state,
-                        code: cellProps.row.original.code,
-                        user_id: cellProps.row.original.user_id,
-                        entered_by: cellProps.row.original.entered_by
-                    }
-                )
-                setEditDialog(true)
-                break;
-            case 'status':
-                setProviderStatus(
-                    {
-                        id: cellProps.row.original.id,
-                        is_active: cellProps.row.original.is_active,
-                        name: cellProps.row.original.name,
-                        user_id: cellProps.row.original.user_id,
-
-                    }
-                )
-                setStatusDialog(true)
-                break;
-            // ... more cases
-            default:
-            // Code to execute if expression doesn't match any case
-        }
-    }
-
-    const handleBatchAction = () => {
-        console.log('selectedRows', selectedRows)
-    }
-
-    const ActionColumn = ({ row }: { row: NhiaServiceTarrif }) => {
-        // const dispatch = useAppDispatch()
-        const { textTheme } = useThemeClass()
-        const navigate = useNavigate()
-
-        const onEdit = () => {
-            navigate(`/app/sales/product-edit/${row.id}`)
+        if (setSubmitting !== undefined) {
+            setSubmitting(true)
         }
 
-        const onDelete = () => {
-            // dispatch(toggleDeleteConfirmation(true))
-            // dispatch(setSelectedProduct(row.id))
-        }
+        const { getItem } = useLocalStorage()
 
-        return (
-            <div className="flex justify-end text-lg">
-                <span
-                    className={`cursor-pointer p-2 hover:${textTheme}`}
-                    onClick={onEdit}
-                >
-                    <HiOutlinePencil />
-                </span>
-                <span
-                    className="cursor-pointer p-2 hover:text-red-500"
-                    onClick={onDelete}
-                >
-                    <HiOutlineTrash />
-                </span>
-            </div>
-        )
-    }
+        values.user_id = getItem("user")
 
-    const columns: ColumnDef<NhiaServiceTarrif>[] = useMemo(() => (
-        [
-            {
-                header: 'Name',
-                accessorKey: 'name_of_drug',
-            },
-            {
-                header: 'Dosage Form',
-                accessorKey: 'dosage_form',
-            },
-            {
-                header: 'Code',
-                accessorKey: 'nhia_code',
-            },
-            {
-                header: 'Drug Strength',
-                accessorKey: 'strength',
-            },
-            {
-                header: 'Drug Presentation',
-                accessorKey: 'presentation',
-            },
-            {
-                header: 'Price',
-                accessorKey: 'price',
-            },
-            {
-                header: 'Entered by',
-                accessorKey: 'entered_by',
-            },
-            {
-                header: '',
-                id: 'action',
-                cell: (props) => <>
-                    <ActionColumn row={props.row.original} />
-                </>
+        const data = await useCreateNhiaEnrolleeAuth(values)
+
+        if (data?.status === 'success') {
+
+            openNotification(data.message, 'success')
+
+            if (setSubmitting !== undefined) {
+                setSubmitting(true)
             }
 
-        ]
-    ), [])
+            if (resetForm !== undefined) {
+                resetForm()
+            }
 
-    const handlePaginationChange = (pageIndex: number) => {
-        setTableData((prevData) => ({ ...prevData, ...{ pageIndex } }))
+        }
+
+        if (data?.status === 'failed') {
+            openNotification(data.message, 'danger')
+
+            if (setSubmitting !== undefined) {
+                setSubmitting(false)
+            }
+        }
+
     }
 
-    const handleSelectChange = (pageSize: number) => {
-        setTableData((prevData) => ({ ...prevData, ...{ pageSize } }))
-    }
+    const beforeUpload = (files: FileList | null, fileList: File[]) => {
+        let valid: string | boolean = true
 
-    const handleSort = ({ order, key }: OnSortParam) => {
-        setTableData((prevData) => ({
-            ...prevData,
-            ...{ sort: { order, key } },
-        }))
-    }
+        const allowedFileType = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']
 
-    const handleRowSelect = (checked: boolean, row: NhiaServiceTarrif) => {
-        console.log('row', row)
-        if (checked) {
-            setSelectedRows((prevData) => {
-                if (!prevData.includes(row.name)) {
-                    return [...prevData, ...[row.name]]
+        if (files) {
+            for (const f of files) {
+                if (!allowedFileType.includes(f.type)) {
+                    valid = 'Please upload a .xlsx or .xls file!'
                 }
-                return prevData
-            })
-        } else {
-            setSelectedRows((prevData) => {
-                if (prevData.includes(row.name)) {
-                    return prevData.filter((id) => id !== row.name)
+            }
+        }
+        return valid
+    }
+
+    const handleFileUpload = async (file: File[], fileList: File[]) => {
+        try {
+
+            if (!file[0]) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const data = e.target?.result;
+                if (data) {
+                    const workbook = XLSX.read(data, { type: 'binary' });
+                    const sheetName = workbook.SheetNames[0];
+                    const sheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+                    const BATCH_SIZE = 10;
+                    let response;
+
+                    for (let i = 0; i < jsonData.length; i += BATCH_SIZE) {
+                        const batch = jsonData.slice(i, i + BATCH_SIZE);
+                        response = await Promise.all(batch.map((item: any) => useCreateNhiaEnrolleeAuth(item)));
+                        console.log(response)
+                        openNotification(`uploading batch ${i / BATCH_SIZE + 1}`, 'info')
+                    }
+
                 }
-                return prevData
-            })
-        }
-    }
+            };
+            reader.readAsBinaryString(file[0]);
 
-    const handleAllRowSelect = (checked: boolean, rows: Row<NhiaServiceTarrif>[]) => {
-        console.log('rows', rows)
-        if (checked) {
-            const originalRows = rows.map((row) => row.original)
-            const selectedIds: string[] = []
-            originalRows.forEach((row) => {
-                selectedIds.push(row.name)
-            })
-            setSelectedRows(selectedIds)
-        } else {
-            setSelectedRows([])
-        }
-    }
+        } catch (error: any) {
 
-    const updateProvider = async (data: any) => {
-        const result = await useEditProviderById(data)
-
-        setMessage(result.message)
-
-        if (result.message) {
-            setTimeout(() => {
-                openNotification()
-            },
-                3000
-            )
-
+            openNotification(error?.response?.data?.message || error.toString(), 'danger')
         }
 
-
-    }
-
-    const toastNotification = (
-        <Notification title="Message">
-            {message}
-        </Notification>
-    )
-
-    function openNotification() {
-        toast.push(toastNotification)
-    }
-
-    async function updateProviderStatus(providerId: string, data: any) {
-
-        let status;
-
-        if (data.is_active) {
-            status = false
-        } else {
-            status = true
-        }
-
-        data.is_active = status;
-
-        const response = await useUpdateProviderActivationStatus(providerId, data)
-
-        if (response) {
-            setStatusDialog(false)
-            window.location.reload();
-        }
-
-    }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
-            setLoading(true)
-            const response = await getAllAndSearchNhiaDrugTarrifAuth(tableData)
 
-            if (response?.status === 'success') {
-                setData(response.data)
-                setLoading(false)
-                setTableData((prevData) => ({
-                    ...prevData,
-                    ...{ total: response.total[0]['count(*)'] },
-                }))
-            }
+            await useHealthCheckAuth()
+
         }
         fetchData()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-
-    }, [tableData.pageIndex, tableData.sort, tableData.pageSize, tableData.query, tableData.total])
-
-
-
+    }, [])
 
     return (
-        <>
-
-            <div className="lg:flex items-center justify-between mb-4 flex flex-col lg:flex-row lg:items-center">
-                <h3 className="mb-4 lg:mb-0">NHIA Drug Tarrif</h3>
-
-                <div className="flex justify-end mb-4 items-center">
-                    {/* search */}
-                    <Input
-                        ref={inputRef}
-                        placeholder="Search..."
-                        size="sm"
-                        prefix={<HiOutlineSearch className="text-lg" />}
-                        className="lg:w-52 mx-3"
-                        onChange={handleChange}
-                    />
-
-                    {/* Add Nhia drug tarrif btn */}
-                    <div>
-                        <Button
-                            className="mr-2"
-                            variant="solid"
-                            onClick={() => navigate('/nhia/tarrif/drugs/create')}
-                            icon={<HiPlus />}
-                        >
-                            <span>Add NHIA Drug Tarrif</span>
-                        </Button>
-                    </div>
-
-                    {/* batch action */}
-                    {selectedRows.length > 0 && (
-                        <Button
-                            size="sm"
-                            variant="solid"
-                            onClick={handleBatchAction}
-                        >
-                            Batch Action
-                        </Button>
-                    )}
-                </div>
+        <div>
+            <div className='my-5'>
+                <Upload
+                    beforeUpload={beforeUpload}
+                    onChange={handleFileUpload}
+                >
+                    <Button variant="solid" icon={<HiCloudUpload />}>
+                        Upload your file
+                    </Button>
+                </Upload>
             </div>
 
-            <DataTable<NhiaServiceTarrif>
-                selectable
-                columns={columns}
-                data={data}
-                loading={loading}
-                pagingData={tableData}
-                onPaginationChange={handlePaginationChange}
-                onSelectChange={handleSelectChange}
-                onSort={handleSort}
-                onCheckBoxChange={handleRowSelect}
-                onIndeterminateCheckBoxChange={handleAllRowSelect}
-            />
+            <Card
+                header="Add NHIA Enrollee"
+            >
+                <p>
+                    When adding NHIA Enrollee, ensure that all fields are completed with the accurate information. Ensure that the you click on <b>Add NHIA Enrollee</b> when done.
+                </p>
+            </Card>
 
-        </>
+            <div
+                className='pt-5'>
+                <Formik
+                    enableReinitialize
+                    initialValues={{
+
+                        policy_id: '',
+                        surname: '',
+                        other_names: '',
+                        relationship: '',
+                        dob: null,
+                        company_id: '',
+                        sex: '',
+                        provider_Address: '',
+                        provider_id: '',
+                        provider_name: ''
+
+                    }}
+                    validationSchema={validationSchema}
+
+                    onSubmit={(values, { setSubmitting, resetForm }) => {
+                        onCreateEnrollee(values, setSubmitting, resetForm)
+                        // alert(JSON.stringify(values, null, 2))
+                    }}
+                >
+                    {({ values, touched, errors, isSubmitting }) => (
+                        <Form>
+                            <FormContainer>
+
+                                {/* Policy ID */}
+                                <FormItem
+                                    asterisk
+                                    label="Policy ID"
+                                    invalid={errors.policy_id && touched.policy_id}
+                                    errorMessage={errors.policy_id}
+                                >
+                                    <Field
+                                        type="text"
+                                        autoComplete="off"
+                                        name="policy_id"
+                                        placeholder="Policy ID eg: 123456"
+                                        component={Input}
+                                    />
+                                </FormItem>
+
+                                {/* Surname */}
+                                <FormItem
+                                    asterisk
+                                    label="Surname"
+                                    invalid={errors.surname && touched.surname}
+                                    errorMessage={errors.surname}
+                                >
+                                    <Field
+                                        type="text"
+                                        autoComplete="off"
+                                        name="surname"
+                                        placeholder="surname"
+                                        component={Input}
+                                    />
+                                </FormItem>
+
+                                {/* other_names */}
+                                <FormItem
+                                    asterisk
+                                    label="Other Names"
+                                    invalid={errors.other_names && touched.other_names}
+                                    errorMessage={errors.other_names}
+                                >
+                                    <Field
+                                        type="text"
+                                        autoComplete="off"
+                                        name="other_names"
+                                        placeholder="Other Names"
+                                        component={Input}
+                                    />
+                                </FormItem>
+
+                                {/* relationship */}
+                                <FormItem
+                                    label="relationship"
+                                    invalid={errors.relationship && touched.relationship}
+                                    errorMessage={errors.relationship}
+                                >
+                                    <Field
+                                        type="text"
+                                        autoComplete="off"
+                                        name="relationship"
+                                        placeholder="Relationship eg: Principal, Spouse etc."
+                                        component={Input}
+                                    />
+                                </FormItem>
+
+                                {/* dob */}
+                                <FormItem
+                                    asterisk
+                                    label="Date of Birth"
+                                    invalid={errors.dob && touched.dob}
+                                    errorMessage={errors.dob}
+                                >
+                                    <Field
+
+                                        name="dob">
+                                        {({ field, form }: FieldProps<FormModel>) => (
+                                            <DatePicker
+                                                field={field}
+                                                form={form}
+                                                value={values.dob}
+                                                placeholder="Pick a date"
+                                                onChange={(date) => {
+                                                    form.setFieldValue(
+                                                        field.name,
+                                                        date
+                                                    )
+                                                }}
+                                            />
+                                        )}
+                                    </Field>
+                                </FormItem>
+
+                                {/* company_id */}
+                                <FormItem
+                                    label="Company ID"
+                                    invalid={errors.company_id && touched.company_id}
+                                    errorMessage={errors.company_id}
+                                >
+                                    <Field
+                                        type="text"
+                                        autoComplete="off"
+                                        name="company_id"
+                                        placeholder="Company ID eg: KN/0082/P"
+                                        component={Input}
+                                    />
+                                </FormItem>
+
+                                {/* sex */}
+                                <FormItem
+                                    asterisk
+                                    label="sex"
+                                    invalid={errors.sex && touched.sex}
+                                    errorMessage={errors.sex}
+                                >
+                                    <Field
+                                        name="sex">
+                                        {({ field, form }: FieldProps<FormModel>) => (
+
+                                            <Select
+                                                options={sex}
+                                                placeholder={"Select Enrollee Sex"}
+                                                value={sex.filter((item) =>
+                                                    item.value === values.sex
+                                                )}
+                                                onChange={(data) => {
+                                                    form.setFieldValue(
+                                                        field.name,
+                                                        data?.value
+                                                    )
+                                                }}
+                                            />
+                                        )}
+                                    </Field>
+                                </FormItem>
+
+                                {/* provider_Address */}
+                                <FormItem
+                                    label="Provider Address"
+                                    invalid={errors.provider_Address && touched.provider_Address}
+                                    errorMessage={errors.provider_Address}
+                                >
+                                    <Field
+                                        type="text"
+                                        autoComplete="off"
+                                        name="provider_Address"
+                                        placeholder="Provider Address"
+                                        component={Input}
+                                    />
+                                </FormItem>
+
+                                {/* provider_id */}
+                                <FormItem
+                                    asterisk
+                                    label="Provider ID"
+                                    invalid={errors.provider_id && touched.provider_id}
+                                    errorMessage={errors.provider_id}
+                                >
+                                    <Field
+                                        type="text"
+                                        autoComplete="off"
+                                        name="provider_id"
+                                        placeholder="Provider ID eg. KN/0199/P"
+                                        component={Input}
+                                    />
+                                </FormItem>
+
+                                {/* provider_name */}
+                                <FormItem
+                                    asterisk
+                                    label="Provider Name"
+                                    invalid={errors.provider_name && touched.provider_name}
+                                    errorMessage={errors.provider_name}
+                                >
+                                    <Field
+                                        type="text"
+                                        autoComplete="off"
+                                        name="provider_name"
+                                        placeholder="Provider Name"
+                                        component={Input}
+                                    />
+                                </FormItem>
+
+                                <FormItem>
+                                    <Button variant="solid" type="submit"
+                                        loading={isSubmitting}>
+                                        {isSubmitting ?
+                                            "Saving..."
+                                            :
+                                            "Add NHIA Enrollee"
+                                        }
+
+                                    </Button>
+                                </FormItem>
+                            </FormContainer>
+                        </Form>
+                    )}
+                </Formik>
+            </div>
+        </div>
+
     )
 }
+
 export default CreateNHIAEnrollee

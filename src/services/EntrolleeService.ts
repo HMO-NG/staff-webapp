@@ -24,3 +24,15 @@ export async function getAllAndSearchNhiaEnrolleeService(data: any) {
         data
     })
 }
+
+export async function getAllNhiaEnrolleeService(data: any) {
+    return ApiService.fetchData<{
+        message: string,
+        data: any,
+        total: number
+    }>({
+        url: '/nhis/enrollee/get',
+        method: 'post',
+        data
+    })
+}

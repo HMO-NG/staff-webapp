@@ -1,5 +1,5 @@
 import Card from '@/components/ui/Card'
-import { HiCheckCircle } from 'react-icons/hi'
+import { HiCheckCircle, HiCloudUpload } from 'react-icons/hi'
 import { NigerianState } from '@/data/NigerianStates'
 import { FormItem, FormContainer } from '@/components/ui/Form'
 import Input from '@/components/ui/Input'
@@ -12,6 +12,10 @@ import * as Yup from 'yup'
 import type { FieldProps } from 'formik'
 import useProvider from '@/utils/customAuth/useProviderAuth'
 import { useLocalStorage } from '@/utils/localStorage'
+import Upload from '@/components/ui/Upload'
+import * as XLSX from 'xlsx'
+import Notification from '@/components/ui/Notification'
+import toast from '@/components/ui/toast'
 
 type FormModel = {
     input: string
@@ -51,7 +55,19 @@ const CreateProvider = () => {
     const [errorMessage, setErrorMessage] = useTimeOutMessage()
     const [successMessage, setSuccessMessage] = useTimeOutMessage()
 
-    const { useCreateProvider } = useProvider()
+    const { useCreateProvider, useCreateNHIAProviderAuth } = useProvider()
+
+    function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
+        toast.push(
+            <Notification
+                title={notificationType.toString()}
+                type={notificationType}>
+
+                {msg}
+            </Notification>, {
+            placement: 'top-center'
+        })
+    }
 
     const onCreateProvider = async (values: any,
         setSubmitting: (isSubmitting: boolean) => void,
@@ -78,6 +94,56 @@ const CreateProvider = () => {
 
     }
 
+    const beforeUpload = (files: FileList | null, fileList: File[]) => {
+        let valid: string | boolean = true
+
+        const allowedFileType = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']
+
+        if (files) {
+            for (const f of files) {
+                if (!allowedFileType.includes(f.type)) {
+                    valid = 'Please upload a .xlsx or .xls file!'
+                }
+            }
+        }
+        return valid
+    }
+
+    const handleFileUpload = async (file: File[], fileList: File[]) => {
+        try {
+
+            if (!file[0]) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const data = e.target?.result;
+                if (data) {
+                    const workbook = XLSX.read(data, { type: 'binary' });
+                    const sheetName = workbook.SheetNames[0];
+                    const sheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+                    const BATCH_SIZE = 10;
+                    let response;
+
+                    for (let i = 0; i < jsonData.length; i += BATCH_SIZE) {
+                        const batch = jsonData.slice(i, i + BATCH_SIZE);
+                        response = await Promise.all(batch.map((item: any) => useCreateNHIAProviderAuth(item)));
+                        console.log(response)
+                        openNotification(`uploading batch ${i / BATCH_SIZE + 1}`, 'info')
+                    }
+
+                }
+            };
+            reader.readAsBinaryString(file[0]);
+
+        } catch (error: any) {
+
+            openNotification(error?.response?.data?.message || error.toString(), 'danger')
+        }
+
+    };
+
     return (
         <div>
             {errorMessage && (
@@ -97,6 +163,16 @@ const CreateProvider = () => {
                     </Alert>
                 )
             }
+            <div className='my-5'>
+                <Upload
+                    beforeUpload={beforeUpload}
+                    onChange={handleFileUpload}
+                >
+                    <Button variant="solid" icon={<HiCloudUpload />}>
+                        Bulk Upload for NHIA Providers
+                    </Button>
+                </Upload>
+            </div>
             <Card
                 header="Add Providers"
             >

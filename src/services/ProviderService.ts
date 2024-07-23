@@ -65,3 +65,28 @@ export async function updateProviderActivationStatus(id: string, data: any) {
         data
     })
 }
+// ---NHIA PROVIDERS ---
+
+//  create NHIA provider
+export async function createNHIAProviderService(data: any) {
+    return ApiService.fetchData<{
+        message: string,
+        data: any,
+    }>({
+        url: '/provider/nhia/create',
+        method: 'post',
+        data
+    })
+}
+
+// search NHIA providers by HCP ID
+export async function searchNHIAProviderByHCPIDService(data: any) {
+    return ApiService.fetchData<{
+        message: string,
+        data: any,
+    }>({
+        url: '/provider/nhia/get',
+        method: 'post',
+        data
+    })
+}

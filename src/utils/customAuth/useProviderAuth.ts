@@ -3,9 +3,23 @@ import {
     getProviderByID,
     getAllProvider,
     editProviderByID,
-    updateProviderActivationStatus
+    updateProviderActivationStatus,
+    createNHIAProviderService,
+    searchNHIAProviderByHCPIDService
 } from "@/services/ProviderService";
 import { string } from "yup";
+
+type Status = 'success' | 'failed'
+
+export type NHIAProviderType = {
+    // value as id
+    value: string,
+    // label as name
+    label: string,
+    hcp_id: string,
+    is_active: string,
+    created_by: string
+}
 
 function useProvider() {
 
@@ -73,12 +87,71 @@ function useProvider() {
         }
     }
 
+    // ---NHIA PROVIDER ---
+    const useCreateNHIAProviderAuth = async (data: any): Promise<{
+        data?: string,
+        message: string,
+        status: Status
+    }> => {
+        try {
+            const response = await createNHIAProviderService(data)
+
+            return {
+                data: response.data.data,
+                message: response.data.message,
+                status: 'success'
+            }
+
+        } catch (error: any) {
+
+            return {
+                status: 'failed',
+                message: error?.response?.data?.message || error.toString(),
+            }
+
+        }
+    }
+
+    const useSearchNHIAProviderByHCPIDAuth = async (data: any): Promise<{
+        data?: NHIAProviderType[],
+        message: string,
+        status: Status
+    }> => {
+        try {
+            const response = await searchNHIAProviderByHCPIDService({"hcpId":data})
+
+            return {
+                data: response.data.data.map((i: any) => {
+                    return {
+                        label: i.name,
+                        value: i.id,
+                        hcp_id: i.hcp_id,
+                        is_active: i.is_active,
+                        created_by: i.created_by
+                    }
+                }),
+                message: response.data.message,
+                status: 'success'
+            }
+
+        } catch (error: any) {
+
+            return {
+                status: 'failed',
+                message: error?.response?.data?.message || error.toString(),
+            }
+
+        }
+    }
+
     return {
         useCreateProvider,
         useGetAllProvider,
         useGetProviderByID,
         useEditProviderById,
-        useUpdateProviderActivationStatus
+        useUpdateProviderActivationStatus,
+        useCreateNHIAProviderAuth,
+        useSearchNHIAProviderByHCPIDAuth
     }
 }
 export default useProvider

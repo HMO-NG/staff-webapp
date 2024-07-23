@@ -137,8 +137,8 @@ const navigationConfig: NavigationTree[] = [
                 subMenu: [
                     // create nhia enrollees
                     {
-                        key: 'nhia.enrollee.create',
-                        path: 'nhia/enrollee/create',
+                        key: 'nhia.enrollee.view',
+                        path: 'nhia/enrollee/view',
                         title: 'View NHIA Enrollees',
                         translateKey: 'nhia.enrollee.create',
                         icon: 'groupCollapseMenu',
@@ -202,8 +202,8 @@ const navigationConfig: NavigationTree[] = [
                 authority: [],
                 subMenu: [
                     {
-                        key: 'nhia.claim.create',
-                        path: 'nhia/claim/create',
+                        key: 'nhia.claims.create',
+                        path: 'nhia/claims/create',
                         title: 'Create Claims',
                         translateKey: 'nhia.claim.create',
                         icon: 'groupCollapseMenu',

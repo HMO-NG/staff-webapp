@@ -148,6 +148,13 @@ export const protectedRoutes = [
         component: lazy(() => import('@/views/enrollee/CreateNHIAEnrollee')),
         authority: [],
     },
+    // create nhia claims
+    {
+        key: 'nhia.claims.create',
+        path: 'nhia/claims/create',
+        component: lazy(() => import('@/views/nhis/CreateClaims')),
+        authority: [],
+    },
     /** Example purpose only, please remove */
     {
         key: 'collapseMenu.item1',
