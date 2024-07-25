@@ -1,4 +1,4 @@
-import React, { Component, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import useEnrollee from '@/utils/customAuth/useEnrolleeAuth'
 import debounce from 'lodash/debounce'
 import Select from '@/components/ui/Select'
@@ -8,13 +8,15 @@ import Spinner from '@/components/ui/Spinner'
 import Avatar from '@/components/ui/Avatar'
 import { HiOutlineUser } from 'react-icons/hi'
 import useHealthCheck from '@/utils/customAuth/useHealthCheckerAuth'
-import type { FieldProps } from 'formik'
+import { Field, FieldArray, Form, Formik, getIn, FieldProps } from 'formik'
 import * as Yup from 'yup'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
-import { Field, Form, Formik } from 'formik'
 import { FormItem, FormContainer } from '@/components/ui/Form'
 import useProvider, { NHIAProviderType } from '@/utils/customAuth/useProviderAuth';
+import DatePicker from '@/components/ui/DatePicker'
+import type { FormikProps } from 'formik'
+
 
 type NHIAEnrollee = {
     // value as id
@@ -35,7 +37,6 @@ type NHIAEnrollee = {
 }
 
 
-
 type FormModel = {
     input: string
     select: string
@@ -52,26 +53,34 @@ type FormModel = {
 
 const validationSchema = Yup.object().shape({
     referring_hcf: Yup.string().required('Referring HCF name Required'),
-    // recieving_hcf: Yup.string().required('Recieving HCF name Required'),
-    // referral_code: Yup.string().required('Referral code required'),
-    // approval_date: Yup.string().required('Please specify the approval date'),
-    // date_hmo_recieved_claim: Yup.string().required('Please specify the date HMO recieved claim'),
-    // diagnosis: Yup.string().required('Please specify the diagnosis'),
-    // items: Yup.,
-    // amount_claimed: Yup.string().required('Please specify the amount claimed'),
-    // amount_agreed: Yup.string().required('Please specify the amount agreed'),
-    // amount_paid: Yup.string().required('Please specify the amount required'),
-    // remarks: Yup.string().required(''),
+    recieving_hcf: Yup.string().required('Recieving HCF name Required'),
+    referral_code: Yup.string().required('Referral code required'),
+    approval_date: Yup.date().required('Please specify the approval date'),
+    date_hmo_recieved_claim: Yup.date().required('Please specify the date HMO recieved claim'),
+    diagnosis: Yup.string().required('Please specify the diagnosis'),
+    items: Yup.array().of(
+        Yup.object().shape({
+            service_name: Yup.string().required('Benefit Required'),
+            amount: Yup.string().required('Limit Type Required'),
+            qty: Yup.number().required("Limit Required"),
+            amount_claimed: Yup.number().required("Limit Required"),
+            amount_agreed: Yup.number().required("Limit Required"),
+            amount_paid: Yup.number().required("Limit Required"),
+            remark: Yup.number().required("Limit Required"),
+        })
+    ),
 })
 const CreateClaims = () => {
 
     const [selectedValue, setSelectedValue] = useState<NHIAEnrollee>()
     const [search, setSearch] = useState<string | undefined>(undefined)
-    const [searchProvider, setSearchProvider] = useState<string | undefined>(undefined)
+    const [searchReferringHCF, setSearchReferringHCF] = useState<string | undefined>(undefined)
+    const [searchrecievingHCF, setSearchRecievingHCF] = useState<string | undefined>(undefined)
     const [data, setData] = useState<NHIAEnrollee[]>([])
-    const [providerData, setProviderData] = useState<NHIAProviderType[]>([])
+    const [referringHCFData, setReferringHCFData] = useState<NHIAProviderType[]>([])
+    const [recievingHCFData, setRecievingHCFData] = useState<NHIAProviderType[]>([])
+    
     const [loading, setLoading] = useState<boolean>(false)
-
     const { useGetAllNhiaEnrolleeAuth } = useEnrollee()
     const { useHealthCheckAuth } = useHealthCheck()
     const { useSearchNHIAProviderByHCPIDAuth } = useProvider()
@@ -79,6 +88,7 @@ const CreateClaims = () => {
 
     const debounceFn = debounce(handleDebounceFn, 500)
     const providerDebounceFn = debounce(getProviderDebounceFn, 500)
+    const receivingDebFn = debounce(recievingHCFDebounceFn, 500)
 
     function handleDebounceFn(val: string) {
         if (typeof val === 'string' && (val.length > 1 || val.length === 0)) {
@@ -88,7 +98,22 @@ const CreateClaims = () => {
 
     function getProviderDebounceFn(val: string) {
         if (typeof val === 'string' && (val.length > 1 || val.length === 0)) {
-            setSearchProvider(val)
+            setSearchReferringHCF(val)
+        }
+    }
+
+    function recievingHCFDebounceFn(val: string) {
+        if (typeof val === 'string' && (val.length > 1 || val.length === 0)) {
+            setSearchRecievingHCF(val)
+        }
+    }
+
+    const fieldFeedback = (form: FormikProps<FormModel>, name: string) => {
+        const error = getIn(form.errors, name)
+        const touch = getIn(form.touched, name)
+        return {
+            errorMessage: error || '',
+            invalid: typeof touch === 'undefined' ? false : error && touch,
         }
     }
 
@@ -112,21 +137,37 @@ const CreateClaims = () => {
         );
     };
 
-    const handleInputChange = (newValue) => {
+    const handleInputChange = (newValue: string) => {
         const inputValue = newValue.replace(/\W/g, '')
         debounceFn(inputValue)
     }
 
-    const getProviderHandleInput = (newValue) => {
+    const getProviderHandleInput = (newValue: string) => {
         const inputValue = newValue.replace(/\W/g, '')
         providerDebounceFn(inputValue)
+    }
+
+    const getRecievingHCFInput = (newValue: string) => {
+        const inputValue = newValue.replace(/\W/g, '')
+        receivingDebFn(inputValue)
+    }
+
+    const onCreateClaims = (values: any, setSubmitting?: (isSubmitting: boolean) => void, resetForm?: () => void) => {
+
+        values.nhia_enrollee_name = `${selectedValue?.surname} ${selectedValue?.other_names}`
+        values.nhia_enrollee_id = `${selectedValue?.label}`
+
+        alert(JSON.stringify(values, null, 2))
+
+        if (setSubmitting !== undefined) {
+            setSubmitting(false)
+        }
     }
 
     useEffect(() => {
         const fetchData = async () => {
 
             await useHealthCheckAuth()
-
 
             if (search !== undefined) {
                 setLoading(true)
@@ -142,14 +183,14 @@ const CreateClaims = () => {
                 }
             }
 
-            if (searchProvider !== undefined) {
+            if (searchReferringHCF !== undefined) {
                 setLoading(true)
-                const response = await useSearchNHIAProviderByHCPIDAuth(searchProvider)
+                const response = await useSearchNHIAProviderByHCPIDAuth(searchReferringHCF)
 
 
                 if (response?.status === 'success') {
                     setLoading(false)
-                    setProviderData(response.data!)
+                    setReferringHCFData(response.data!)
                 }
 
                 if (response?.status === 'failed') {
@@ -158,10 +199,26 @@ const CreateClaims = () => {
 
             }
 
+            if (searchrecievingHCF !== undefined) {
+                setLoading(true)
+                const recievingResponse = await useSearchNHIAProviderByHCPIDAuth(searchrecievingHCF)
+
+
+                if (recievingResponse?.status === 'success') {
+                    setLoading(false)
+                    setRecievingHCFData(recievingResponse.data!)
+                }
+
+                if (recievingResponse?.status === 'failed') {
+                    setLoading(false)
+                }
+
+            }
+
         }
         fetchData()
-        console.log("provider", providerData)
-    }, [search, searchProvider])
+        console.log("searching on ", searchrecievingHCF)
+    }, [search, searchReferringHCF, searchrecievingHCF])
 
     return (
         <>
@@ -214,202 +271,399 @@ const CreateClaims = () => {
                             enableReinitialize
                             initialValues={{
                                 nhia_enrollee_name: '',
+                                nhia_enrollee_id: '',
                                 referring_hcf: '',
-                                recieving_hcf: ''
+                                recieving_hcf: '',
+                                referral_code: '',
+                                approval_date: null,
+                                date_hmo_recieved_claim: null,
+                                diagnosis: '',
+                                items: [
+                                    {
+                                        service_name: '',
+                                        amount: '',
+                                        qty: '',
+                                        amount_claimed: '',
+                                        amount_agreed: '',
+                                        amount_paid: '',
+                                        remark: '',
+                                    }
+                                ]
                             }}
                             validationSchema={validationSchema}
 
                             onSubmit={(values, { setSubmitting, resetForm }) => {
-                                // onCreateProvider(values, setSubmitting, resetForm)
-
-                                alert(JSON.stringify(values, null, 2))
-                                setSubmitting(false)
+                                onCreateClaims(values, setSubmitting, resetForm)
                             }}
                         >
-                            {({ values, touched, errors, isSubmitting }) => (
-                                <Form>
-                                    <FormContainer>
+                            {({ values, touched, errors, isSubmitting }) => {
+                                const items = values.items
+                                return (
+                                    <Form>
+                                        <FormContainer>
 
-                                        {/* Referring HCF */}
-                                        <FormItem
-                                            asterisk
-                                            label="Referring HCF"
-                                            invalid={errors.referring_hcf && touched.referring_hcf}
-                                            errorMessage={errors.referring_hcf}
-                                        >
+                                            {/* Referring HCF */}
+                                            <FormItem
+                                                asterisk
+                                                label="Referring HCF"
+                                                invalid={errors.referring_hcf && touched.referring_hcf}
+                                                errorMessage={errors.referring_hcf}
+                                            >
 
-                                            <Field
+                                                <Field
 
-                                                name="referring_hcf">
-                                                {({ field, form }: FieldProps<FormModel>) => (
+                                                    name="referring_hcf">
+                                                    {({ field, form }: FieldProps<FormModel>) => (
 
-                                                    <Select
-                                                        onInputChange={(i) => { getProviderHandleInput(i) }}
-                                                        options={providerData}
-                                                        onChange={(k) => {
-                                                            form.setFieldValue(
-                                                                field.name,
-                                                                k?.value
-                                                            )
-                                                            setLoading(false)
+                                                        <Select
+                                                            onInputChange={(i) => { getProviderHandleInput(i) }}
+                                                            options={referringHCFData}
+                                                            onChange={(k) => {
+                                                                form.setFieldValue(
+                                                                    field.name,
+                                                                    k?.label
+                                                                )
+                                                                setLoading(false)
 
-                                                        }}
-                                                        isLoading={loading}
-                                                        value={providerData.filter((item) =>
-                                                            item.value === values.referring_hcf
-                                                        )}
-                                                    />
-                                                )}
-                                            </Field>
+                                                            }}
+                                                            isLoading={loading}
+                                                            value={referringHCFData.filter((item) =>
+                                                                item.label === values.referring_hcf
+                                                            )}
+                                                        />
+                                                    )}
+                                                </Field>
 
-                                            {/* Things of concern */}
-                                            {/* 1. too much api calls - useEffect runs all the time, check others.
+                                                {/*TODO Things of concern*/}
+                                                {/* 1. too much api calls - useEffect runs all the time, check others.
                                             2. the exception i am returning all the time for the Select
 
                                              */}
-                                        </FormItem>
+                                            </FormItem>
 
-                                        {/* nhia code */}
-                                        {/* <FormItem
-                                            asterisk
-                                            label="NHIA Code"
-                                            invalid={errors.nhia_code && touched.nhia_code}
-                                            errorMessage={errors.nhia_code}
-                                        >
-                                            <Field
-                                                type="text"
-                                                autoComplete="off"
-                                                name="nhia_code"
-                                                placeholder="Drug Code eg: NHIS-01-03-01"
-                                                component={Input}
-                                            />
-                                        </FormItem> */}
+                                            {/* Recieving HCF */}
+                                            <FormItem
+                                                asterisk
+                                                label="Recieving HCF"
+                                                invalid={errors.recieving_hcf && touched.recieving_hcf}
+                                                errorMessage={errors.recieving_hcf}
+                                            >
 
-                                        {/* dosage_form */}
-                                        {/* <FormItem
+                                                <Field
 
-                                            asterisk
-                                            label="Dosage"
-                                            invalid={errors.dosage_form && touched.dosage_form}
-                                            errorMessage={errors.dosage_form}
-                                        >
-                                            <Field
-                                                type="text"
-                                                autoComplete="off"
-                                                name="dosage_form"
-                                                placeholder="Dosage eg: Injection, Tablets etc."
-                                                component={Input}
-                                            />
-                                        </FormItem> */}
+                                                    name="recieving_hcf">
+                                                    {({ field, form }: FieldProps<FormModel>) => (
 
-                                        {/* strength */}
-                                        {/* <FormItem
+                                                        <Select
+                                                            onInputChange={(i) => { getRecievingHCFInput(i) }}
+                                                            options={recievingHCFData}
+                                                            onChange={(k) => {
+                                                                form.setFieldValue(
+                                                                    field.name,
+                                                                    k?.label
+                                                                )
+                                                                setLoading(false)
 
-                                            asterisk
-                                            label="Drug Strength"
-                                            invalid={errors.strength && touched.strength}
-                                            errorMessage={errors.strength}
-                                        >
-                                            <Field
-                                                type="text"
-                                                autoComplete="off"
-                                                name="strength"
-                                                placeholder="Drug Strengths eg: 0.5mg/amp, 5mg/ml in 2 ml etc."
-                                                component={Input}
-                                            />
-                                        </FormItem> */}
+                                                            }}
+                                                            isLoading={loading}
+                                                            value={recievingHCFData.filter((item) =>
+                                                                item.label === values.recieving_hcf
+                                                            )}
+                                                        />
+                                                    )}
+                                                </Field>
 
-                                        {/* presentation */}
-                                        {/* <FormItem
-                                            asterisk
-                                            label="presentation"
-                                            invalid={errors.presentation && touched.presentation}
-                                            errorMessage={errors.presentation}
-                                        >
-                                            <Field
-                                                type="text"
-                                                autoComplete="off"
-                                                name="presentation"
-                                                placeholder="Drug Presentation eg:Amp., Capsule, Tablet etc."
-                                                component={Input}
-                                            />
-                                        </FormItem> */}
+                                                {/* Things of concern */}
+                                                {/* 1. too much api calls - useEffect runs all the time, check others.
+                                            2. the exception i am returning all the time for the Select
 
-                                        {/* category */}
-                                        {/* <FormItem
-                                            asterisk
-                                            label="category"
-                                            invalid={errors.category && touched.category}
-                                            errorMessage={errors.category}
-                                        >
-                                            <Field
-                                                type="text"
-                                                autoComplete="off"
-                                                name="category"
-                                                placeholder="Drug Category eg: Pain relieve"
-                                                component={Input}
-                                            />
-                                        </FormItem> */}
+                                             */}
+                                            </FormItem>
 
-                                        {/* plan_type */}
-                                        {/* <FormItem
-                                            asterisk
-                                            label="Plan Type"
-                                            invalid={errors.plan_type && touched.plan_type}
-                                            errorMessage={errors.plan_type}
-                                        >
-                                            <Field
+                                            {/* Referral code */}
+                                            <FormItem
+                                                asterisk
+                                                label="Referral Code"
+                                                invalid={errors.referral_code && touched.referral_code}
+                                                errorMessage={errors.referral_code}
+                                            >
+                                                <Field
+                                                    type="text"
+                                                    autoComplete="off"
+                                                    name="referral_code"
+                                                    placeholder="Referral Code"
+                                                    component={Input}
+                                                />
+                                            </FormItem>
 
-                                                name="plan_type">
-                                                {({ field, form }: FieldProps<FormModel>) => (
+                                            {/* approval date */}
+                                            <FormItem
+                                                asterisk
+                                                label="Approval Date"
+                                                invalid={errors.approval_date && touched.approval_date}
+                                                errorMessage={errors.approval_date}
+                                            >
+                                                <Field
 
-                                                    <Select
-                                                        options={healthPlan}
-                                                        placeholder={"Select Health Plan Name"}
-                                                        value={healthPlan.filter((item) =>
-                                                            item.value === values.plan_type
-                                                        )}
-                                                        onChange={(data) => {
-                                                            form.setFieldValue(
-                                                                field.name,
-                                                                data?.value
-                                                            )
-                                                        }}
-                                                    />
+                                                    name="approval_date">
+                                                    {({ field, form }: FieldProps<FormModel>) => (
+                                                        <DatePicker
+                                                            field={field}
+                                                            form={form}
+                                                            value={values.approval_date}
+                                                            placeholder="Pick the approval date"
+                                                            onChange={(date) => {
+                                                                form.setFieldValue(
+                                                                    field.name,
+                                                                    date
+                                                                )
+                                                            }}
+                                                        />
+                                                    )}
+                                                </Field>
+                                            </FormItem>
+
+                                            {/* date hmo recieved claim */}
+                                            <FormItem
+                                                asterisk
+                                                label="Date HMO Recieved Claim"
+                                                invalid={errors.date_hmo_recieved_claim && touched.date_hmo_recieved_claim}
+                                                errorMessage={errors.date_hmo_recieved_claim}
+                                            >
+                                                <Field
+
+                                                    name="date_hmo_recieved_claim">
+                                                    {({ field, form }: FieldProps<FormModel>) => (
+                                                        <DatePicker
+                                                            field={field}
+                                                            form={form}
+                                                            value={values.date_hmo_recieved_claim}
+                                                            placeholder="Pick the date hmo recieved claim"
+                                                            onChange={(date) => {
+                                                                form.setFieldValue(
+                                                                    field.name,
+                                                                    date
+                                                                )
+                                                            }}
+                                                        />
+                                                    )}
+                                                </Field>
+                                            </FormItem>
+
+                                            {/* diagnosis */}
+                                            <FormItem
+                                                asterisk
+                                                label="Diagnosis"
+                                                invalid={errors.diagnosis && touched.diagnosis}
+                                                errorMessage={errors.diagnosis}
+                                            >
+                                                <Field
+
+                                                    name="diagnosis">
+                                                    {({ field, form }: FieldProps<FormModel>) => (
+                                                        <Input
+                                                            field={field}
+                                                            form={form}
+                                                            placeholder="Text area example" textArea
+                                                        />
+
+                                                    )}
+                                                </Field>
+                                            </FormItem>
+
+                                            {/* Array */}
+                                            <FieldArray
+                                                name="items">
+                                                {({ form, remove, push }) => (
+                                                    <div>
+                                                        {items && items.length > 0
+                                                            ? items.map((_, index) => {
+                                                                const serviceNameFeedBack =
+                                                                    fieldFeedback(
+                                                                        form,
+                                                                        `items[${index}].service_name`
+                                                                    )
+                                                                const amountFeedBack =
+                                                                    fieldFeedback(
+                                                                        form,
+                                                                        `items[${index}].amount`
+                                                                    )
+                                                                const qtyFeedBack =
+                                                                fieldFeedback(form,
+                                                                    `items[${index}].qty`)
+
+                                                                const amountClaimedFeedBack =
+                                                                fieldFeedback(form,
+                                                                    `items[${index}].amount_claimed`)
+
+                                                                const amountAgreedFeedBack =
+                                                                fieldFeedback(form,
+                                                                    `items[${index}].amount_agreed`)
+
+                                                                const amountPaidFeedBack =
+                                                                fieldFeedback(form,
+                                                                    `items[${index}].amount_paid`)
+
+                                                                return (
+                                                                    <div key={index}>
+                                                                        {/* benefit names */}
+                                                                        <FormItem
+                                                                            label="Service Name"
+                                                                            invalid={
+                                                                                serviceNameFeedBack.invalid
+                                                                            }
+                                                                            errorMessage={
+                                                                                serviceNameFeedBack.errorMessage
+                                                                            }
+                                                                        >
+                                                                            <Field
+                                                                                name={`items[${index}].service_name`}
+                                                                                placeholder="">
+                                                                                {({ field, form }: FieldProps<FormModel>) => (
+                                                                                    <Select
+                                                                                        field={field}
+                                                                                        form={form}
+                                                                                        options={selectedBenefitList}
+                                                                                        placeholder="select appropriate benefit"
+                                                                                        value={selectedBenefitList?.filter(
+                                                                                            (items) =>
+                                                                                                items.label === _.benefit_name
+                                                                                        )}
+
+                                                                                        onChange={(items) => {
+                                                                                            form.setFieldValue(
+                                                                                                field.name,
+                                                                                                items?.label
+                                                                                            )
+
+                                                                                            if (items?.value) {
+
+                                                                                                values.benefit_limit[index].benefit_id = items?.value
+                                                                                            } else {
+                                                                                                values.benefit_limit[index].benefit_id = ''
+                                                                                            }
+
+                                                                                        }
+
+
+                                                                                        }
+                                                                                    />
+                                                                                )}
+                                                                            </Field>
+                                                                        </FormItem>
+
+                                                                        {/* the type of limit */}
+                                                                        <FormItem
+                                                                            label="Limit Type"
+                                                                            invalid={
+                                                                                amountFeedBack.invalid
+                                                                            }
+                                                                            errorMessage={
+                                                                                amountFeedBack.errorMessage
+                                                                            }
+                                                                        >
+                                                                            <Field
+                                                                                name={`benefit_limit[${index}].limit_type`}>
+                                                                                {({ field, form }: FieldProps<FormModel>) => (
+                                                                                    <Select
+                                                                                        field={field}
+                                                                                        form={form}
+                                                                                        options={limit_type}
+                                                                                        value={limit_type?.filter(
+                                                                                            (items) =>
+                                                                                                items.value === _.limit_type
+                                                                                        )}
+
+                                                                                        onChange={(items) =>
+                                                                                            form.setFieldValue(
+                                                                                                field.name,
+                                                                                                items?.value
+                                                                                            )
+                                                                                        }
+                                                                                    />
+                                                                                )}
+                                                                            </Field>
+                                                                        </FormItem>
+
+                                                                        {/* expected limit value */}
+                                                                        <FormItem
+                                                                            label="limit Value"
+                                                                            invalid={
+                                                                                qtyFeedBack.invalid
+                                                                            }
+                                                                            errorMessage={
+                                                                                qtyFeedBack.errorMessage
+                                                                            }
+
+                                                                        >
+                                                                            <Field
+                                                                                invalid={
+                                                                                    qtyFeedBack.invalid
+                                                                                }
+                                                                                placeholder="Limit Value"
+                                                                                name={`benefit_limit[${index}].limit_value`}
+                                                                                type="number"
+                                                                                component={
+                                                                                    Input
+                                                                                }
+                                                                            />
+                                                                        </FormItem>
+                                                                        <Button
+                                                                            shape="circle"
+                                                                            size="sm"
+                                                                            icon={
+                                                                                <HiMinus />
+                                                                            }
+                                                                            onClick={() =>
+                                                                                remove(
+                                                                                    index
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                    </div>
+                                                                )
+                                                            })
+                                                            : null}
+                                                        <div>
+                                                            <Button
+                                                                type="button"
+                                                                className="ltr:mr-2 rtl:ml-2"
+                                                                onClick={() => {
+                                                                    push({
+                                                                        name: '',
+                                                                        limit_type: '',
+                                                                        limit_value: ''
+
+                                                                    })
+                                                                }}
+                                                            >
+                                                                Attach New Benefit
+                                                            </Button>
+                                                            <Button
+                                                                type="submit"
+                                                                variant="solid"
+                                                            >
+                                                                Save list
+                                                            </Button>
+                                                        </div>
+                                                    </div>
                                                 )}
-                                            </Field>
-                                        </FormItem> */}
+                                            </FieldArray>
+                                            <FormItem>
+                                                <Button variant="solid" type="submit"
+                                                    loading={isSubmitting}>
+                                                    {isSubmitting ?
+                                                        "Saving..."
+                                                        :
+                                                        "Save Claim"
+                                                    }
 
-                                        {/* price */}
-                                        {/* <FormItem
-                                            asterisk
-                                            label="Price"
-                                            invalid={errors.price && touched.price}
-                                            errorMessage={errors.price}
-                                        >
-                                            <Field
-                                                type="number"
-                                                autoComplete="off"
-                                                name="price"
-                                                placeholder="price"
-                                                component={Input}
-                                            />
-                                        </FormItem> */}
-
-                                        <FormItem>
-                                            <Button variant="solid" type="submit"
-                                                loading={isSubmitting}>
-                                                {isSubmitting ?
-                                                    "Saving..."
-                                                    :
-                                                    "Save Claim"
-                                                }
-
-                                            </Button>
-                                        </FormItem>
-                                    </FormContainer>
-                                </Form>
-                            )}
+                                                </Button>
+                                            </FormItem>
+                                        </FormContainer>
+                                    </Form>
+                                )
+                            }}
                         </Formik>
                     </div>
                 }
