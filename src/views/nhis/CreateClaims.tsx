@@ -6,7 +6,7 @@ import { components, OptionProps, SingleValueProps } from "react-select";
 import Card from '@/components/ui/Card'
 import Spinner from '@/components/ui/Spinner'
 import Avatar from '@/components/ui/Avatar'
-import { HiOutlineUser } from 'react-icons/hi'
+import { HiOutlineUser, HiMinus } from 'react-icons/hi'
 import useHealthCheck from '@/utils/customAuth/useHealthCheckerAuth'
 import { Field, FieldArray, Form, Formik, getIn, FieldProps } from 'formik'
 import * as Yup from 'yup'
@@ -16,6 +16,9 @@ import { FormItem, FormContainer } from '@/components/ui/Form'
 import useProvider, { NHIAProviderType } from '@/utils/customAuth/useProviderAuth';
 import DatePicker from '@/components/ui/DatePicker'
 import type { FormikProps } from 'formik'
+import useNhia from '@/utils/customAuth/useNhisAuth';
+
+
 
 
 type NHIAEnrollee = {
@@ -36,6 +39,19 @@ type NHIAEnrollee = {
     created_at: string,
 }
 
+type NHIATarrifService = {
+    // value as id
+    value: string,
+    // label as name
+    label: string,
+    nhia_code: string,
+    price: string,
+    tarrif_type: string,
+    service_type: string,
+    category: string,
+    sub_category: string,
+
+}
 
 type FormModel = {
     input: string
@@ -63,10 +79,10 @@ const validationSchema = Yup.object().shape({
             service_name: Yup.string().required('Benefit Required'),
             amount: Yup.string().required('Limit Type Required'),
             qty: Yup.number().required("Limit Required"),
-            amount_claimed: Yup.number().required("Limit Required"),
-            amount_agreed: Yup.number().required("Limit Required"),
-            amount_paid: Yup.number().required("Limit Required"),
-            remark: Yup.number().required("Limit Required"),
+            // amount_claimed: Yup.number().required("Limit Required"),
+            // amount_agreed: Yup.number().required("Limit Required"),
+            // amount_paid: Yup.number().required("Limit Required"),
+            // remark: Yup.number().required("Limit Required"),
         })
     ),
 })
@@ -79,11 +95,17 @@ const CreateClaims = () => {
     const [data, setData] = useState<NHIAEnrollee[]>([])
     const [referringHCFData, setReferringHCFData] = useState<NHIAProviderType[]>([])
     const [recievingHCFData, setRecievingHCFData] = useState<NHIAProviderType[]>([])
-    
     const [loading, setLoading] = useState<boolean>(false)
+    // the nhia service tarrif from database
+    const [nhiaDataFromDb, setNhiaDataFromDb] = useState<NHIATarrifService[]>([])
+    // the nhia service tarrif price
+    const [serviceAmount, setServiceAmount] = useState<string[]>([])
+
+    // network auth
     const { useGetAllNhiaEnrolleeAuth } = useEnrollee()
     const { useHealthCheckAuth } = useHealthCheck()
     const { useSearchNHIAProviderByHCPIDAuth } = useProvider()
+    const { getAllAndSearchNhiaServiceTarrifAuth } = useNhia()
 
 
     const debounceFn = debounce(handleDebounceFn, 500)
@@ -159,6 +181,8 @@ const CreateClaims = () => {
 
         alert(JSON.stringify(values, null, 2))
 
+        console.log(serviceAmount)
+
         if (setSubmitting !== undefined) {
             setSubmitting(false)
         }
@@ -215,9 +239,26 @@ const CreateClaims = () => {
 
             }
 
+            // nhia service
+            const nhiaServiceDetails = await getAllAndSearchNhiaServiceTarrifAuth({ sort: { order: 'asc' } })
+
+            if (nhiaServiceDetails?.status === 'success') {
+                setNhiaDataFromDb(nhiaServiceDetails.data.map((i: any) => {
+                    return {
+                        label: i.name,
+                        value: i.id,
+                        nhia_code: i.nhia_code,
+                        price: i.price,
+                        tarrif_type: i.tarrif_type,
+                        service_type: i.service_type,
+                        category: i.category,
+                        sub_category: i.sub_category,
+                    }
+                }))
+            }
+
         }
         fetchData()
-        console.log("searching on ", searchrecievingHCF)
     }, [search, searchReferringHCF, searchrecievingHCF])
 
     return (
@@ -283,10 +324,10 @@ const CreateClaims = () => {
                                         service_name: '',
                                         amount: '',
                                         qty: '',
-                                        amount_claimed: '',
-                                        amount_agreed: '',
-                                        amount_paid: '',
-                                        remark: '',
+                                        // amount_claimed: '',
+                                        // amount_agreed: '',
+                                        // amount_paid: '',
+                                        // remark: '',
                                     }
                                 ]
                             }}
@@ -471,184 +512,176 @@ const CreateClaims = () => {
                                                 </Field>
                                             </FormItem>
 
-                                            {/* Array */}
-                                            <FieldArray
-                                                name="items">
-                                                {({ form, remove, push }) => (
-                                                    <div>
-                                                        {items && items.length > 0
-                                                            ? items.map((_, index) => {
-                                                                const serviceNameFeedBack =
-                                                                    fieldFeedback(
-                                                                        form,
-                                                                        `items[${index}].service_name`
-                                                                    )
-                                                                const amountFeedBack =
-                                                                    fieldFeedback(
-                                                                        form,
-                                                                        `items[${index}].amount`
-                                                                    )
-                                                                const qtyFeedBack =
-                                                                fieldFeedback(form,
-                                                                    `items[${index}].qty`)
+                                            {/* Item services  */}
+                                            <FormContainer
+                                                layout='horizontal'
+                                            >
 
-                                                                const amountClaimedFeedBack =
-                                                                fieldFeedback(form,
-                                                                    `items[${index}].amount_claimed`)
+                                                <FieldArray name="items">
+                                                    {({ form, remove, push }) => (
+                                                        <div>
+                                                            {items && items.length > 0
+                                                                ? items.map((_, index) => {
+                                                                    const serviceNameFeedBack =
+                                                                        fieldFeedback(
+                                                                            form,
+                                                                            `items[${index}].service_name`
+                                                                        )
+                                                                    const amountFeedBack =
+                                                                        fieldFeedback(
+                                                                            form,
+                                                                            `items[${index}].amount`
+                                                                        )
+                                                                    const qtyfeedBack =
+                                                                        fieldFeedback(
+                                                                            form,
+                                                                            `items[${index}].qty`
+                                                                        )
 
-                                                                const amountAgreedFeedBack =
-                                                                fieldFeedback(form,
-                                                                    `items[${index}].amount_agreed`)
-
-                                                                const amountPaidFeedBack =
-                                                                fieldFeedback(form,
-                                                                    `items[${index}].amount_paid`)
-
-                                                                return (
-                                                                    <div key={index}>
-                                                                        {/* benefit names */}
-                                                                        <FormItem
-                                                                            label="Service Name"
-                                                                            invalid={
-                                                                                serviceNameFeedBack.invalid
-                                                                            }
-                                                                            errorMessage={
-                                                                                serviceNameFeedBack.errorMessage
-                                                                            }
-                                                                        >
-                                                                            <Field
-                                                                                name={`items[${index}].service_name`}
-                                                                                placeholder="">
-                                                                                {({ field, form }: FieldProps<FormModel>) => (
-                                                                                    <Select
-                                                                                        field={field}
-                                                                                        form={form}
-                                                                                        options={selectedBenefitList}
-                                                                                        placeholder="select appropriate benefit"
-                                                                                        value={selectedBenefitList?.filter(
-                                                                                            (items) =>
-                                                                                                items.label === _.benefit_name
-                                                                                        )}
-
-                                                                                        onChange={(items) => {
-                                                                                            form.setFieldValue(
-                                                                                                field.name,
-                                                                                                items?.label
-                                                                                            )
-
-                                                                                            if (items?.value) {
-
-                                                                                                values.benefit_limit[index].benefit_id = items?.value
-                                                                                            } else {
-                                                                                                values.benefit_limit[index].benefit_id = ''
-                                                                                            }
-
-                                                                                        }
-
-
-                                                                                        }
-                                                                                    />
-                                                                                )}
-                                                                            </Field>
-                                                                        </FormItem>
-
-                                                                        {/* the type of limit */}
-                                                                        <FormItem
-                                                                            label="Limit Type"
-                                                                            invalid={
-                                                                                amountFeedBack.invalid
-                                                                            }
-                                                                            errorMessage={
-                                                                                amountFeedBack.errorMessage
-                                                                            }
-                                                                        >
-                                                                            <Field
-                                                                                name={`benefit_limit[${index}].limit_type`}>
-                                                                                {({ field, form }: FieldProps<FormModel>) => (
-                                                                                    <Select
-                                                                                        field={field}
-                                                                                        form={form}
-                                                                                        options={limit_type}
-                                                                                        value={limit_type?.filter(
-                                                                                            (items) =>
-                                                                                                items.value === _.limit_type
-                                                                                        )}
-
-                                                                                        onChange={(items) =>
-                                                                                            form.setFieldValue(
-                                                                                                field.name,
-                                                                                                items?.value
-                                                                                            )
-                                                                                        }
-                                                                                    />
-                                                                                )}
-                                                                            </Field>
-                                                                        </FormItem>
-
-                                                                        {/* expected limit value */}
-                                                                        <FormItem
-                                                                            label="limit Value"
-                                                                            invalid={
-                                                                                qtyFeedBack.invalid
-                                                                            }
-                                                                            errorMessage={
-                                                                                qtyFeedBack.errorMessage
-                                                                            }
-
-                                                                        >
-                                                                            <Field
+                                                                    return (
+                                                                        <div key={index}>
+                                                                            {/* service names */}
+                                                                            <FormItem
+                                                                                label="Service Name"
                                                                                 invalid={
-                                                                                    qtyFeedBack.invalid
+                                                                                    serviceNameFeedBack.invalid
                                                                                 }
-                                                                                placeholder="Limit Value"
-                                                                                name={`benefit_limit[${index}].limit_value`}
-                                                                                type="number"
-                                                                                component={
-                                                                                    Input
+                                                                                errorMessage={
+                                                                                    serviceNameFeedBack.errorMessage
+                                                                                }
+                                                                            >
+                                                                                <Field
+                                                                                    name={`items[${index}].service_name`}
+                                                                                    placeholder="select a service">
+                                                                                    {({ field, form }: FieldProps<FormModel>) => (
+                                                                                        <Select
+                                                                                            field={field}
+                                                                                            form={form}
+                                                                                            options={nhiaDataFromDb}
+                                                                                            placeholder="select appropriate service"
+                                                                                            value={nhiaDataFromDb?.filter(
+                                                                                                (items) =>
+                                                                                                    items.label === _.service_name
+                                                                                            )}
+
+                                                                                            onChange={(items) => {
+                                                                                                form.setFieldValue(
+                                                                                                    field.name,
+                                                                                                    items?.label
+                                                                                                )
+
+                                                                                                if (items?.value) {
+
+                                                                                                    values.items[index].service_name = items?.value
+                                                                                                } else {
+                                                                                                    values.items[index].service_name = ''
+                                                                                                }
+
+                                                                                                if (items?.price) {
+                                                                                                    setServiceAmount((prevServiceAmount) => {
+                                                                                                        const updatedArray = [...prevServiceAmount];
+                                                                                                        updatedArray.splice(index, 0, items.price);
+                                                                                                        return updatedArray
+                                                                                                    })
+                                                                                                } else {
+                                                                                                    setServiceAmount((prevServiceAmount) => [...prevServiceAmount, ""])
+                                                                                                }
+
+                                                                                            }
+                                                                                            }
+                                                                                        />
+                                                                                    )}
+                                                                                </Field>
+                                                                            </FormItem>
+
+                                                                            {/* Service amount */}
+                                                                            <FormItem
+                                                                                label="Amount"
+                                                                                invalid={
+                                                                                    amountFeedBack.invalid
+                                                                                }
+                                                                                errorMessage={
+                                                                                    amountFeedBack.errorMessage
+                                                                                }
+                                                                            >
+                                                                                <Field
+                                                                                    invalid={
+                                                                                        qtyfeedBack.invalid
+                                                                                    }
+                                                                                    name={`items[${index}].amount`}
+                                                                                >
+                                                                                    {({ field, form }: FieldProps<FormModel>) => (
+                                                                                        <Input
+                                                                                            value={serviceAmount[index]}
+                                                                                            disabled />
+                                                                                    )}
+                                                                                </Field>
+
+                                                                            </FormItem>
+
+                                                                            {/* qty*/}
+                                                                            <FormItem
+                                                                                label="Quantity"
+                                                                                invalid={
+                                                                                    qtyfeedBack.invalid
+                                                                                }
+                                                                                errorMessage={
+                                                                                    qtyfeedBack.errorMessage
+                                                                                }
+
+                                                                            >
+                                                                                <Field
+                                                                                    invalid={
+                                                                                        qtyfeedBack.invalid
+                                                                                    }
+                                                                                    placeholder="Select Quantity"
+                                                                                    name={`items[${index}].qty`}
+                                                                                    type="number"
+                                                                                    component={
+                                                                                        Input
+                                                                                    }
+                                                                                />
+                                                                            </FormItem>
+
+                                                                            <Button
+                                                                                shape="circle"
+                                                                                size="sm"
+                                                                                icon={
+                                                                                    <HiMinus />
+                                                                                }
+                                                                                onClick={() =>
+                                                                                    remove(
+                                                                                        index
+                                                                                    )
                                                                                 }
                                                                             />
-                                                                        </FormItem>
-                                                                        <Button
-                                                                            shape="circle"
-                                                                            size="sm"
-                                                                            icon={
-                                                                                <HiMinus />
-                                                                            }
-                                                                            onClick={() =>
-                                                                                remove(
-                                                                                    index
-                                                                                )
-                                                                            }
-                                                                        />
-                                                                    </div>
-                                                                )
-                                                            })
-                                                            : null}
-                                                        <div>
-                                                            <Button
-                                                                type="button"
-                                                                className="ltr:mr-2 rtl:ml-2"
-                                                                onClick={() => {
-                                                                    push({
-                                                                        name: '',
-                                                                        limit_type: '',
-                                                                        limit_value: ''
+                                                                        </div>
+                                                                    )
+                                                                })
+                                                                : null}
+                                                            <div>
+                                                                <Button
+                                                                    type="button"
+                                                                    className="ltr:mr-2 rtl:ml-2"
+                                                                    onClick={() => {
+                                                                        push({
+                                                                            name: '',
+                                                                            limit_type: '',
+                                                                            limit_value: ''
 
-                                                                    })
-                                                                }}
-                                                            >
-                                                                Attach New Benefit
-                                                            </Button>
-                                                            <Button
-                                                                type="submit"
-                                                                variant="solid"
-                                                            >
-                                                                Save list
-                                                            </Button>
+                                                                        })
+                                                                    }}
+                                                                >
+                                                                    Attach New Benefit
+                                                                </Button>
+
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )}
-                                            </FieldArray>
+                                                    )}
+                                                </FieldArray>
+                                            </FormContainer>
+
+
                                             <FormItem>
                                                 <Button variant="solid" type="submit"
                                                     loading={isSubmitting}>

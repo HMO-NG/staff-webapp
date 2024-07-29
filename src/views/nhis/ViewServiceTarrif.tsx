@@ -33,7 +33,7 @@ type NhiaServiceTarrif = {
 
 const viewServiceTarrif = () => {
 
-    const { getAllAndSearchNhiaProcedureService } = useNhia()
+    const { getAllAndSearchNhiaServiceTarrifAuth } = useNhia()
     const navigate = useNavigate()
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(false)
@@ -331,7 +331,7 @@ const viewServiceTarrif = () => {
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true)
-            const response = await getAllAndSearchNhiaProcedureService(tableData)
+            const response = await getAllAndSearchNhiaServiceTarrifAuth(tableData)
             if (response?.status === 'success') {
                 setData(response.data)
                 setLoading(false)

@@ -74,7 +74,7 @@ function useNhia() {
         }
     }
 
-    const getAllAndSearchNhiaProcedureService = async (data: any): Promise<{
+    const getAllAndSearchNhiaServiceTarrifAuth = async (data: any): Promise<{
         message: string,
         data?: any,
         status: Status
@@ -149,7 +149,7 @@ function useNhia() {
     return {
         useCreateNhiaServiceTarrifAuth,
         useCreateNhiaServiceBulkUpload,
-        getAllAndSearchNhiaProcedureService,
+        getAllAndSearchNhiaServiceTarrifAuth,
         useCreateNhiaDrugTarrifAuth,
         getAllAndSearchNhiaDrugTarrifAuth
     }
