@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import useEnrollee from '@/utils/customAuth/useEnrolleeAuth'
 import debounce from 'lodash/debounce'
 import Select from '@/components/ui/Select'
@@ -17,9 +17,6 @@ import useProvider, { NHIAProviderType } from '@/utils/customAuth/useProviderAut
 import DatePicker from '@/components/ui/DatePicker'
 import type { FormikProps } from 'formik'
 import useNhia from '@/utils/customAuth/useNhisAuth';
-
-
-
 
 type NHIAEnrollee = {
     // value as id
@@ -50,7 +47,18 @@ type NHIATarrifService = {
     service_type: string,
     category: string,
     sub_category: string,
+}
 
+type NHIADrugs = {
+    // value as id
+    value: string,
+    // label as name_of_drug
+    label: string,
+    nhia_code: string,
+    price: string,
+    dosage_form: string,
+    strength: string,
+    presentation: string,
 }
 
 type FormModel = {
@@ -67,6 +75,14 @@ type FormModel = {
     upload: File[];
 }
 
+const nhiaDrugDeduction = [
+    {value: 10, label: "10%"},
+    {value: 20, label: "20%"},
+    {value: 30, label: "30%"},
+    {value: 40, label: "40%"},
+    {value: 50, label: "50%"},
+]
+
 const validationSchema = Yup.object().shape({
     referring_hcf: Yup.string().required('Referring HCF name Required'),
     recieving_hcf: Yup.string().required('Recieving HCF name Required'),
@@ -74,17 +90,17 @@ const validationSchema = Yup.object().shape({
     approval_date: Yup.date().required('Please specify the approval date'),
     date_hmo_recieved_claim: Yup.date().required('Please specify the date HMO recieved claim'),
     diagnosis: Yup.string().required('Please specify the diagnosis'),
-    items: Yup.array().of(
-        Yup.object().shape({
-            service_name: Yup.string().required('Benefit Required'),
-            amount: Yup.string().required('Limit Type Required'),
-            qty: Yup.number().required("Limit Required"),
-            // amount_claimed: Yup.number().required("Limit Required"),
-            // amount_agreed: Yup.number().required("Limit Required"),
-            // amount_paid: Yup.number().required("Limit Required"),
-            // remark: Yup.number().required("Limit Required"),
-        })
-    ),
+    // items: Yup.array().of(
+    //     Yup.object().shape({
+    //         service_name: Yup.string().required('Benefit Required'),
+    //         amount: Yup.string().required('Limit Type Required'),
+    //         qty: Yup.number().required("Limit Required"),
+    //         // amount_claimed: Yup.number().required("Limit Required"),
+    //         // amount_agreed: Yup.number().required("Limit Required"),
+    //         // amount_paid: Yup.number().required("Limit Required"),
+    //         // remark: Yup.number().required("Limit Required"),
+    //     })
+    // ),
 })
 const CreateClaims = () => {
 
@@ -98,15 +114,25 @@ const CreateClaims = () => {
     const [loading, setLoading] = useState<boolean>(false)
     // the nhia service tarrif from database
     const [nhiaDataFromDb, setNhiaDataFromDb] = useState<NHIATarrifService[]>([])
-    // the nhia service tarrif price
-    const [serviceAmount, setServiceAmount] = useState<string[]>([])
+    // the nhia drugs from database
+    const [nhiaDrugsFromDb, setNhiaDrugsFromDb] = useState<NHIADrugs[]>([])
+    // the nhia service tarrif info
+    const [serviceInfo, setServiceInfo] = useState<{
+        name?: string,
+        price?: string,
+        qty?: string,
+        amt_claimed?: string,
+        comment?: string
+    }>({})
+
+    // an array to store the info from nhia service and drug
+    const [combindedServices, setCombindedServices] = useState<{}[]>([])
 
     // network auth
     const { useGetAllNhiaEnrolleeAuth } = useEnrollee()
     const { useHealthCheckAuth } = useHealthCheck()
     const { useSearchNHIAProviderByHCPIDAuth } = useProvider()
-    const { getAllAndSearchNhiaServiceTarrifAuth } = useNhia()
-
+    const { getAllAndSearchNhiaServiceTarrifAuth, getAllAndSearchNhiaDrugTarrifAuth } = useNhia()
 
     const debounceFn = debounce(handleDebounceFn, 500)
     const providerDebounceFn = debounce(getProviderDebounceFn, 500)
@@ -179,13 +205,31 @@ const CreateClaims = () => {
         values.nhia_enrollee_name = `${selectedValue?.surname} ${selectedValue?.other_names}`
         values.nhia_enrollee_id = `${selectedValue?.label}`
 
-        alert(JSON.stringify(values, null, 2))
+        // alert(JSON.stringify(values, null, 2))
+        alert(JSON.stringify(combindedServices, null, 2))
 
-        console.log(serviceAmount)
+        // console.log(serviceInfo)
+
 
         if (setSubmitting !== undefined) {
             setSubmitting(false)
         }
+    }
+
+    function storeTheServices() {
+
+        // if(serviceInfo !== undefined){
+
+        setCombindedServices((prevServiceAmount) => [...prevServiceAmount, serviceInfo])
+        // }
+
+        // console.log("service info",)
+
+        // setTimeout(() => {
+        //     alert(JSON.stringify(combindedServices, null, 2))
+        // }, 3000)
+
+        // setServiceInfo({})
     }
 
     useEffect(() => {
@@ -257,6 +301,23 @@ const CreateClaims = () => {
                 }))
             }
 
+            // nhia drugs
+            const nhiaDrugs = await getAllAndSearchNhiaDrugTarrifAuth({ sort: { order: 'asc' } })
+
+            if (nhiaDrugs?.status === 'success') {
+                setNhiaDrugsFromDb(nhiaDrugs.data.map((j: any) => {
+                    return {
+                        value: j.id,
+                        label: j.name_of_drug,
+                        nhia_code: j.nhia_code,
+                        price: j.price,
+                        dosage_form: j.dosage_form,
+                        strength: j.strength,
+                        presentation: j.presentation,
+                    }
+                }))
+            }
+
         }
         fetchData()
     }, [search, searchReferringHCF, searchrecievingHCF])
@@ -319,6 +380,7 @@ const CreateClaims = () => {
                                 approval_date: null,
                                 date_hmo_recieved_claim: null,
                                 diagnosis: '',
+                                item: '',
                                 items: [
                                     {
                                         service_name: '',
@@ -513,172 +575,306 @@ const CreateClaims = () => {
                                             </FormItem>
 
                                             {/* Item services  */}
-                                            <FormContainer
-                                                layout='horizontal'
-                                            >
+                                            <FormContainer>
+                                                <Card
+                                                    header="Investigation & Procuredures"
+                                                    className='mb-10'>
+                                                    <div className='grid grid-cols-3 gap-4'>
 
-                                                <FieldArray name="items">
-                                                    {({ form, remove, push }) => (
+
+                                                        {/* service names */}
                                                         <div>
-                                                            {items && items.length > 0
-                                                                ? items.map((_, index) => {
-                                                                    const serviceNameFeedBack =
-                                                                        fieldFeedback(
-                                                                            form,
-                                                                            `items[${index}].service_name`
-                                                                        )
-                                                                    const amountFeedBack =
-                                                                        fieldFeedback(
-                                                                            form,
-                                                                            `items[${index}].amount`
-                                                                        )
-                                                                    const qtyfeedBack =
-                                                                        fieldFeedback(
-                                                                            form,
-                                                                            `items[${index}].qty`
-                                                                        )
+                                                            <FormItem
+                                                                label="Service Name"
+                                                            >
+                                                                <Field
+                                                                    name="item"
+                                                                    placeholder="select a service">
+                                                                    {({ field, form }: FieldProps<FormModel>) => (
+                                                                        <Select
+                                                                            isClearable={true}
+                                                                            options={nhiaDataFromDb}
 
-                                                                    return (
-                                                                        <div key={index}>
-                                                                            {/* service names */}
-                                                                            <FormItem
-                                                                                label="Service Name"
-                                                                                invalid={
-                                                                                    serviceNameFeedBack.invalid
+                                                                            placeholder="select appropriate service"
+                                                                            onChange={(items) => {
+                                                                                // form.setFieldValue(
+                                                                                //     field.name,
+                                                                                //     items?.label
+                                                                                // )
+
+                                                                                if (items?.price) {
+                                                                                    // setServiceAmount((prevServiceAmount) => {
+                                                                                    //     const updatedArray = [...prevServiceAmount];
+                                                                                    //     updatedArray.splice(index, 0, items.price);
+                                                                                    //     return updatedArray
+                                                                                    // })
+                                                                                    setServiceInfo({ ...serviceInfo, name: items?.label, price: items?.price })
+
+                                                                                } else {
+                                                                                    // setServiceInfo({ ...serviceInfo, name: items?.label, price: items?.price })
                                                                                 }
-                                                                                errorMessage={
-                                                                                    serviceNameFeedBack.errorMessage
-                                                                                }
-                                                                            >
-                                                                                <Field
-                                                                                    name={`items[${index}].service_name`}
-                                                                                    placeholder="select a service">
-                                                                                    {({ field, form }: FieldProps<FormModel>) => (
-                                                                                        <Select
-                                                                                            field={field}
-                                                                                            form={form}
-                                                                                            options={nhiaDataFromDb}
-                                                                                            placeholder="select appropriate service"
-                                                                                            value={nhiaDataFromDb?.filter(
-                                                                                                (items) =>
-                                                                                                    items.label === _.service_name
-                                                                                            )}
 
-                                                                                            onChange={(items) => {
-                                                                                                form.setFieldValue(
-                                                                                                    field.name,
-                                                                                                    items?.label
-                                                                                                )
+                                                                            }
+                                                                            }
+                                                                        />
+                                                                    )}
+                                                                </Field>
+                                                            </FormItem>
+                                                        </div>
 
-                                                                                                if (items?.value) {
 
-                                                                                                    values.items[index].service_name = items?.value
-                                                                                                } else {
-                                                                                                    values.items[index].service_name = ''
-                                                                                                }
+                                                        {/* Amount */}
+                                                        <div>
+                                                            <FormItem
+                                                                label="Service Amount"
+                                                            >
 
-                                                                                                if (items?.price) {
-                                                                                                    setServiceAmount((prevServiceAmount) => {
-                                                                                                        const updatedArray = [...prevServiceAmount];
-                                                                                                        updatedArray.splice(index, 0, items.price);
-                                                                                                        return updatedArray
-                                                                                                    })
-                                                                                                } else {
-                                                                                                    setServiceAmount((prevServiceAmount) => [...prevServiceAmount, ""])
-                                                                                                }
+                                                                <Field
+                                                                    name={``}
+                                                                >
+                                                                    {({ field, form }: FieldProps<FormModel>) => (
+                                                                        <Input
+                                                                            disabled={true}
+                                                                            value={serviceInfo.price}
+                                                                        />
+                                                                    )}
 
-                                                                                            }
-                                                                                            }
-                                                                                        />
-                                                                                    )}
-                                                                                </Field>
-                                                                            </FormItem>
+                                                                </Field>
+                                                            </FormItem>
+                                                        </div>
 
-                                                                            {/* Service amount */}
-                                                                            <FormItem
-                                                                                label="Amount"
-                                                                                invalid={
-                                                                                    amountFeedBack.invalid
-                                                                                }
-                                                                                errorMessage={
-                                                                                    amountFeedBack.errorMessage
-                                                                                }
-                                                                            >
-                                                                                <Field
-                                                                                    invalid={
-                                                                                        qtyfeedBack.invalid
+
+                                                        {/* qty */}
+                                                        <div>
+                                                            <FormItem
+                                                                label="Service Quantity"
+                                                            >
+
+                                                                <Field
+                                                                    name={``}
+                                                                >
+                                                                    {({ field, form }: FieldProps<FormModel>) => (
+                                                                        <Input
+                                                                            type='number'
+                                                                            onChange={(i) =>
+                                                                                setServiceInfo({ ...serviceInfo, qty: i.target.value })
+                                                                            }
+                                                                        />
+                                                                    )}
+
+                                                                </Field>
+                                                            </FormItem>
+                                                        </div>
+
+
+                                                        {/* amount claimed */}
+                                                        <div>
+                                                            <FormItem
+                                                                label="Amt Claimed"
+                                                            >
+
+                                                                <Field
+                                                                    name={``}
+                                                                >
+                                                                    {({ field, form }: FieldProps<FormModel>) => (
+                                                                        <Input
+                                                                            type='number'
+                                                                            onChange={(i) =>
+                                                                                setServiceInfo({ ...serviceInfo, amt_claimed: i.target.value })
+                                                                            }
+                                                                        />
+                                                                    )}
+
+                                                                </Field>
+                                                            </FormItem>
+                                                        </div>
+
+
+                                                        {/* comments */}
+                                                        <div>
+                                                            <FormItem
+                                                                label="Comment"
+                                                            >
+
+                                                                <Field
+                                                                    name={``}
+                                                                >
+                                                                    {({ field, form }: FieldProps<FormModel>) => (
+                                                                        <Input
+                                                                            onChange={(i) =>
+                                                                                setServiceInfo({ ...serviceInfo, comment: i.target.value })
+                                                                            }
+                                                                        />
+                                                                    )}
+
+                                                                </Field>
+                                                            </FormItem>
+                                                        </div>
+
+                                                        <div className='justify-self-center content-center'>
+                                                            <Button
+                                                                variant="solid"
+                                                                type='button'
+                                                                onClick={storeTheServices}
+                                                            >
+
+                                                                Add Service
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                </Card>
+
+                                            </FormContainer>
+
+                                            {/* Drugs */}
+                                            <FormContainer>
+                                                <Card
+                                                    header="Drugs"
+                                                    className='mb-10'>
+                                                    <div>
+                                                        <div className='grid grid-cols-3 gap-4'>
+                                                            {/* drug names */}
+                                                            <div>
+                                                                <FormItem
+                                                                    label="Drugs Name"
+                                                                >
+                                                                    <Field
+                                                                        name="item"
+                                                                        placeholder="select a drugs">
+                                                                        {({ field, form }: FieldProps<FormModel>) => (
+                                                                            <Select
+                                                                                isClearable={true}
+                                                                                options={nhiaDrugsFromDb}
+
+                                                                                placeholder="select appropriate service"
+                                                                                onChange={(items) => {
+                                                                                    if (items?.price) {
+                                                                                        setServiceInfo({ ...serviceInfo, name: items?.label, price: items?.price })
                                                                                     }
-                                                                                    name={`items[${index}].amount`}
-                                                                                >
-                                                                                    {({ field, form }: FieldProps<FormModel>) => (
-                                                                                        <Input
-                                                                                            value={serviceAmount[index]}
-                                                                                            disabled />
-                                                                                    )}
-                                                                                </Field>
 
-                                                                            </FormItem>
-
-                                                                            {/* qty*/}
-                                                                            <FormItem
-                                                                                label="Quantity"
-                                                                                invalid={
-                                                                                    qtyfeedBack.invalid
                                                                                 }
-                                                                                errorMessage={
-                                                                                    qtyfeedBack.errorMessage
-                                                                                }
-
-                                                                            >
-                                                                                <Field
-                                                                                    invalid={
-                                                                                        qtyfeedBack.invalid
-                                                                                    }
-                                                                                    placeholder="Select Quantity"
-                                                                                    name={`items[${index}].qty`}
-                                                                                    type="number"
-                                                                                    component={
-                                                                                        Input
-                                                                                    }
-                                                                                />
-                                                                            </FormItem>
-
-                                                                            <Button
-                                                                                shape="circle"
-                                                                                size="sm"
-                                                                                icon={
-                                                                                    <HiMinus />
-                                                                                }
-                                                                                onClick={() =>
-                                                                                    remove(
-                                                                                        index
-                                                                                    )
                                                                                 }
                                                                             />
-                                                                        </div>
-                                                                    )
-                                                                })
-                                                                : null}
+                                                                        )}
+                                                                    </Field>
+                                                                </FormItem>
+                                                            </div>
+
+
+                                                            {/* Amount */}
                                                             <div>
-                                                                <Button
-                                                                    type="button"
-                                                                    className="ltr:mr-2 rtl:ml-2"
-                                                                    onClick={() => {
-                                                                        push({
-                                                                            name: '',
-                                                                            limit_type: '',
-                                                                            limit_value: ''
-
-                                                                        })
-                                                                    }}
+                                                                <FormItem
+                                                                    label="Drugs Amount"
                                                                 >
-                                                                    Attach New Benefit
-                                                                </Button>
+                                                                    <Field
+                                                                        name={``}
+                                                                    >
+                                                                        {({ field, form }: FieldProps<FormModel>) => (
+                                                                            <Input
+                                                                                disabled={true}
+                                                                                value={serviceInfo.price}
+                                                                            />
+                                                                        )}
 
+                                                                    </Field>
+                                                                </FormItem>
+                                                            </div>
+
+
+                                                            {/* qty */}
+                                                            <div>
+                                                                <FormItem
+                                                                    label="Drug Quantity"
+                                                                >
+
+                                                                    <Field
+                                                                        name={``}
+                                                                    >
+                                                                        {({ field, form }: FieldProps<FormModel>) => (
+                                                                            <Input
+                                                                                type='number'
+                                                                                onChange={(i) =>
+                                                                                    setServiceInfo({ ...serviceInfo, qty: i.target.value })
+                                                                                }
+                                                                            />
+                                                                        )}
+
+                                                                    </Field>
+                                                                </FormItem>
+                                                            </div>
+
+
+                                                            {/* drug deduction */}
+                                                            <div>
+                                                                <FormItem
+                                                                    label="Deduction"
+                                                                >
+
+                                                                    <Field
+                                                                        name={``}
+                                                                    >
+                                                                        {({ field, form }: FieldProps<FormModel>) => (
+                                                                            // <Input
+                                                                            //     type='number'
+                                                                            //     onChange={(i) =>
+                                                                            //         setServiceInfo({ ...serviceInfo, amt_claimed: i.target.value })
+                                                                            //     }
+                                                                            // />
+                                                                            <Select
+                                                                                isClearable={true}
+                                                                                options={nhiaDrugDeduction}
+
+                                                                                placeholder="select appropriate service"
+                                                                                onChange={(items) => {
+                                                                                    // if (items?.price) {
+                                                                                    //     setServiceInfo({ ...serviceInfo, name: items?.label, price: items?.price })
+                                                                                    // }
+
+                                                                                }
+                                                                                }
+                                                                            />
+                                                                        )}
+
+                                                                    </Field>
+                                                                </FormItem>
+                                                            </div>
+
+
+                                                            {/* comments */}
+                                                            <div>
+                                                                <FormItem
+                                                                    label="Comment"
+                                                                >
+
+                                                                    <Field
+                                                                        name={``}
+                                                                    >
+                                                                        {({ field, form }: FieldProps<FormModel>) => (
+                                                                            <Input
+                                                                                onChange={(i) =>
+                                                                                    setServiceInfo({ ...serviceInfo, comment: i.target.value })
+                                                                                }
+                                                                            />
+                                                                        )}
+
+                                                                    </Field>
+                                                                </FormItem>
+                                                            </div>
+
+                                                            <div className='justify-self-center content-center'>
+                                                                <Button
+                                                                    variant="solid"
+                                                                    type='button'
+                                                                    onClick={storeTheServices}
+                                                                >
+
+                                                                    Add Drugs
+                                                                </Button>
                                                             </div>
                                                         </div>
-                                                    )}
-                                                </FieldArray>
+                                                    </div>
+                                                </Card>
+
                                             </FormContainer>
 
 
