@@ -208,11 +208,7 @@ const CreateClaims = () => {
         values.nhia_enrollee_name = `${selectedValue?.surname} ${selectedValue?.other_names}`
         values.nhia_enrollee_id = `${selectedValue?.label}`
 
-        // alert(JSON.stringify(values, null, 2))
         alert(JSON.stringify(combindedServices, null, 2))
-
-        // console.log(serviceInfo)
-
 
         if (setSubmitting !== undefined) {
             setSubmitting(false)
@@ -350,28 +346,7 @@ const CreateClaims = () => {
 
                 {
                     selectedValue &&
-                    <div>
-                        <Card
-                            className='mt-5'>
-                            <h3 className='mb-7'>NHIA Enrollee Details</h3>
-                            <div className='flex grid-cols-{2} items-center'>
-                                <Avatar size={60} className="mr-4" icon={<HiOutlineUser />} />
-                                <div className=' flex grid-cols-{1}'>
-                                    <p>Policy ID: {selectedValue.label}</p>
-                                    <p>Relationship: {selectedValue.relationship}</p>
-                                    <p>Surname: {selectedValue.surname}</p>
-                                    <p>Other Name: {selectedValue.other_names}</p>
-                                    <p>Date of Birth: {selectedValue.dob}</p>
-                                    <p>Sex: {selectedValue.sex}</p>
-                                    <p>Company ID: {selectedValue.company_id}</p>
-                                    <p>Provider ID: {selectedValue.provider_id}</p>
-                                    <p>Provider Name: {selectedValue.provider_name}</p>
-                                    <p>Provider Address: {selectedValue.provider_Address}</p>
-
-                                </div>
-                            </div>
-                        </Card>
-
+                    <div className='flex grid-cols-2'>
                         <Formik
                             enableReinitialize
                             initialValues={{
@@ -883,6 +858,58 @@ const CreateClaims = () => {
                                 )
                             }}
                         </Formik>
+
+                        <div>
+                            <Card
+                                className='mt-5'>
+                                <h3 className='mb-7'>NHIA Enrollee Details</h3>
+                                <div>
+                                    {/* className='flex grid-cols-{2} items-center' */}
+                                    <Avatar size={60} className="mr-4" icon={<HiOutlineUser />} />
+                                    <div>
+                                        {/* className=' flex grid-cols-{1}' */}
+                                        <p>Policy ID: {selectedValue.label}</p>
+                                        <p>Relationship: {selectedValue.relationship}</p>
+                                        <p>Surname: {selectedValue.surname}</p>
+                                        <p>Other Name: {selectedValue.other_names}</p>
+                                        <p>Date of Birth: {selectedValue.dob}</p>
+                                        <p>Sex: {selectedValue.sex}</p>
+                                        <p>Company ID: {selectedValue.company_id}</p>
+                                        <p>Provider ID: {selectedValue.provider_id}</p>
+                                        <p>Provider Name: {selectedValue.provider_name}</p>
+                                        <p>Provider Address: {selectedValue.provider_Address}</p>
+
+                                    </div>
+                                </div>
+                            </Card>
+                            <Card
+                                header="Drugs & Services">
+                                <div>
+                                    {
+                                        combindedServices.map((items) => {
+                                            return (
+                                                <>
+                                                    {/* name?: string,
+        service_price?: string,
+        drug_price?: string,
+        qty?: string,
+        percentage?: string,
+        amt_claimed?: string,
+        comment?: string */}
+                                                    <p>Name</p>:<p>{items.name}</p>
+                                                    <p>Service Price</p>:<p>item.service_price</p>
+                                                    <p>Drug Price</p>:<p>item.drug_price</p>
+                                                    <p>Quantity</p>:<p>item.qty</p>
+                                                    <p>percentage</p>:<p>item.name</p>
+                                                    <p>Name</p>:<p>item.name</p>
+                                                </>
+                                            )
+                                        })
+                                    }
+                                </div>
+
+                            </Card>
+                        </div>
                     </div>
                 }
 
