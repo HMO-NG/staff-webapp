@@ -76,11 +76,12 @@ type FormModel = {
 }
 
 const nhiaDrugDeduction = [
-    {value: 10, label: "10%"},
-    {value: 20, label: "20%"},
-    {value: 30, label: "30%"},
-    {value: 40, label: "40%"},
-    {value: 50, label: "50%"},
+    { value: "0", label: "0%" },
+    { value: "10", label: "10%" },
+    { value: "20", label: "20%" },
+    { value: "30", label: "30%" },
+    { value: "40", label: "40%" },
+    { value: "50", label: "50%" },
 ]
 
 const validationSchema = Yup.object().shape({
@@ -119,8 +120,10 @@ const CreateClaims = () => {
     // the nhia service tarrif info
     const [serviceInfo, setServiceInfo] = useState<{
         name?: string,
-        price?: string,
+        service_price?: string,
+        drug_price?: string,
         qty?: string,
+        percentage?: string,
         amt_claimed?: string,
         comment?: string
     }>({})
@@ -226,7 +229,7 @@ const CreateClaims = () => {
         // console.log("service info",)
 
         // setTimeout(() => {
-        //     alert(JSON.stringify(combindedServices, null, 2))
+        // alert(JSON.stringify(combindedServices, null, 2))
         // }, 3000)
 
         // setServiceInfo({})
@@ -603,12 +606,7 @@ const CreateClaims = () => {
                                                                                 // )
 
                                                                                 if (items?.price) {
-                                                                                    // setServiceAmount((prevServiceAmount) => {
-                                                                                    //     const updatedArray = [...prevServiceAmount];
-                                                                                    //     updatedArray.splice(index, 0, items.price);
-                                                                                    //     return updatedArray
-                                                                                    // })
-                                                                                    setServiceInfo({ ...serviceInfo, name: items?.label, price: items?.price })
+                                                                                    setServiceInfo({ ...serviceInfo, name: items?.label, service_price: items?.price })
 
                                                                                 } else {
                                                                                     // setServiceInfo({ ...serviceInfo, name: items?.label, price: items?.price })
@@ -635,7 +633,7 @@ const CreateClaims = () => {
                                                                     {({ field, form }: FieldProps<FormModel>) => (
                                                                         <Input
                                                                             disabled={true}
-                                                                            value={serviceInfo.price}
+                                                                            value={serviceInfo.service_price}
                                                                         />
                                                                     )}
 
@@ -746,10 +744,10 @@ const CreateClaims = () => {
                                                                                 isClearable={true}
                                                                                 options={nhiaDrugsFromDb}
 
-                                                                                placeholder="select appropriate service"
+                                                                                placeholder="select appropriate drug"
                                                                                 onChange={(items) => {
                                                                                     if (items?.price) {
-                                                                                        setServiceInfo({ ...serviceInfo, name: items?.label, price: items?.price })
+                                                                                        setServiceInfo({ ...serviceInfo, name: items?.label, drug_price: items?.price })
                                                                                     }
 
                                                                                 }
@@ -772,7 +770,7 @@ const CreateClaims = () => {
                                                                         {({ field, form }: FieldProps<FormModel>) => (
                                                                             <Input
                                                                                 disabled={true}
-                                                                                value={serviceInfo.price}
+                                                                                value={serviceInfo.drug_price}
                                                                             />
                                                                         )}
 
@@ -814,21 +812,14 @@ const CreateClaims = () => {
                                                                         name={``}
                                                                     >
                                                                         {({ field, form }: FieldProps<FormModel>) => (
-                                                                            // <Input
-                                                                            //     type='number'
-                                                                            //     onChange={(i) =>
-                                                                            //         setServiceInfo({ ...serviceInfo, amt_claimed: i.target.value })
-                                                                            //     }
-                                                                            // />
                                                                             <Select
                                                                                 isClearable={true}
                                                                                 options={nhiaDrugDeduction}
 
                                                                                 placeholder="select appropriate service"
                                                                                 onChange={(items) => {
-                                                                                    // if (items?.price) {
-                                                                                    //     setServiceInfo({ ...serviceInfo, name: items?.label, price: items?.price })
-                                                                                    // }
+                                                                                    setServiceInfo({ ...serviceInfo, percentage: items.value })
+
 
                                                                                 }
                                                                                 }
@@ -860,14 +851,12 @@ const CreateClaims = () => {
                                                                     </Field>
                                                                 </FormItem>
                                                             </div>
-
                                                             <div className='justify-self-center content-center'>
                                                                 <Button
                                                                     variant="solid"
                                                                     type='button'
                                                                     onClick={storeTheServices}
                                                                 >
-
                                                                     Add Drugs
                                                                 </Button>
                                                             </div>
