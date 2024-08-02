@@ -231,6 +231,27 @@ const CreateClaims = () => {
         // setServiceInfo({})
     }
 
+    function calculateTotals(items: any) {
+        let totalServicePrice = 0;
+        let totalDrugPrice = 0;
+
+        for (const item of items) {
+          const quantity = Number(item.qty) || 0;
+
+          if (item.service_price) {
+            const servicePrice = Number(item.service_price) || 0;
+            totalServicePrice += servicePrice * quantity;
+          } else if (item.drug_price) {
+            const drugPrice = Number(item.drug_price) || 0;
+            const percentage = Number(item.percentage) || 0;
+            const discountedPrice = drugPrice * (1 - percentage / 100);
+            totalDrugPrice += discountedPrice * quantity;
+          }
+        }
+
+        return (totalServicePrice + totalDrugPrice);
+      }
+
     useEffect(() => {
         const fetchData = async () => {
 
@@ -378,7 +399,6 @@ const CreateClaims = () => {
                             }}
                         >
                             {({ values, touched, errors, isSubmitting }) => {
-                                const items = values.items
                                 return (
                                     <Form>
                                         <FormContainer>
@@ -575,13 +595,8 @@ const CreateClaims = () => {
 
                                                                             placeholder="select appropriate service"
                                                                             onChange={(items) => {
-                                                                                // form.setFieldValue(
-                                                                                //     field.name,
-                                                                                //     items?.label
-                                                                                // )
-
                                                                                 if (items?.price) {
-                                                                                    setServiceInfo({ ...serviceInfo, name: items?.label, service_price: items?.price })
+                                                                                    setServiceInfo({ ...serviceInfo, name: items?.label, service_price: items?.price, drug_price: undefined})
 
                                                                                 } else {
                                                                                     // setServiceInfo({ ...serviceInfo, name: items?.label, price: items?.price })
@@ -722,7 +737,7 @@ const CreateClaims = () => {
                                                                                 placeholder="select appropriate drug"
                                                                                 onChange={(items) => {
                                                                                     if (items?.price) {
-                                                                                        setServiceInfo({ ...serviceInfo, name: items?.label, drug_price: items?.price })
+                                                                                        setServiceInfo({ ...serviceInfo, name: items?.label, drug_price: items?.price, service_price: undefined })
                                                                                     }
 
                                                                                 }
@@ -861,8 +876,8 @@ const CreateClaims = () => {
 
                         <div>
                             <Card
-                                className='mt-5'>
-                                <h3 className='mb-7'>NHIA Enrollee Details</h3>
+                                className='m-7'
+                                header="NHIA Enrollee Details">
                                 <div>
                                     {/* className='flex grid-cols-{2} items-center' */}
                                     <Avatar size={60} className="mr-4" icon={<HiOutlineUser />} />
@@ -883,28 +898,28 @@ const CreateClaims = () => {
                                 </div>
                             </Card>
                             <Card
-                                header="Drugs & Services">
+                                header="Drugs & Services"
+                                className='m-7'>
                                 <div>
                                     {
                                         combindedServices.map((items) => {
                                             return (
                                                 <>
-                                                    {/* name?: string,
-        service_price?: string,
-        drug_price?: string,
-        qty?: string,
-        percentage?: string,
-        amt_claimed?: string,
-        comment?: string */}
-                                                    <p>Name</p>:<p>{items.name}</p>
-                                                    <p>Service Price</p>:<p>item.service_price</p>
-                                                    <p>Drug Price</p>:<p>item.drug_price</p>
-                                                    <p>Quantity</p>:<p>item.qty</p>
-                                                    <p>percentage</p>:<p>item.name</p>
-                                                    <p>Name</p>:<p>item.name</p>
+                                                    <p>Name: <b>{items.name}</b></p>
+                                                    {items.service_price && <p>Service Price: <b>{items.service_price}</b></p>}
+                                                    {items.drug_price && <p>Drug Price: <b>{items.drug_price}</b></p>}
+                                                    <p>Quantity: <b>{items.qty}</b></p>
+                                                    {items.percentage && <p>percentage: <b>{items.percentage}</b>%</p>}
+                                                    {items.percentage && <p>deducted amount: <b>{(items.percentage * items.drug_price) / 100}</b></p>}
+                                                    <p>comment: <b>{items.comment}</b></p>
+                                                    <br />
+                                                    <br />
                                                 </>
                                             )
                                         })
+                                    }
+                                    {
+                                        <h3>Total  N{calculateTotals(combindedServices)}</h3>
                                     }
                                 </div>
 
