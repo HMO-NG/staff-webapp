@@ -1,0 +1,23 @@
+services:
+  web:
+    image: hmo-web
+#    ports:
+#      - '8080:80'
+#    build:
+#      context: ..
+#      dockerfile: Dockerfile
+    volumes:
+      - static_data:/web
+
+  python_server:
+    image: python:3.9-slim
+    depends_on:
+      - web
+    volumes:
+      - static_data:/usr/src/app/static
+    working_dir: /usr/src/app/static
+    command: python -m http.server 8000
+    ports:
+      - "8000:8000"
+volumes:
+  static_data:
