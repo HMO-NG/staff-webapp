@@ -24,9 +24,10 @@ export default defineConfig({
   },
   server:{
     proxy:{
+      // change your backend endpoint here
       '/api/v1': {
                 // config the target url based on your backend server
-                target: 'http://localhost:3000/',
+                target: 'http://localhost:8080/api/', //this is from nginx don't edit
                 changeOrigin: true,
                 secure: false,
             }
