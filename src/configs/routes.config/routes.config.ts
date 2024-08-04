@@ -124,7 +124,7 @@ export const protectedRoutes = [
     {
         key: 'nhia.tarrif.services.view',
         path: 'nhia/tarrif/services/view',
-        component: lazy(() => import('@/views/nhis/viewServiceTarrif')),
+        component: lazy(() => import('@/views/nhis/ViewServiceTarrif')),
         authority: [],
     },
     // create Nhis Tarrif Service
