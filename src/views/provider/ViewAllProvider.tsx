@@ -259,7 +259,7 @@ const ViewAllProvider = () => {
             },
             {
                 header: 'Entered by',
-                accessorKey: 'entered_by',
+                cell: (props) => props.cell.row.original.entered_by,
             },
             {
                 header: 'Status',
