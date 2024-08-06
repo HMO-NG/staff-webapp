@@ -11,10 +11,6 @@ COPY . .
 RUN yarn run build
 
 ## Stage 2: Prepare the final image with only static files
-FROM alpine:3.20
-
-COPY --from=appbuild /app/build /usr/share/nginx/html
-
 FROM nginx:alpine3.19
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=appbuild /app/build /usr/share/nginx/html
