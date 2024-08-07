@@ -4,7 +4,7 @@ import debounce from 'lodash/debounce'
 import Select from '@/components/ui/Select'
 import { components, OptionProps, SingleValueProps } from "react-select";
 import Card from '@/components/ui/Card'
-import Spinner from '@/components/ui/Spinner'
+import { useLocalStorage } from '@/utils/localStorage'
 import Avatar from '@/components/ui/Avatar'
 import { HiOutlineUser, HiMinus } from 'react-icons/hi'
 import useHealthCheck from '@/utils/customAuth/useHealthCheckerAuth'
@@ -15,8 +15,9 @@ import Input from '@/components/ui/Input'
 import { FormItem, FormContainer } from '@/components/ui/Form'
 import useProvider, { NHIAProviderType } from '@/utils/customAuth/useProviderAuth';
 import DatePicker from '@/components/ui/DatePicker'
-import type { FormikProps } from 'formik'
 import useNhia from '@/utils/customAuth/useNhisAuth';
+import Notification from '@/components/ui/Notification'
+import toast from '@/components/ui/toast'
 
 type NHIAEnrollee = {
     // value as id
@@ -103,6 +104,7 @@ const validationSchema = Yup.object().shape({
     //     })
     // ),
 })
+
 const CreateClaims = () => {
 
     const [selectedValue, setSelectedValue] = useState<NHIAEnrollee>()
@@ -135,7 +137,7 @@ const CreateClaims = () => {
     const { useGetAllNhiaEnrolleeAuth } = useEnrollee()
     const { useHealthCheckAuth } = useHealthCheck()
     const { useSearchNHIAProviderByHCPIDAuth } = useProvider()
-    const { getAllAndSearchNhiaServiceTarrifAuth, getAllAndSearchNhiaDrugTarrifAuth } = useNhia()
+    const { getAllAndSearchNhiaServiceTarrifAuth, getAllAndSearchNhiaDrugTarrifAuth, useCreateNhiaClaimsAuth } = useNhia()
 
     const debounceFn = debounce(handleDebounceFn, 500)
     const providerDebounceFn = debounce(getProviderDebounceFn, 500)
@@ -159,13 +161,16 @@ const CreateClaims = () => {
         }
     }
 
-    const fieldFeedback = (form: FormikProps<FormModel>, name: string) => {
-        const error = getIn(form.errors, name)
-        const touch = getIn(form.touched, name)
-        return {
-            errorMessage: error || '',
-            invalid: typeof touch === 'undefined' ? false : error && touch,
-        }
+    function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
+        toast.push(
+            <Notification
+                title={notificationType.toString()}
+                type={notificationType}>
+
+                {msg}
+            </Notification>, {
+            placement: 'top-center'
+        })
     }
 
     const SingleValue = ({
@@ -203,13 +208,26 @@ const CreateClaims = () => {
         receivingDebFn(inputValue)
     }
 
-    const onCreateClaims = (values: any, setSubmitting?: (isSubmitting: boolean) => void, resetForm?: () => void) => {
+    const onCreateClaims = async (values: any, setSubmitting?: (isSubmitting: boolean) => void, resetForm?: () => void) => {
 
+        const { getItem } = useLocalStorage()
+
+        values.user_id = getItem("user")
         values.nhia_enrollee_name = `${selectedValue?.surname} ${selectedValue?.other_names}`
         values.nhia_enrollee_id = `${selectedValue?.label}`
-        values.items = combindedServices
+        values.items = JSON.stringify(combindedServices, null, 2)
 
-        alert(JSON.stringify(values, null, 2))
+        // alert(JSON.stringify(values, null, 2))
+
+        const isNhiaClaimedSaved = await useCreateNhiaClaimsAuth(values)
+        
+        if (isNhiaClaimedSaved?.status === 'success') {
+            openNotification(isNhiaClaimedSaved.message, 'success')
+        }
+
+        if (isNhiaClaimedSaved?.status === 'failed') {
+            openNotification(isNhiaClaimedSaved.message, 'danger')
+        }
 
         console.log(values)
 
@@ -239,21 +257,21 @@ const CreateClaims = () => {
         let totalDrugPrice = 0;
 
         for (const item of items) {
-          const quantity = Number(item.qty) || 0;
+            const quantity = Number(item.qty) || 0;
 
-          if (item.service_price) {
-            const servicePrice = Number(item.service_price) || 0;
-            totalServicePrice += servicePrice * quantity;
-          } else if (item.drug_price) {
-            const drugPrice = Number(item.drug_price) || 0;
-            const percentage = Number(item.percentage) || 0;
-            const discountedPrice = drugPrice * (1 - percentage / 100);
-            totalDrugPrice += discountedPrice * quantity;
-          }
+            if (item.service_price) {
+                const servicePrice = Number(item.service_price) || 0;
+                totalServicePrice += servicePrice * quantity;
+            } else if (item.drug_price) {
+                const drugPrice = Number(item.drug_price) || 0;
+                const percentage = Number(item.percentage) || 0;
+                const discountedPrice = drugPrice * (1 - percentage / 100);
+                totalDrugPrice += discountedPrice * quantity;
+            }
         }
 
         return (totalServicePrice + totalDrugPrice);
-      }
+    }
 
     useEffect(() => {
         const fetchData = async () => {
@@ -382,7 +400,7 @@ const CreateClaims = () => {
                                 approval_date: null,
                                 date_hmo_recieved_claim: null,
                                 diagnosis: '',
-                                item: '',
+                                user_id: '',
                                 items: [
                                     {
                                         // service_name: '',
@@ -599,7 +617,7 @@ const CreateClaims = () => {
                                                                             placeholder="select appropriate service"
                                                                             onChange={(items) => {
                                                                                 if (items?.price) {
-                                                                                    setServiceInfo({ ...serviceInfo, name: items?.label, service_price: items?.price, drug_price: undefined})
+                                                                                    setServiceInfo({ ...serviceInfo, name: items?.label, service_price: items?.price, drug_price: undefined })
 
                                                                                 } else {
                                                                                     // setServiceInfo({ ...serviceInfo, name: items?.label, price: items?.price })

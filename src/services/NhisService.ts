@@ -44,3 +44,13 @@ export async function getAllAndSearchNhiaDrugTarrifService(data: any) {
         data
     })
 }
+
+export async function createNhiaClaimService(data: any) {
+    return ApiService.fetchData<{
+        message: string,
+    }>({
+        url: '/nhis/claim/create',
+        method: 'post',
+        data
+    })
+}

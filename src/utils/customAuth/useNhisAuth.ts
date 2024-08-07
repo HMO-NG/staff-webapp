@@ -2,7 +2,8 @@ import {
     createNhiaServiceTarrifService,
     getAllAndSearchNhiaService,
     createNhiaDrugTarrifService,
-    getAllAndSearchNhiaDrugTarrifService
+    getAllAndSearchNhiaDrugTarrifService,
+    createNhiaClaimService
 } from "@/services/NhisService"
 import { retry } from "@reduxjs/toolkit/dist/query"
 import { ErrorMessage } from "formik"
@@ -146,12 +147,32 @@ function useNhia() {
             }
         }
     }
+
+    const useCreateNhiaClaimsAuth = async (data: any): Promise<{
+        message: string,
+        status: Status
+    } | undefined> => {
+        try {
+            const response = await createNhiaClaimService(data)
+
+            return {
+                message: response.data.message,
+                status: 'success'
+            }
+        } catch (error: any) {
+            return {
+                message: error?.response?.data?.message || error.toString(),
+                status: 'failed'
+            }
+        }
+    }
     return {
         useCreateNhiaServiceTarrifAuth,
         useCreateNhiaServiceBulkUpload,
         getAllAndSearchNhiaServiceTarrifAuth,
         useCreateNhiaDrugTarrifAuth,
-        getAllAndSearchNhiaDrugTarrifAuth
+        getAllAndSearchNhiaDrugTarrifAuth,
+        useCreateNhiaClaimsAuth
     }
 
 }
