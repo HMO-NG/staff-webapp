@@ -51,17 +51,10 @@ function useNhia() {
                     } catch (error) {
                         console.error(`Error processing batch ${i / BATCH_SIZE + 1}:`, error);
                     }
-                    // const response = await createNhiaService(data)
                 }
             } else {
                 console.log("data is not any arrat")
             }
-
-            // return {
-            //     status: 'success',
-            //     message: response.data.message,
-            //     data: response.data.data
-            // }
 
         } catch (error: any) {
 

@@ -110,7 +110,7 @@ const CreateClaims = () => {
     const [selectedValue, setSelectedValue] = useState<NHIAEnrollee>()
     const [search, setSearch] = useState<string | undefined>(undefined)
     const [searchReferringHCF, setSearchReferringHCF] = useState<string | undefined>(undefined)
-    const [searchrecievingHCF, setSearchRecievingHCF] = useState<string | undefined>(undefined)
+    const [searchRecievingHCF, setSearchRecievingHCF] = useState<string | undefined>(undefined)
     const [data, setData] = useState<NHIAEnrollee[]>([])
     const [referringHCFData, setReferringHCFData] = useState<NHIAProviderType[]>([])
     const [recievingHCFData, setRecievingHCFData] = useState<NHIAProviderType[]>([])
@@ -217,10 +217,8 @@ const CreateClaims = () => {
         values.nhia_enrollee_id = `${selectedValue?.label}`
         values.items = JSON.stringify(combindedServices, null, 2)
 
-        // alert(JSON.stringify(values, null, 2))
-
         const isNhiaClaimedSaved = await useCreateNhiaClaimsAuth(values)
-        
+
         if (isNhiaClaimedSaved?.status === 'success') {
             openNotification(isNhiaClaimedSaved.message, 'success')
         }
@@ -229,8 +227,6 @@ const CreateClaims = () => {
             openNotification(isNhiaClaimedSaved.message, 'danger')
         }
 
-        console.log(values)
-
         if (setSubmitting !== undefined) {
             setSubmitting(false)
         }
@@ -238,18 +234,8 @@ const CreateClaims = () => {
 
     function storeTheServices() {
 
-        // if(serviceInfo !== undefined){
-
         setCombindedServices((prevServiceAmount) => [...prevServiceAmount, serviceInfo])
-        // }
 
-        // console.log("service info",)
-
-        // setTimeout(() => {
-        // alert(JSON.stringify(combindedServices, null, 2))
-        // }, 3000)
-
-        // setServiceInfo({})
     }
 
     function calculateTotals(items: any) {
@@ -308,9 +294,9 @@ const CreateClaims = () => {
 
             }
 
-            if (searchrecievingHCF !== undefined) {
+            if (searchRecievingHCF !== undefined) {
                 setLoading(true)
-                const recievingResponse = await useSearchNHIAProviderByHCPIDAuth(searchrecievingHCF)
+                const recievingResponse = await useSearchNHIAProviderByHCPIDAuth(searchRecievingHCF)
 
 
                 if (recievingResponse?.status === 'success') {
@@ -361,7 +347,7 @@ const CreateClaims = () => {
 
         }
         fetchData()
-    }, [search, searchReferringHCF, searchrecievingHCF])
+    }, [search, searchReferringHCF, searchRecievingHCF])
 
     return (
         <>
