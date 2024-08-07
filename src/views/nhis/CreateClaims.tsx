@@ -207,8 +207,11 @@ const CreateClaims = () => {
 
         values.nhia_enrollee_name = `${selectedValue?.surname} ${selectedValue?.other_names}`
         values.nhia_enrollee_id = `${selectedValue?.label}`
+        values.items = combindedServices
 
-        alert(JSON.stringify(combindedServices, null, 2))
+        alert(JSON.stringify(values, null, 2))
+
+        console.log(values)
 
         if (setSubmitting !== undefined) {
             setSubmitting(false)
@@ -382,13 +385,13 @@ const CreateClaims = () => {
                                 item: '',
                                 items: [
                                     {
-                                        service_name: '',
-                                        amount: '',
-                                        qty: '',
-                                        // amount_claimed: '',
-                                        // amount_agreed: '',
-                                        // amount_paid: '',
-                                        // remark: '',
+                                        // service_name: '',
+                                        // amount: '',
+                                        // qty: '',
+                                        // // amount_claimed: '',
+                                        // // amount_agreed: '',
+                                        // // amount_paid: '',
+                                        // // remark: '',
                                     }
                                 ]
                             }}
@@ -841,6 +844,7 @@ const CreateClaims = () => {
                                                                     </Field>
                                                                 </FormItem>
                                                             </div>
+                                                            {/* button */}
                                                             <div className='justify-self-center content-center'>
                                                                 <Button
                                                                     variant="solid"

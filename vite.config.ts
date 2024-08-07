@@ -27,7 +27,8 @@ export default defineConfig({
       // change your backend endpoint here
       '/api/v1': {
                 // config the target url based on your backend server
-                target: 'http://localhost:8080/api/', //this is from nginx don't edit
+                // target: 'http://localhost:8080/api/', //this is from nginx don't edit
+                target: 'http://localhost:3000', //TODO remove this when you want to go to production.
                 changeOrigin: true,
                 secure: false,
             }
