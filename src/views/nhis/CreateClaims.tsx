@@ -387,17 +387,7 @@ const CreateClaims = () => {
                                 date_hmo_recieved_claim: null,
                                 diagnosis: '',
                                 user_id: '',
-                                items: [
-                                    {
-                                        // service_name: '',
-                                        // amount: '',
-                                        // qty: '',
-                                        // // amount_claimed: '',
-                                        // // amount_agreed: '',
-                                        // // amount_paid: '',
-                                        // // remark: '',
-                                    }
-                                ]
+                                items: [ { } ]
                             }}
                             validationSchema={validationSchema}
 
@@ -604,11 +594,9 @@ const CreateClaims = () => {
                                                                             onChange={(items) => {
                                                                                 if (items?.price) {
                                                                                     setServiceInfo({ ...serviceInfo, name: items?.label, service_price: items?.price, drug_price: undefined })
-
                                                                                 } else {
                                                                                     // setServiceInfo({ ...serviceInfo, name: items?.label, price: items?.price })
                                                                                 }
-
                                                                             }
                                                                             }
                                                                         />
