@@ -236,6 +236,7 @@ const CreateClaims = () => {
 
         setCombindedServices((prevServiceAmount) => [...prevServiceAmount, serviceInfo])
 
+        setServiceInfo({})
     }
 
     function calculateTotals(items: any) {
@@ -732,7 +733,7 @@ const CreateClaims = () => {
                                                                                 placeholder="select appropriate drug"
                                                                                 onChange={(items) => {
                                                                                     if (items?.price) {
-                                                                                        setServiceInfo({ ...serviceInfo, name: items?.label, drug_price: items?.price, service_price: undefined })
+                                                                                        setServiceInfo({ ...serviceInfo, name: items?.label, drug_price: items?.price })
                                                                                     }
 
                                                                                 }
