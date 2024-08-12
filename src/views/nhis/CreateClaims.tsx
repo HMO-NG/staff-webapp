@@ -129,6 +129,8 @@ const CreateClaims = () => {
         amt_claimed?: string,
         comment?: string
     }>({})
+    // state for the service qty
+    const [serviceQty, setServiceQty] = useState<string>("1")
 
     // an array to store the info from nhia service and drug
     const [combindedServices, setCombindedServices] = useState<{}[]>([])
@@ -233,6 +235,11 @@ const CreateClaims = () => {
     }
 
     function storeTheServices() {
+
+        if (!serviceInfo.name) {
+            openNotification('Input a valid NHIA tarrif', 'warning')
+            return;
+        }
 
         setCombindedServices((prevServiceAmount) => [...prevServiceAmount, serviceInfo])
 
@@ -388,7 +395,7 @@ const CreateClaims = () => {
                                 date_hmo_recieved_claim: null,
                                 diagnosis: '',
                                 user_id: '',
-                                items: [ { } ]
+                                items: [{}]
                             }}
                             validationSchema={validationSchema}
 
@@ -640,8 +647,12 @@ const CreateClaims = () => {
                                                                     {({ field, form }: FieldProps<FormModel>) => (
                                                                         <Input
                                                                             type='number'
-                                                                            onChange={(i) =>
-                                                                                setServiceInfo({ ...serviceInfo, qty: i.target.value })
+                                                                            value={serviceQty}
+                                                                            onChange={(i) => {
+
+                                                                                setServiceQty(i.target.value)
+                                                                                setServiceInfo({ ...serviceInfo, qty: serviceQty })
+                                                                            }
                                                                             }
                                                                         />
                                                                     )}
