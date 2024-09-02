@@ -1,15 +1,15 @@
-import {lazy} from 'react'
+import { lazy } from 'react'
 import authRoute from './authRoute'
-import type {Routes} from '@/@types/routes'
-import {components} from 'react-select'
+import type { Routes } from '@/@types/routes'
+import { components } from 'react-select'
 
 export const publicRoutes: Routes = [...authRoute,
-    {
-        key: 'test',
-        path: '/test',
-        component: lazy(() => import('@/views/Home')),
-        authority: []
-    }
+{
+    key: 'test',
+    path: '/test',
+    component: lazy(() => import('@/views/Home')),
+    authority: []
+}
 ]
 
 export const protectedRoutes = [
@@ -153,6 +153,13 @@ export const protectedRoutes = [
         key: 'nhia.claims.create',
         path: 'nhia/claims/create',
         component: lazy(() => import('@/views/nhis/CreateClaims')),
+        authority: [],
+    },
+    // manage users/users permission
+    {
+        key: 'manage.user',
+        path: '/manage/user',
+        component: lazy(() => import('@/views/profile/UserPermissions')),
         authority: [],
     },
     /** Example purpose only, please remove */

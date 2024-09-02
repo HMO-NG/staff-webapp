@@ -6,6 +6,9 @@ import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 import { HiOutlineLogout, HiOutlineUser } from 'react-icons/hi'
 import type { CommonProps } from '@/@types/common'
+import {useAppSelector} from '@/store'
+import { HiOutlineUserGroup } from "react-icons/hi";
+
 
 type DropdownList = {
     label: string
@@ -13,18 +16,27 @@ type DropdownList = {
     icon: JSX.Element
 }
 
-const dropdownItemList: DropdownList[] = []
+const dropdownItemList: DropdownList[] = [
+    {
+        label: 'Manage Users',
+        path: '/manage/user',
+        icon: <HiOutlineUserGroup />,
+    }
+]
 
 const _UserDropdown = ({ className }: CommonProps) => {
 
     const { signOut } = useAuth()
 
+    const { first_name, last_name, email } = useAppSelector((state) => state.auth.user)
+
+
     const UserAvatar = (
         <div className={classNames(className, 'flex items-center gap-2')}>
             <Avatar size={32} shape="circle" icon={<HiOutlineUser />} />
             <div className="hidden md:block">
-                <div className="text-xs capitalize">admin</div>
-                <div className="font-bold">User01</div>
+                <div className="text-xs capitalize">{"your role"}</div>
+                <div className="font-bold">{first_name} {last_name}</div>
             </div>
         </div>
     )
@@ -41,9 +53,9 @@ const _UserDropdown = ({ className }: CommonProps) => {
                         <Avatar shape="circle" icon={<HiOutlineUser />} />
                         <div>
                             <div className="font-bold text-gray-900 dark:text-gray-100">
-                                User01
+                                {first_name} {last_name}
                             </div>
-                            <div className="text-xs">user01@mail.com</div>
+                            <div className="text-xs">{email}</div>
                         </div>
                     </div>
                 </Dropdown.Item>
@@ -54,8 +66,8 @@ const _UserDropdown = ({ className }: CommonProps) => {
                         eventKey={item.label}
                         className="mb-1 px-0"
                     >
-                        <Link 
-                            className="flex h-full w-full px-2" 
+                        <Link
+                            className="flex h-full w-full px-2"
                             to={item.path}
                         >
                             <span className="flex gap-2 items-center w-full">
