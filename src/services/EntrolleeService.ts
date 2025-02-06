@@ -36,3 +36,16 @@ export async function getAllNhiaEnrolleeService(data: any) {
         data
     })
 }
+
+export async function OnboardNhiaCompanyEnrolleesService(data: any) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+      total: number
+  }>({
+      url: '/privates/enrollee/company-masterlist',
+      method: 'post',
+      data
+  })
+}
+
