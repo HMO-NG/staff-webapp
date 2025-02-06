@@ -146,7 +146,20 @@ const navigationConfig: NavigationTree[] = [
                         authority: [],
                         subMenu: []
                     },
-                ]
+
+
+                  // create private enrollees
+                  {
+                      key: 'nhia.enrollee.private',
+                      path: 'privates/enrollee',
+                      title: 'View Privates',
+                      translateKey: 'nhia.enrollee.private',
+                      icon: 'groupCollapseMenu',
+                      type: NAV_ITEM_TYPE_ITEM,
+                      authority: [],
+                      subMenu: []
+                  },
+              ]
             },
         ],
     },
