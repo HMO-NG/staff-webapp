@@ -143,3 +143,25 @@ export async function DeleteAttachedBenefitService(data:any) {
         data
     })
 }
+
+export async function UpdateHealthPlanService(id:any,data:any) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+  }>({
+      url: `/healthplan/update/${id}`,
+      method: 'put',
+      data,
+  })
+}
+
+export async function UpdateHealthPlanStatusService(id:any,data:any) {
+  return ApiService.fetchData<{
+      message: string,
+      data:any,
+  }>({
+      url: `/healthplan/change-status/${id}`,
+      method: 'put',
+      data: typeof data === "boolean" ? { disabled_plan: data } : data,
+  })
+}
