@@ -30,6 +30,17 @@ export async function OnboardCompanyEnrolleesService(data: any) {
       data
   })
 }
+export async function OnboardIndividualEnrolleesService(data: any) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+      total: number
+  }>({
+      url: '/privates/enrollee/onboarding',
+      method: 'post',
+      data
+  })
+}
 
 export async function updateClientStatusService(data:any,id:string) {
   return ApiService.fetchData<Response>({
