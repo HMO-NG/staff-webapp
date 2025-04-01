@@ -159,21 +159,33 @@ export const protectedRoutes = [
     },
     {
         key: 'nhia.enrollee.private',
-        path: 'privates/enrollee',
-        component: lazy(() => import('@/views/enrollee/ViewPrivates')),
+        path: 'privates/viewclients',
+        component: lazy(() => import('@/views/privates/ViewClients')),
         authority: [],
     },
     {
         key: 'nhia.enrollee.onboard',
         path: 'privates/enrollee/onboard',
-        component: lazy(() => import('@/views/enrollee/Onboarding')),
+        component: lazy(() => import('@/views/privates/Onboarding')),
         authority: [],
     },
     {
       key: 'nhia.enrollee.comapanyinfo',
       path: 'privates/enrollee/companyinfo',
-      component: lazy(() => import('@/views/enrollee/CompanyInfo')),
+      component: lazy(() => import('@/views/privates/CompanyInfo')),
       authority: [],
+  },
+   {
+    key: 'nhia.enrollee.enroleeview',
+    path: 'privates/enrollee/view',
+    component: lazy(() => import('@/views/privates/ViewPrivateEnrollees')),
+    authority: [],
+   },
+   {
+   key: 'nhia.enrollee.comapanyinfo',
+   path: 'privates/enrollee/add',
+   component: lazy(() => import('@/views/privates/EnrolleeEntryForm')),
+   authority: [],
   },
     // create nhia claims
     {
