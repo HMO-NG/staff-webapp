@@ -162,6 +162,6 @@ export async function UpdateHealthPlanStatusService(id:any,data:any) {
   }>({
       url: `/healthplan/change-status/${id}`,
       method: 'put',
-      data: typeof data === "boolean" ? { disabled_plan: data } : data,
+      data,
   })
 }
