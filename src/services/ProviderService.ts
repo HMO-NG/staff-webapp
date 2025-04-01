@@ -85,7 +85,7 @@ export async function searchNHIAProviderByHCPIDService(data: any) {
         message: string,
         data: any,
     }>({
-        url: '/provider/nhia/get',
+        url: '/provider/get',
         method: 'post',
         data
     })
