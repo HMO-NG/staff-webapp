@@ -82,11 +82,11 @@ function useEnrollee() {
         status: Status
     } | undefined> => {
         try {
-            const response = await getAllNhiaEnrolleeService({ "id": data })
+            const response = await getAllNhiaEnrolleeService({ "query": data ,"sort":{"order":"asc","key":""}})
 
             return {
                 message: response.data.message,
-                data: response.data.data.map((i) => {
+                data: response.data.data.map((i:any) => {
                     return {
                         label: i.policy_id,
                         value: i.id,
