@@ -31,7 +31,7 @@ export async function getAllNhiaEnrolleeService(data: any) {
         data: any,
         total: number
     }>({
-        url: '/nhis/enrollee/get',
+        url: '/nhis/enrollee/search',
         method: 'post',
         data
     })
