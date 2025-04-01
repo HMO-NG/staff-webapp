@@ -24,7 +24,7 @@ import {
     HiOutlineDocumentDownload,
 } from 'react-icons/hi'
 import Tag from '@/components/ui/Tag'
-// import useUpdateHealthPlanAuth from '@/utils/customAuth/useHealthPlanAuth'
+
 type HealthPlan = {
     id: string
     plan_name: string
@@ -84,7 +84,6 @@ const ViewHealthPlan = () => {
         plan_cost: string
         created_at: string
         entered_by: string
-        //  disabled_plan:string;
     }>({
         id: '',
         plan_name: '',
@@ -96,7 +95,6 @@ const ViewHealthPlan = () => {
         plan_cost: '',
         created_at: '',
         entered_by: '',
-        // disabled_plan:"",
     })
 
     const [edithealthplan, setEditHealthPlan] = useState<{
@@ -112,7 +110,6 @@ const ViewHealthPlan = () => {
         created_at: string
         entered_by: string
     }>({
-        // id: "",
         id: '',
         plan_name: '',
         health_plan_category_name: '',
@@ -127,12 +124,10 @@ const ViewHealthPlan = () => {
     const [healthplanStatus, setHealthPlanStatus] = useState<{
         id: string
         disabled_plan: boolean
-        // user_id: string
         plan_name: string;
     }>({
         id: '',
         disabled_plan: false,
-        // user_id: '',
         plan_name: '',
     })
 
@@ -150,6 +145,18 @@ const ViewHealthPlan = () => {
     const [viewDialog, setViewDialog] = useState(false)
     const [statusDialog, setStatusDialog] = useState(false)
 
+    const fetchData2 = async () => {
+      setLoading(true)
+      const response = await useViewHealthPlanAuth(tableData)
+      if (response?.status === 'success') {
+          setData(response.data)
+          setLoading(false)
+          setTableData((prevData) => ({
+              ...prevData,
+              ...{ total: response.total[0]['count(*)'] },
+          }))
+      }
+  }
     const onDropdownClick = (e: SyntheticEvent) => {
         console.log('Dropdown Clicked', e)
     }
@@ -212,7 +219,6 @@ const ViewHealthPlan = () => {
                     id: cellProps.row.original.id,
                     disabled_plan: cellProps.row.original.disabled_plan,
                     plan_name: cellProps.row.original.plan_name,
-                    // user_id: cellProps.row.original.user_id,
                 })
                 setStatusDialog(true)
                 break
@@ -357,23 +363,35 @@ const ViewHealthPlan = () => {
         const result = await useUpdateHealthPlanAuth(id, data)
 
         setMessage(result.message)
-
+        let notif_type:any
+        if (result.status === 'success'){
+           notif_type='success'
+        }
+        else if(result.status === 'failed'){
+          notif_type='warning'
+        }
+        setEditDialog(false)
+        fetchData2()
         if (result.message) {
             setTimeout(() => {
-                openNotification()
-            }, 3000)
+                openNotification(result.message,notif_type)
+            }, 2000)
         }
     }
 
-    const toastNotification = (
-        <Notification title="Message">{message}</Notification>
-    )
+    function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
+      toast.push(
+          <Notification
+              title={notificationType.toString()}
+              type={notificationType}>
 
-    function openNotification() {
-        toast.push(toastNotification)
-    }
+              {msg}
+          </Notification>, {
+          placement: 'top-center'
+      })
+  }
 
-    async function updateProviderStatus(healthplanId: string, disabled_plan: boolean) {
+    async function updateHealthPlanStatus(healthplanId: string, disabled_plan: boolean) {
         let status;
 
         if (disabled_plan) {
@@ -381,15 +399,23 @@ const ViewHealthPlan = () => {
         } else {
             status = true
         }
-        // let status: boolean = !disabled_plan;
 
         disabled_plan = status;
 
-        const response = await useUpdateHealthPlanStatusAuth(healthplanId, disabled_plan)
-
+        const response = await useUpdateHealthPlanStatusAuth(healthplanId,{'disabled_plan': disabled_plan})
+        let notif_type:any
+        if (response.status === 'success'){
+           notif_type='success'
+        }
+        else if(response.status === 'failed'){
+          notif_type='warning'
+        }
         if (response) {
             setStatusDialog(false)
-            window.location.reload();
+            fetchData2()
+            setTimeout(() => {
+              openNotification(response.message,notif_type)
+          }, 2000)
         }
     }
 
@@ -564,22 +590,7 @@ const ViewHealthPlan = () => {
                                                 <b>{healthplan.entered_by}</b>
                                             </td>
                                         </tr>
-                                        {/* <tr>
-                                            <td>Entered By</td>
-                                            <td><b>{provider.entered_by}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Modified By</td>
-                                            <td><b>{provider.modified_by}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Modified At</td>
-                                            <td><b>{provider.modified_at}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Created At</td>
-                                            <td><b>{provider.created_at}</b></td>
-                                        </tr> */}
+
                                     </tbody>
                                 </table>
                             </div>
@@ -617,24 +628,16 @@ const ViewHealthPlan = () => {
         user_id: string,
         entered_by: string */
                                     initialValues={{
-                                        // id: edithealthplan.id,
+
                                         plan_name: edithealthplan.plan_name,
-                                        health_plan_category_name:
-                                            edithealthplan.health_plan_category_name,
+                                        health_plan_category_name:edithealthplan.health_plan_category_name,
                                         plan_type: edithealthplan.plan_type,
-                                        allow_dependent:
-                                            edithealthplan.allow_dependent,
-                                        max_dependant:
-                                            edithealthplan.max_dependant,
-                                        plan_age_limit:
-                                            edithealthplan.plan_age_limit,
+                                        allow_dependent:edithealthplan.allow_dependent,
+                                        max_dependant:edithealthplan.max_dependant,
+                                        plan_age_limit:edithealthplan.plan_age_limit,
                                         plan_cost: edithealthplan.plan_cost,
-                                        entered_by: edithealthplan.entered_by,
                                     }}
-                                    onSubmit={(
-                                        values,
-                                        { resetForm, setSubmitting },
-                                    ) => {
+                                    onSubmit={(values,{ resetForm, setSubmitting },) => {
                                         updateHealthPlan(values)
                                     }}
                                 >
@@ -757,7 +760,7 @@ const ViewHealthPlan = () => {
                         <Button
                             variant="solid"
                             onClick={() =>
-                                updateProviderStatus(
+                                updateHealthPlanStatus(
                                     healthplanStatus.id,
                                     healthplanStatus.disabled_plan
                                 )
