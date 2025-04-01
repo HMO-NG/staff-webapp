@@ -477,14 +477,6 @@ function useHealthPlan() {
     }
 
 
-    // const useUpdateHealthPlanAuth = async (data: any): Promise<{ message: string }> => {
-    //           try {
-    //               const result = await UpdateHealthPlanService(data)
-    //               return result.data
-    //           } catch (error: any) {
-    //               return error
-    //           }
-    //       }
       const useUpdateHealthPlanAuth = async (id:any,data: any): Promise<{
       message: string,
       data?: any,
@@ -510,7 +502,7 @@ function useHealthPlan() {
       }
 
   }
-  const useUpdateHealthPlanStatusAuth = async (id:any,data: boolean): Promise<{
+  const useUpdateHealthPlanStatusAuth = async (id:any,data: any): Promise<{
     message: string,
     data?: any,
     status: Status
