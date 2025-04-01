@@ -24,17 +24,25 @@ export type NHIAProviderType = {
 function useProvider() {
 
     const useCreateProvider = async (data: any): Promise<{
-        data: string,
-        message: string
+        data?: any,
+        message: string,
+        status: Status
     }> => {
         try {
             const response = await createProvider(data)
 
-            return response.data
+          return {
+              message: response.data.message,
+              data: response.data.data,
+              status: "success"
+          }
 
         } catch (error: any) {
 
-            return error
+          return {
+            status: 'failed',
+            message: error?.response?.data?.message || error.toString(),
+        }
 
         }
     }
@@ -118,14 +126,14 @@ function useProvider() {
         status: Status
     }> => {
         try {
-            const response = await searchNHIAProviderByHCPIDService({"hcpId":data})
+            const response = await searchNHIAProviderByHCPIDService({"query":data,"sort":{"order":"asc","key":""}})
 
             return {
                 data: response.data.data.map((i: any) => {
                     return {
                         label: i.name,
                         value: i.id,
-                        hcp_id: i.hcp_id,
+                        hcp_id: i.code,
                         is_active: i.is_active,
                         created_by: i.created_by
                     }
