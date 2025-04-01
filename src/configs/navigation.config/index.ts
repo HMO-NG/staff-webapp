@@ -63,7 +63,7 @@ const navigationConfig: NavigationTree[] = [
                 path: '',
                 title: 'Health Plan Menu',
                 translateKey: 'nav.healthplan.create',
-                icon: 'menu',
+                icon: 'MdOutlineHealthAndSafety',
                 type: NAV_ITEM_TYPE_COLLAPSE,
                 authority: [],
                 subMenu: [
@@ -147,22 +147,69 @@ const navigationConfig: NavigationTree[] = [
                         subMenu: []
                     },
 
-
-                  // create private enrollees
-                  {
-                      key: 'nhia.enrollee.private',
-                      path: 'privates/enrollee',
-                      title: 'View Privates',
-                      translateKey: 'nhia.enrollee.private',
-                      icon: 'groupCollapseMenu',
-                      type: NAV_ITEM_TYPE_ITEM,
-                      authority: [],
-                      subMenu: []
-                  },
               ]
             },
         ],
     },
+    //privates
+    {
+      key: 'private-title',
+      path: '',
+      title: '',
+      translateKey: 'Privates',
+      icon: '',
+      type: NAV_ITEM_TYPE_TITLE,
+      authority: [],
+      subMenu: [
+          {
+              key: 'private',
+              path: '',
+              title: 'Privates',
+              translateKey: 'enrollee-private',
+              icon: 'RiGitRepositoryPrivateLine',
+              type: NAV_ITEM_TYPE_COLLAPSE,
+              authority: [],
+              subMenu: [
+
+
+                // create private enrollees
+                {
+                    key: 'private.company',
+                    path: 'privates/viewclients',
+                    title: 'View Clients',
+                    translateKey: 'private.company',
+                    icon: 'groupCollapseMenu',
+                    type: NAV_ITEM_TYPE_ITEM,
+                    authority: [],
+                    subMenu: []
+                },
+                 // create private enrollees
+                 {
+                   key: 'private.employee',
+                   path: 'privates/enrollee/onboard',
+                   title: 'Onboard Private Employees',
+                   translateKey: 'private.employee',
+                   icon: 'groupCollapseMenu',
+                   type: NAV_ITEM_TYPE_ITEM,
+                   authority: [],
+                   subMenu: []
+                },
+                {
+                  key: 'private.employee.view',
+                  path: 'privates/enrollee/view',
+                  title: 'view Private Employees',
+                  translateKey: 'private.employee.view',
+                  icon: 'groupCollapseMenu',
+                  type: NAV_ITEM_TYPE_ITEM,
+                  authority: [],
+                  subMenu: []
+               },
+
+            ]
+          },
+      ],
+  },
+
     // nhis
     {
         key: 'nhis-title',
