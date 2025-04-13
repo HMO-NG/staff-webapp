@@ -3,7 +3,9 @@ import {createCompanyService,
   updateClientService,updateClientStatusService,
   getPrivateEnrolleeByCompanyIdService,
   getPrivateProviderService,OnboardCompanyEnrolleesService,
-  OnboardIndividualEnrolleesService
+  OnboardIndividualEnrolleesService,
+  getSinglePrivateEnrolleeService,
+  createPrivateEnrolleeDependantsService,
 
 }from "@/services/PrivatesService";
 
@@ -29,7 +31,7 @@ type PrivateEnrollee={
       last_name:string
       middle_name:string
       email:string
-      phone_number:number
+      phone_number:string
       passport_url:string
       sex:string
       department:string
@@ -45,6 +47,15 @@ type PrivateEnrollee={
       provider_id:string
       provider_name:string
       company_name:string
+
+      blood_group: string,
+      genotype: string,
+      disabilities: string,
+      allergies: string,
+      pre_existing_conditions:string,
+      past_surgeries: string,
+      family_medical_history: string,
+
       linked_to_user:string
       enrolled_by:string
 }
@@ -347,6 +358,58 @@ function usePrivates() {
 
 }
 
+const usegetSinglePrivateEnrolleeAuth = async (id:string): Promise<{
+  message: string,
+  data?: Omit<PrivateEnrollee, 'provider_name'|'company_name'>,
+  status: Status
+}> => {
+
+  try {
+
+      const response = await getSinglePrivateEnrolleeService(id);
+      const { provider_name, company_name, ...enrolleeData } = response.data.data;
+      return {
+          message: response.data.message,
+          data: enrolleeData,
+
+          status: 'success'
+
+      }
+  }
+  catch (error: any) {
+
+      return {
+          status: 'failed',
+          message: error?.response?.data?.message || error.toString(),
+      }
+  }
+
+}
+const createPrivateEnrolleeDependantsAuth = async (id: string,data:any): Promise<{
+  message: string,
+  data?: any,
+  status: Status
+}> => {
+  try {
+      const response = await createPrivateEnrolleeDependantsService(id,data)
+
+      return {
+          message: response.data.message,
+          data: response.data.data,
+          status: "success"
+      }
+
+  } catch (error: any) {
+
+      return {
+          status: 'failed',
+          message: error?.response?.data?.message || error.toString(),
+      }
+
+  }
+}
+
+
 
 
 
@@ -360,6 +423,8 @@ function usePrivates() {
         updateClientStatusAuth,
         usegetPrivateEnrolleeByCompanyIdAuth,
         usegetPrivateProviderAuth,
+        usegetSinglePrivateEnrolleeAuth,
+        createPrivateEnrolleeDependantsAuth,
       }
 }
 
