@@ -77,6 +77,27 @@ export async function getPrivateProviderService() {
   })
 }
 
+export async function getSinglePrivateEnrolleeService(id:string) {
+  return ApiService.fetchData<Response>({
+      url: `/privates/enrollee/get/${id}`,
+      method: 'get',
+  })
+}
+export async function createPrivateEnrolleeDependantsService(id: string,data:any) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+      total: number
+  }>({
+      url: `/privates/enrollee/dependent/${id}`,
+      method: 'post',
+      data
+  })
+}
+
+
+
+
 
 
 
