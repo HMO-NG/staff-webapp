@@ -87,7 +87,6 @@ const CreateProvider = () => {
               if (data?.status ==='success'){
                 setSuccessMessage(data.message)
               }
-                // setSuccessMessage(data.message)
                 setSubmitting(false)
                 resetForm()
             }, 3000)
