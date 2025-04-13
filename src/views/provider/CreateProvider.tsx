@@ -83,13 +83,24 @@ const CreateProvider = () => {
         const data = await useCreateProvider(values)
 
         if (data?.data) {
-
             setTimeout(() => {
+              if (data?.status ==='success'){
                 setSuccessMessage(data.message)
+              }
+                // setSuccessMessage(data.message)
                 setSubmitting(false)
                 resetForm()
             }, 3000)
 
+        }
+
+        else if (data?.status ==='failed'){
+          setTimeout(() => {
+              setErrorMessage(data.message)
+              setSubmitting(false)
+              resetForm()
+          }, 3000)
+          setErrorMessage(data.message)
         }
 
     }
@@ -147,7 +158,12 @@ const CreateProvider = () => {
     return (
         <div>
             {errorMessage && (
-                <Alert showIcon className="mb-4" type="danger">
+                <Alert closable
+                showIcon
+                type="danger"
+                title='failed'
+                customIcon={<HiCheckCircle />}
+                duration={10000}>
                     {errorMessage}
                 </Alert>
             )}
