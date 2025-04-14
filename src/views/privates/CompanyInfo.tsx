@@ -42,7 +42,7 @@ const validationSchema = Yup.object().shape({
 
 const CompanyInfo = () => {
   const {useGetCompanyAuth,useCreateCompanyAuth}=usePrivates()
-  const {addDocumentAuth}=useDouments()
+  const {addDocumentAuth,uploadRawFilesTocloudinaryAuth,uploadImagesTocloudinaryAuth}=useDouments()
   const navigate = useNavigate()
   const { getItem,setItem,removeItem } = useLocalStorage()
   const [companyId, setcompanyId] = useState<{
@@ -83,10 +83,7 @@ const CompanyInfo = () => {
                 formData.append('cloud_name', 'dtqdaogbn');
                 formData.append('resource_type', 'raw')
 
-                const response2 = await axios.post(
-                  `https://api.cloudinary.com/v1_1/dtqdaogbn/raw/upload`,
-                  formData
-                );
+                const response2 = await uploadRawFilesTocloudinaryAuth(formData,'dtqdaogbn')
                 let client_data1:any =sessionStorage.getItem('client')
                 let client_data2=JSON.parse(client_data1)
                 let user_data = getItem('user')
@@ -97,7 +94,7 @@ const CompanyInfo = () => {
                   linked_to_user:client_data2.profile_id,
                   created_by:user_data
                 }
-                if(response2.status==200){
+                if(response2.status=='success'){
                const result = await addDocumentAuth(data)
                 }
               }
@@ -121,9 +118,16 @@ const CompanyInfo = () => {
                       setSubmitting(false)
                       resetForm()
                   }, 3000)
-                  // navigate('/privates/viewclients')
-                  openNotification(data.message,'success')
-                  sessionStorage.setItem("client", JSON.stringify(data?.data));
+                  if (data.status=='success'){
+                    openNotification(data.message,'success')
+                    sessionStorage.setItem("client", JSON.stringify(data?.data));
+                    setregistered_company_data(data?.data)
+                  }
+                  else if (data.status=='failed'){
+                    openNotification(data.message,'danger')
+                  }
+
+
 
               }
 
@@ -162,13 +166,11 @@ const CompanyInfo = () => {
          {registered_company_data ?(
                           <Card
                                  className='m-7'
-                                 header="Registered Enrollee Details">
+                                 header="Registered Client Details">
                                  <div>
 
 
                                    <div>
-                                       {/* className=' flex grid-cols-{1}' */}
-                                       {/* <p>first_name: {registered_company_data?.first_name}</p> */}
                                        <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
                                        <div className="space-y-2">
                                         {[
@@ -261,10 +263,10 @@ const CompanyInfo = () => {
                         invalid={errors.primary_contact_email && touched.primary_contact_email}
                         errorMessage={errors.primary_contact_email}>
                             <Field
-                                type="txt"
+                                type="email"
                                 autoComplete="off"
                                 name="primary_contact_email"
-                                placeholder="Enter primary_contact_email"
+                                placeholder="Enter Primary Contact Email"
                                 component={Input}
                             />
                         </FormItem>
@@ -351,7 +353,6 @@ const CompanyInfo = () => {
                          size="md"
                         className='mt-10 '
                         onClick={()=>{
-                          // openNotification('exited enrollee entry form','info')
                           setopen_add_doc(true)
 
                         }}
@@ -367,7 +368,7 @@ const CompanyInfo = () => {
                         className='mt-10 '
                         onClick={()=>{
                           navigate('/privates/enrollee/view')
-                          openNotification('exited enrollee entry form','info')
+                          openNotification('exited create client form','info')
                           sessionStorage.removeItem('client')
 
                         }}
