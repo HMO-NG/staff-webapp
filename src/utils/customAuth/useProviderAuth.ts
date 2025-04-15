@@ -5,7 +5,15 @@ import {
     editProviderByID,
     updateProviderActivationStatus,
     createNHIAProviderService,
-    searchNHIAProviderByHCPIDService
+    searchNHIAProviderByHCPIDService,
+    CreateProviderServiceTariffService,
+    getProviderServiceTariffByIdfService,
+    getAllProviderServiceTariffService,
+    getSingleProviderServiceTariffByIdService,
+    CreateProviderDrugTariffService,
+    getProviderDrugTariffByIdfService,
+    getAllProviderDrugTariffService,
+    getSingleProviderDrugTariffByIdService,
 } from "@/services/ProviderService";
 import { string } from "yup";
 
@@ -19,6 +27,30 @@ export type NHIAProviderType = {
     hcp_id: string,
     is_active: string,
     created_by: string
+}
+export type ProviderServiceTariffType={
+  id:string,
+  item_name:string,
+  item_price:string,
+  provider_id:string,
+  insurance_plan_type:string,
+  hcpcs_code:string,
+  is_surgical:string,
+  patient_type:string,
+  category:string,
+  created_by:string
+}
+export type ProviderDrugTariffType={
+  id:string,
+  item_name:string,
+  item_price:string,
+  provider_id:string,
+  insurance_plan_type:string,
+  formulation:string,
+  unit_of_measure:string,
+  category:string,
+  strength:string,
+  created_by:string
 }
 
 function useProvider() {
@@ -152,6 +184,300 @@ function useProvider() {
         }
     }
 
+    const useCreateProviderServiceTariffAuth = async (data: any): Promise<{
+      data?: any,
+      message: string,
+      status: Status
+  }> => {
+      try {
+          const response = await CreateProviderServiceTariffService(data)
+
+        return {
+            message: response.data.message,
+            data: response.data.data,
+            status: "success"
+        }
+
+      } catch (error: any) {
+
+        return {
+          status: 'failed',
+          message: error?.response?.data?.message || error.toString(),
+      }
+
+      }
+  }
+
+        const usegetProviderServiceTariffByIdAuth = async (id:string): Promise<{
+          message: string,
+          data?: ProviderServiceTariffType[],
+          count?:number
+          status: Status
+      }> => {
+
+          try {
+
+              const response = await getProviderServiceTariffByIdfService(id);
+              return {
+                  message: response.data.message,
+                  data: response.data.data.map((data: any) => {
+                      return {
+                        id:data.id,
+                        item_name:data.item_name,
+                        item_price:data.item_price,
+                        provider_id:data.provider_id,
+                        insurance_plan_type:data.insurance_plan_type,
+                        hcpcs_code:data.hcpcs_code,
+                        is_surgical:data.is_surgical,
+                        patient_type:data.patient_type,
+                        category:data.category,
+                        created_by:data.created_by
+
+                      }
+                  }),
+                  count:response.data.count,
+                  status: 'success'
+
+              }
+          }
+          catch (error: any) {
+
+              return {
+                  status: 'failed',
+                  message: error?.response?.data?.message || error.toString(),
+              }
+          }
+
+      }
+
+      const usegetAllProviderServiceTariffAuth = async (): Promise<{
+        message: string,
+        data?: ProviderServiceTariffType[],
+        status: Status
+    }> => {
+
+        try {
+
+            const response = await getAllProviderServiceTariffService();
+            return {
+                message: response.data.message,
+                data: response.data.data.map((data: any) => {
+                    return {
+                      id:data.id,
+                      item_name:data.item_name,
+                      item_price:data.item_price,
+                      provider_id:data.provider_id,
+                      insurance_plan_type:data.insurance_plan_type,
+                      hcpcs_code:data.hcpcs_code,
+                      is_surgical:data.is_surgical,
+                      patient_type:data.patient_type,
+                      category:data.category,
+                      created_by:data.created_by
+
+                    }
+                }),
+                status: 'success'
+
+            }
+        }
+        catch (error: any) {
+
+            return {
+                status: 'failed',
+                message: error?.response?.data?.message || error.toString(),
+            }
+        }
+
+    }
+
+    const usegetSingleProviderServiceTariffByIdAuth = async (id:string): Promise<{
+      message: string,
+      data?: ProviderServiceTariffType,
+      status: Status
+  }> => {
+
+      try {
+
+          const response = await getSingleProviderServiceTariffByIdService(id);
+          return {
+              message: response.data.message,
+              data: response.data.data.map((data: any) => {
+                  return {
+                    id:data.id,
+                    item_name:data.item_name,
+                    item_price:data.item_price,
+                    provider_id:data.provider_id,
+                    insurance_plan_type:data.insurance_plan_type,
+                    hcpcs_code:data.hcpcs_code,
+                    is_surgical:data.is_surgical,
+                    patient_type:data.patient_type,
+                    category:data.category,
+                    created_by:data.created_by
+
+                  }
+              }),
+              status: 'success'
+
+          }
+      }
+      catch (error: any) {
+
+          return {
+              status: 'failed',
+              message: error?.response?.data?.message || error.toString(),
+          }
+      }
+
+  }
+
+
+
+
+  const useCreateProviderDrugTariffAuth = async (data: any): Promise<{
+    data?: any,
+    message: string,
+    status: Status
+}> => {
+    try {
+        const response = await CreateProviderDrugTariffService(data)
+
+      return {
+          message: response.data.message,
+          data: response.data.data,
+          status: "success"
+      }
+
+    } catch (error: any) {
+
+      return {
+        status: 'failed',
+        message: error?.response?.data?.message || error.toString(),
+    }
+
+    }
+}
+
+      const usegetProviderDrugTariffByIdAuth = async (id:string): Promise<{
+        message: string,
+        data?: ProviderDrugTariffType[],
+        count?:number
+        status: Status
+    }> => {
+
+        try {
+
+            const response = await getProviderServiceTariffByIdfService(id);
+            return {
+                message: response.data.message,
+                data: response.data.data.map((data: any) => {
+                    return {
+                      id:data.id,
+                      item_name:data.item_name,
+                      item_price:data.item_price,
+                      provider_id:data.provider_id,
+                      insurance_plan_type:data.insurance_plan_type,
+                      formulation:data.formulation,
+                      unit_of_measure:data.unit_of_measure,
+                      category:data.category,
+                      strength:data.strength,
+                      created_by:data.created_by
+
+                    }
+                }),
+                count:response.data.count,
+                status: 'success'
+
+            }
+        }
+        catch (error: any) {
+
+            return {
+                status: 'failed',
+                message: error?.response?.data?.message || error.toString(),
+            }
+        }
+
+    }
+
+    const usegetAllProviderDrugTariffAuth = async (): Promise<{
+      message: string,
+      data?: ProviderDrugTariffType[],
+      status: Status
+  }> => {
+
+      try {
+
+          const response = await getAllProviderDrugTariffService();
+          return {
+              message: response.data.message,
+              data: response.data.data.map((data: any) => {
+                  return {
+                    id:data.id,
+                    item_name:data.item_name,
+                    item_price:data.item_price,
+                    provider_id:data.provider_id,
+                    insurance_plan_type:data.insurance_plan_type,
+                    formulation:data.formulation,
+                    unit_of_measure:data.unit_of_measure,
+                    category:data.category,
+                    strength:data.strength,
+                    created_by:data.created_by
+
+                  }
+              }),
+              status: 'success'
+
+          }
+      }
+      catch (error: any) {
+
+          return {
+              status: 'failed',
+              message: error?.response?.data?.message || error.toString(),
+          }
+      }
+
+  }
+
+  const usegetSingleProviderDrugTariffByIdAuth = async (id:string): Promise<{
+    message: string,
+    data?: ProviderDrugTariffType,
+    status: Status
+}> => {
+
+    try {
+
+        const response = await getSingleProviderDrugTariffByIdService(id);
+        return {
+            message: response.data.message,
+            data: response.data.data.map((data: any) => {
+                return {
+                  id:data.id,
+                  item_name:data.item_name,
+                  item_price:data.item_price,
+                  provider_id:data.provider_id,
+                  insurance_plan_type:data.insurance_plan_type,
+                  formulation:data.formulation,
+                  unit_of_measure:data.unit_of_measure,
+                  category:data.category,
+                  strength:data.strength,
+                  created_by:data.created_by
+
+                }
+            }),
+            status: 'success'
+
+        }
+    }
+    catch (error: any) {
+
+        return {
+            status: 'failed',
+            message: error?.response?.data?.message || error.toString(),
+        }
+    }
+
+}
     return {
         useCreateProvider,
         useGetAllProvider,
@@ -159,7 +485,15 @@ function useProvider() {
         useEditProviderById,
         useUpdateProviderActivationStatus,
         useCreateNHIAProviderAuth,
-        useSearchNHIAProviderByHCPIDAuth
+        useSearchNHIAProviderByHCPIDAuth,
+        useCreateProviderServiceTariffAuth,
+        usegetProviderServiceTariffByIdAuth,
+        usegetAllProviderServiceTariffAuth,
+        usegetSingleProviderServiceTariffByIdAuth,
+        useCreateProviderDrugTariffAuth,
+        usegetProviderDrugTariffByIdAuth,
+        usegetSingleProviderDrugTariffByIdAuth,
+        usegetAllProviderDrugTariffAuth
     }
 }
 export default useProvider
