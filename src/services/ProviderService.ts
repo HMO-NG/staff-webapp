@@ -85,8 +85,93 @@ export async function searchNHIAProviderByHCPIDService(data: any) {
         message: string,
         data: any,
     }>({
-        url: '/provider/nhia/get',
+        url: '/provider/get',
         method: 'post',
         data
     })
+}
+
+export async function CreateProviderServiceTariffService(data: any) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+  }>({
+      url: '/provider/service/tariff/create',
+      method: 'post',
+      data
+  })
+}
+
+export async function getProviderServiceTariffByIdfService(id: string) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+      count:number
+  }>({
+      url: `/provider/service/tariff/get/${id}`,
+      method: 'get',
+  })
+}
+
+export async function getAllProviderServiceTariffService() {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+  }>({
+      url: '/provider/service/tariff/getall',
+      method: 'get',
+  })
+}
+
+export async function getSingleProviderServiceTariffByIdService(id: string) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+  }>({
+      url: `/provider/service/tariff/${id}`,
+      method: 'get',
+  })
+}
+
+
+export async function CreateProviderDrugTariffService(data: any) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+  }>({
+      url: '/provider/drug/tariff/create',
+      method: 'post',
+      data
+  })
+}
+
+export async function getProviderDrugTariffByIdfService(id: string) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+      count:number
+  }>({
+      url: `/provider/drug/tariff/get/${id}`,
+      method: 'get',
+  })
+}
+
+export async function getAllProviderDrugTariffService() {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+  }>({
+      url: '/provider/drug/tariff/getall',
+      method: 'get',
+  })
+}
+
+export async function getSingleProviderDrugTariffByIdService(id: string) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+  }>({
+      url: `/provider/drug/tariff/${id}`,
+      method: 'get',
+  })
 }

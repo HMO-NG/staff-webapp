@@ -3,7 +3,12 @@ import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import DataTable from '@/components/shared/DataTable'
 import { useNavigate } from 'react-router-dom'
-import type { ColumnDef, OnSortParam, CellContext, Row } from '@/components/shared/DataTable'
+import type {
+    ColumnDef,
+    OnSortParam,
+    CellContext,
+    Row,
+} from '@/components/shared/DataTable'
 import debounce from 'lodash/debounce'
 import Dropdown from '@/components/ui/Dropdown'
 import type { SyntheticEvent } from 'react'
@@ -13,26 +18,35 @@ import { Field, Form, Formik } from 'formik'
 import toast from '@/components/ui/toast'
 import Notification from '@/components/ui/Notification'
 import useHealthPlan from '@/utils/customAuth/useHealthPlanAuth'
-import { HiPlus, HiDocumentAdd, HiOutlineDocumentDownload } from "react-icons/hi"
+import {
+    HiPlus,
+    HiDocumentAdd,
+    HiOutlineDocumentDownload,
+} from 'react-icons/hi'
 import Tag from '@/components/ui/Tag'
 
 type HealthPlan = {
-    id: string;
-    plan_name: string,
-    plan_category: string,
-    plan_type: string,
-    allow_dependent: string,
-    max_dependant: string,
-    plan_age_limit: string,
-    plan_cost: string,
-    created_at: string,
-    user_id: string,
+    id: string
+    plan_name: string
+    health_plan_category_name: string
+    plan_type: string
+    allow_dependent: string
+    max_dependant: string
+    plan_age_limit: string
+    plan_cost: string
+    created_at: string
+    user_id: string
     entered_by: string
+    disabled_plan: boolean
 }
 
 const ViewHealthPlan = () => {
-
-    const { useViewHealthPlanAuth, useCreateHealthPlanAuth } = useHealthPlan()
+    const {
+        useViewHealthPlanAuth,
+        useCreateHealthPlanAuth,
+        useUpdateHealthPlanAuth,
+        useUpdateHealthPlanStatusAuth,
+    } = useHealthPlan()
 
     const navigate = useNavigate()
     const [data, setData] = useState([])
@@ -44,8 +58,8 @@ const ViewHealthPlan = () => {
         pageSize: number
         sort: {
             order: '' | 'asc' | 'desc'
-            key: string | number;
-        };
+            key: string | number
+        }
         query: string
         total: number
     }>({
@@ -58,83 +72,64 @@ const ViewHealthPlan = () => {
             key: '',
         },
     })
-    const [provider, setProvider] = useState<
-        {
-            id: string;
-            email: string,
-            address: string,
-            phone_number: string,
-            medical_director_name: string,
-            medical_director_phone_no: string,
-            modified_by: string,
-            created_at: string,
-            modified_at: string,
-            name: string;
-            state: string,
-            code: string;
-            user_id: string,
-            entered_by: string
-        }>({
-            id: "",
-            email: "",
-            address: "",
-            phone_number: "",
-            medical_director_name: "",
-            medical_director_phone_no: "",
-            modified_by: "",
-            created_at: "",
-            modified_at: "",
-            name: "",
-            state: "",
-            code: "",
-            user_id: "",
-            entered_by: "",
-        })
+    const [healthplan, setHealthPlan] = useState<{
 
-    const [editProvider, setEditProvider] = useState<
-        {
-            id: string;
-            email: string,
-            address: string,
-            phone_number: string,
-            medical_director_name: string,
-            medical_director_phone_no: string,
-            modified_by: string,
-            created_at: string,
-            modified_at: string,
-            name: string;
-            state: string,
-            code: string;
-            user_id: string,
-            entered_by: string
-        }>({
-            id: "",
-            email: "",
-            address: "",
-            phone_number: "",
-            medical_director_name: "",
-            medical_director_phone_no: "",
-            modified_by: "",
-            created_at: "",
-            modified_at: "",
-            name: "",
-            state: "",
-            code: "",
-            user_id: "",
-            entered_by: "",
-        })
-    const [providerStatus, setProviderStatus] = useState<
-        {
-            id: string;
-            is_active: boolean,
-            user_id: string,
-            name: string,
-        }>({
-            id: "",
-            is_active: false,
-            user_id: "",
-            name: "",
-        })
+        id: string
+        plan_name: string
+        health_plan_category_name: string
+        plan_type: string
+        allow_dependent: string
+        max_dependant: string
+        plan_age_limit: string
+        plan_cost: string
+        created_at: string
+        entered_by: string
+    }>({
+        id: '',
+        plan_name: '',
+        health_plan_category_name: '',
+        plan_type: '',
+        allow_dependent: '',
+        max_dependant: '',
+        plan_age_limit: '',
+        plan_cost: '',
+        created_at: '',
+        entered_by: '',
+    })
+
+    const [edithealthplan, setEditHealthPlan] = useState<{
+
+        id: string
+        plan_name: string
+        health_plan_category_name: string
+        plan_type: string
+        allow_dependent: string
+        max_dependant: string
+        plan_age_limit: string
+        plan_cost: string
+        created_at: string
+        entered_by: string
+    }>({
+        id: '',
+        plan_name: '',
+        health_plan_category_name: '',
+        plan_type: '',
+        allow_dependent: '',
+        max_dependant: '',
+        plan_age_limit: '',
+        plan_cost: '',
+        created_at: '',
+        entered_by: '',
+    })
+    const [healthplanStatus, setHealthPlanStatus] = useState<{
+        id: string
+        disabled_plan: boolean
+        plan_name: string;
+    }>({
+        id: '',
+        disabled_plan: false,
+        plan_name: '',
+    })
 
     const inputRef = useRef(null)
 
@@ -150,6 +145,18 @@ const ViewHealthPlan = () => {
     const [viewDialog, setViewDialog] = useState(false)
     const [statusDialog, setStatusDialog] = useState(false)
 
+    const fetchData2 = async () => {
+      setLoading(true)
+      const response = await useViewHealthPlanAuth(tableData)
+      if (response?.status === 'success') {
+          setData(response.data)
+          setLoading(false)
+          setTableData((prevData) => ({
+              ...prevData,
+              ...{ total: response.total[0]['count(*)'] },
+          }))
+      }
+  }
     const onDropdownClick = (e: SyntheticEvent) => {
         console.log('Dropdown Clicked', e)
     }
@@ -171,65 +178,50 @@ const ViewHealthPlan = () => {
         debounceFn(e.target.value)
     }
 
-    const handleAction = async (cellProps: CellContext<HealthPlan, unknown>, key: any) => {
-
+    const handleAction = async (
+        cellProps: CellContext<HealthPlan, unknown>,
+        key: any,
+    ) => {
         switch (key) {
             case 'view':
-                setProvider(
-                    {
-                        id: cellProps.row.original.id,
-                        email: cellProps.row.original.email,
-                        address: cellProps.row.original.address,
-                        phone_number: cellProps.row.original.phone_number,
-                        medical_director_name: cellProps.row.original.medical_director_name,
-                        medical_director_phone_no: cellProps.row.original.medical_director_phone_no,
-                        modified_by: cellProps.row.original.modified_by,
-                        created_at: cellProps.row.original.created_at,
-                        modified_at: cellProps.row.original.modified_at,
-                        name: cellProps.row.original.name,
-                        state: cellProps.row.original.state,
-                        code: cellProps.row.original.code,
-                        user_id: cellProps.row.original.user_id,
-                        entered_by: cellProps.row.original.entered_by
-                    }
-                )
+                setHealthPlan({
+                    id: cellProps.row.original.id,
+                    plan_name: cellProps.row.original.plan_name,
+                    health_plan_category_name:cellProps.row.original.health_plan_category_name,
+                    plan_type: cellProps.row.original.plan_type,
+                    allow_dependent: cellProps.row.original.allow_dependent,
+                    max_dependant: cellProps.row.original.max_dependant,
+                    plan_age_limit: cellProps.row.original.plan_age_limit,
+                    plan_cost: cellProps.row.original.plan_cost,
+                    created_at: cellProps.row.original.created_at,
+                    entered_by: cellProps.row.original.entered_by,
+                })
 
                 setViewDialog(true)
-                break;
+                break
             case 'edit':
-
-                setEditProvider(
-                    {
-                        id: cellProps.row.original.id,
-                        email: cellProps.row.original.email,
-                        address: cellProps.row.original.address,
-                        phone_number: cellProps.row.original.phone_number,
-                        medical_director_name: cellProps.row.original.medical_director_name,
-                        medical_director_phone_no: cellProps.row.original.medical_director_phone_no,
-                        modified_by: cellProps.row.original.modified_by,
-                        created_at: cellProps.row.original.created_at,
-                        modified_at: cellProps.row.original.modified_at,
-                        name: cellProps.row.original.name,
-                        state: cellProps.row.original.state,
-                        code: cellProps.row.original.code,
-                        user_id: cellProps.row.original.user_id,
-                        entered_by: cellProps.row.original.entered_by
-                    }
-                )
+                setEditHealthPlan({
+                    id: cellProps.row.original.id,
+                    plan_name: cellProps.row.original.plan_name,
+                    health_plan_category_name:cellProps.row.original.health_plan_category_name,
+                    plan_type: cellProps.row.original.plan_type,
+                    allow_dependent: cellProps.row.original.allow_dependent,
+                    max_dependant: cellProps.row.original.max_dependant,
+                    plan_age_limit: cellProps.row.original.plan_age_limit,
+                    plan_cost: cellProps.row.original.plan_cost,
+                    created_at: cellProps.row.original.created_at,
+                    entered_by: cellProps.row.original.entered_by,
+                })
                 setEditDialog(true)
-                break;
+                break
             case 'status':
-                setProviderStatus(
-                    {
-                        id: cellProps.row.original.id,
-                        is_active: cellProps.row.original.is_active,
-                        name: cellProps.row.original.name,
-                        user_id: cellProps.row.original.user_id,
-
-                    }
-                )
+                setHealthPlanStatus({
+                    id: cellProps.row.original.id,
+                    disabled_plan: cellProps.row.original.disabled_plan,
+                    plan_name: cellProps.row.original.plan_name,
+                })
                 setStatusDialog(true)
-                break;
+                break
             // ... more cases
             default:
             // Code to execute if expression doesn't match any case
@@ -240,8 +232,8 @@ const ViewHealthPlan = () => {
         console.log('selectedRows', selectedRows)
     }
 
-    const columns: ColumnDef<HealthPlan>[] = useMemo(() => (
-        [
+    const columns: ColumnDef<HealthPlan>[] = useMemo(
+        () => [
             {
                 header: 'Plan Name',
                 accessorKey: 'plan_name',
@@ -258,18 +250,17 @@ const ViewHealthPlan = () => {
                 header: 'Allow Dependent',
                 cell: (props) => (
                     <div>
-                        {
-                            props.cell.row.original.allow_dependent ?
-                                <Tag className='text-white bg-indigo-600 border-0'>
-                                    Yes
-                                </Tag> :
-                                <Tag className='text-white bg-red-700 border-0'>
-                                    No
-                                </Tag>
-
-                        }
+                        {props.cell.row.original.allow_dependent ? (
+                            <Tag className="text-white bg-indigo-600 border-0">
+                                Yes
+                            </Tag>
+                        ) : (
+                            <Tag className="text-white bg-red-700 border-0">
+                                No
+                            </Tag>
+                        )}
                     </div>
-                )
+                ),
             },
             {
                 header: 'Age Limit',
@@ -288,18 +279,23 @@ const ViewHealthPlan = () => {
                 accessorKey: 'entered_by',
             },
             {
+              header: 'is active',
+              accessorKey: 'disabled_plan',
+          },
+            {
                 header: '',
                 id: 'action',
                 cell: (props) => (
                     <div>
-                        <Dropdown
-                            placement='bottom-start'>
+                        <Dropdown placement="bottom-start">
                             {dropdownItems.map((item) => (
                                 <Dropdown.Item
                                     key={item.key}
                                     eventKey={item.key}
                                     onSelect={onDropdownItemClick}
-                                    onClick={() => handleAction(props, item.key)}
+                                    onClick={() =>
+                                        handleAction(props, item.key)
+                                    }
                                 >
                                     {item.name}
                                 </Dropdown.Item>
@@ -308,8 +304,9 @@ const ViewHealthPlan = () => {
                     </div>
                 ),
             },
-        ]
-    ), [])
+        ],
+        [],
+    )
 
     const handlePaginationChange = (pageIndex: number) => {
         setTableData((prevData) => ({ ...prevData, ...{ pageIndex } }))
@@ -330,15 +327,15 @@ const ViewHealthPlan = () => {
         console.log('row', row)
         if (checked) {
             setSelectedRows((prevData) => {
-                if (!prevData.includes(row.name)) {
-                    return [...prevData, ...[row.name]]
+                if (!prevData.includes(row.plan_name)) {
+                    return [...prevData, ...[row.plan_name]]
                 }
                 return prevData
             })
         } else {
             setSelectedRows((prevData) => {
-                if (prevData.includes(row.name)) {
-                    return prevData.filter((id) => id !== row.name)
+                if (prevData.includes(row.plan_name)) {
+                    return prevData.filter((id) => id !== row.plan_name)
                 }
                 return prevData
             })
@@ -351,7 +348,7 @@ const ViewHealthPlan = () => {
             const originalRows = rows.map((row) => row.original)
             const selectedIds: string[] = []
             originalRows.forEach((row) => {
-                selectedIds.push(row.name)
+                selectedIds.push(row.plan_name)
             })
             setSelectedRows(selectedIds)
         } else {
@@ -359,52 +356,67 @@ const ViewHealthPlan = () => {
         }
     }
 
-    const updateProvider = async (data: any) => {
-        const result = await useEditProviderById(data)
+    const updateHealthPlan = async (data: any) => {
+        const id = edithealthplan.id
+        console.log(id)
+        console.log('ID:', id)
+        const result = await useUpdateHealthPlanAuth(id, data)
 
         setMessage(result.message)
-
+        let notif_type:any
+        if (result.status === 'success'){
+           notif_type='success'
+        }
+        else if(result.status === 'failed'){
+          notif_type='warning'
+        }
+        setEditDialog(false)
+        fetchData2()
         if (result.message) {
             setTimeout(() => {
-                openNotification()
-            },
-                3000
-            )
-
+                openNotification(result.message,notif_type)
+            }, 2000)
         }
-
-
     }
 
-    const toastNotification = (
-        <Notification title="Message">
-            {message}
-        </Notification>
-    )
+    function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
+      toast.push(
+          <Notification
+              title={notificationType.toString()}
+              type={notificationType}>
 
-    function openNotification() {
-        toast.push(toastNotification)
-    }
+              {msg}
+          </Notification>, {
+          placement: 'top-center'
+      })
+  }
 
-    async function updateProviderStatus(providerId: string, data: any) {
-
+    async function updateHealthPlanStatus(healthplanId: string, disabled_plan: boolean) {
         let status;
 
-        if (data.is_active) {
+        if (disabled_plan) {
             status = false
         } else {
             status = true
         }
 
-        data.is_active = status;
+        disabled_plan = status;
 
-        const response = await useUpdateProviderActivationStatus(providerId, data)
-
+        const response = await useUpdateHealthPlanStatusAuth(healthplanId,{'disabled_plan': disabled_plan})
+        let notif_type:any
+        if (response.status === 'success'){
+           notif_type='success'
+        }
+        else if(response.status === 'failed'){
+          notif_type='warning'
+        }
         if (response) {
             setStatusDialog(false)
-            window.location.reload();
+            fetchData2()
+            setTimeout(() => {
+              openNotification(response.message,notif_type)
+          }, 2000)
         }
-
     }
 
     useEffect(() => {
@@ -422,8 +434,13 @@ const ViewHealthPlan = () => {
         }
         fetchData()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-
-    }, [tableData.pageIndex, tableData.sort, tableData.pageSize, tableData.query, tableData.total])
+    }, [
+        tableData.pageIndex,
+        tableData.sort,
+        tableData.pageSize,
+        tableData.query,
+        tableData.total,
+    ])
 
     return (
         <>
@@ -441,7 +458,7 @@ const ViewHealthPlan = () => {
 
             {/* Add benefit btn */}
             {/* grid-row-{1} */}
-            <div className=' flex  justify-evenly pb-10'>
+            <div className=" flex  justify-evenly pb-10">
                 <Button
                     className="mr-2"
                     variant="solid"
@@ -492,9 +509,8 @@ const ViewHealthPlan = () => {
                 onIndeterminateCheckBoxChange={handleAllRowSelect}
             />
 
-
-            {
-                viewDialog && <Dialog
+            {viewDialog && (
+                <Dialog
                     isOpen={viewDialog}
                     onClose={() => setViewDialog(false)}
                     onRequestClose={() => setViewDialog(false)}
@@ -503,12 +519,8 @@ const ViewHealthPlan = () => {
                     shouldCloseOnEsc={false}
                 >
                     <div className="flex flex-col h-full justify-between">
-
-
-                        <h5 className="mb-4">View Provider</h5>
+                        <h5 className="mb-4">View HealthPlan</h5>
                         <div className="max-h-96 overflow-y-auto">
-
-
                             <div className="prose dark:prose-invert mx-auto">
                                 <table>
                                     <thead>
@@ -520,53 +532,65 @@ const ViewHealthPlan = () => {
                                     <tbody>
                                         <tr>
                                             <td>Name</td>
-                                            <td><b>{provider.name}</b></td>
+                                            <td>
+                                                <b>{healthplan.plan_name}</b>
+                                            </td>
                                         </tr>
                                         <tr>
-                                            <td>Email</td>
-                                            <td><b>{provider.email}</b></td>
+                                            <td>plan_category</td>
+                                            <td>
+                                                <b>
+                                                    {
+                                                        healthplan.health_plan_category_name
+                                                    }
+                                                </b>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>plan_type</td>
+                                            <td>
+                                                <b>{healthplan.plan_type}</b>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>allow_dependent</td>
+                                            <td>
+                                                <b>
+                                                    {healthplan.allow_dependent
+                                                        ? 'True'
+                                                        : 'False'}
+                                                </b>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>max_dependant</td>
+                                            <td>
+                                                <b>
+                                                    {healthplan.max_dependant}
+                                                </b>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>plan_age_limit</td>
+                                            <td>
+                                                <b>
+                                                    {healthplan.plan_age_limit}
+                                                </b>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>plan_cos</td>
+                                            <td>
+                                                <b>{healthplan.plan_cost}</b>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>entered_by</td>
+                                            <td>
+                                                <b>{healthplan.entered_by}</b>
+                                            </td>
+                                        </tr>
 
-                                        </tr>
-                                        <tr>
-                                            <td>Address</td>
-                                            <td><b>{provider.address}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Phone Number</td>
-                                            <td><b>{provider.phone_number}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>State</td>
-                                            <td><b>{provider.state}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Provider Code</td>
-                                            <td><b>{provider.code}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Medical Director Name</td>
-                                            <td><b>{provider.medical_director_name}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Medical Director Phone No.</td>
-                                            <td><b>{provider.medical_director_phone_no}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Entered By</td>
-                                            <td><b>{provider.entered_by}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Modified By</td>
-                                            <td><b>{provider.modified_by}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Modified At</td>
-                                            <td><b>{provider.modified_at}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Created At</td>
-                                            <td><b>{provider.created_at}</b></td>
-                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -582,9 +606,9 @@ const ViewHealthPlan = () => {
                         </div>
                     </div>
                 </Dialog>
-            }
-            {
-                editDialog && <Dialog
+            )}
+            {editDialog && (
+                <Dialog
                     isOpen={editDialog}
                     onClose={() => setEditDialog(false)}
                     onRequestClose={() => setEditDialog(false)}
@@ -593,11 +617,8 @@ const ViewHealthPlan = () => {
                     shouldCloseOnEsc={false}
                 >
                     <div className="flex flex-col h-full justify-between">
-
-
-                        <h5 className="mb-4">Edit Provider</h5>
+                        <h5 className="mb-4">Edit plan</h5>
                         <div className="max-h-96 overflow-y-auto">
-
                             <div className="prose dark:prose-invert mx-auto">
                                 <Formik
                                     /*  id: string;
@@ -607,106 +628,91 @@ const ViewHealthPlan = () => {
         user_id: string,
         entered_by: string */
                                     initialValues={{
-                                        id: editProvider.id,
-                                        name: editProvider.name,
-                                        email: editProvider.email,
-                                        address: editProvider.address,
-                                        phone_number: editProvider.phone_number,
-                                        medical_director_name: editProvider.medical_director_name,
-                                        medical_director_phone_no: editProvider.medical_director_phone_no,
-                                        state: editProvider.state,
-                                        user_id: editProvider.user_id
 
+                                        plan_name: edithealthplan.plan_name,
+                                        health_plan_category_name:edithealthplan.health_plan_category_name,
+                                        plan_type: edithealthplan.plan_type,
+                                        allow_dependent:edithealthplan.allow_dependent,
+                                        max_dependant:edithealthplan.max_dependant,
+                                        plan_age_limit:edithealthplan.plan_age_limit,
+                                        plan_cost: edithealthplan.plan_cost,
                                     }}
-                                    onSubmit={(values, { resetForm, setSubmitting }) => {
-                                        updateProvider(values)
-                                    }
-                                    }
-
+                                    onSubmit={(values,{ resetForm, setSubmitting },) => {
+                                        updateHealthPlan(values)
+                                    }}
                                 >
                                     {({ touched, errors, resetForm }) => (
                                         <Form>
                                             <FormContainer>
                                                 {/* Name */}
-                                                <FormItem
-                                                    label="Name"
-                                                >
+                                                <FormItem label="plan_name">
                                                     <Field
                                                         type="text"
                                                         autoComplete="off"
-                                                        name="name"
+                                                        name="plan_name"
                                                         component={Input}
                                                     />
                                                 </FormItem>
                                                 {/* Email */}
-                                                <FormItem
-                                                    label="Email"
-                                                >
+                                                <FormItem label="health_plan_category_name">
                                                     <Field
                                                         type="text"
                                                         autoComplete="off"
-                                                        name="email"
+                                                        name="health_plan_category_name"
                                                         component={Input}
                                                     />
                                                 </FormItem>
                                                 {/* Address */}
-                                                <FormItem
-                                                    label="Address"
-                                                >
+                                                <FormItem label="plan_type">
                                                     <Field
                                                         type="text"
                                                         autoComplete="off"
-                                                        name="address"
+                                                        name="plan_type"
                                                         component={Input}
                                                     />
                                                 </FormItem>
                                                 {/* phone number */}
-                                                <FormItem
-                                                    label="Phone Number"
-                                                >
+                                                <FormItem label="allow_dependent">
                                                     <Field
                                                         type="text"
                                                         autoComplete="off"
-                                                        name="phone_number"
+                                                        name="allow_dependent"
                                                         component={Input}
                                                     />
                                                 </FormItem>
                                                 {/* Medical Director's Name */}
-                                                <FormItem
-                                                    label="Medical Director's Name"
-                                                >
+                                                <FormItem label="max_dependant">
                                                     <Field
                                                         type="text"
                                                         autoComplete="off"
-                                                        name="medical_director_name"
+                                                        name="max_dependant"
                                                         component={Input}
                                                     />
                                                 </FormItem>
                                                 {/*medical_director_phone_no*/}
-                                                <FormItem
-                                                    label="Medical Director's Phone No."
-                                                >
+                                                <FormItem label="plan_age_limit">
                                                     <Field
                                                         type="text"
                                                         autoComplete="off"
-                                                        name="medical_director_phone_no"
+                                                        name="plan_age_limit"
                                                         component={Input}
                                                     />
                                                 </FormItem>
                                                 {/* state */}
-                                                <FormItem
-                                                    label="State"
-                                                >
+                                                <FormItem label="plan_cost">
                                                     <Field
                                                         type="text"
                                                         autoComplete="off"
-                                                        name="state"
+                                                        name="plan_cost"
                                                         component={Input}
                                                     />
                                                 </FormItem>
 
                                                 <FormItem>
-                                                    <Button variant="solid" type="submit">
+                                                    <Button
+                                                        variant="solid"
+                                                        type="submit"
+                                                    >
                                                         SAVE
                                                     </Button>
                                                 </FormItem>
@@ -727,9 +733,9 @@ const ViewHealthPlan = () => {
                         </div>
                     </div>
                 </Dialog>
-            }
-            {
-                statusDialog && <Dialog
+            )}
+            {statusDialog && (
+                <Dialog
                     isOpen={statusDialog}
                     onClose={() => setStatusDialog(false)}
                     onRequestClose={() => setStatusDialog(false)}
@@ -737,13 +743,11 @@ const ViewHealthPlan = () => {
                     shouldCloseOnOverlayClick={false}
                     shouldCloseOnEsc={false}
                 >
-
-                    <h5 className="mb-4">Set Provider Status</h5>
+                    <h5 className="mb-4">Deactivate Health Plan</h5>
                     <p>
-                        {providerStatus.is_active ?
-                            `Deactivate ${providerStatus.name}` :
-                            `Activate ${providerStatus.name}`
-                        }
+                        {healthplanStatus.disabled_plan
+                            ? `Deactivate ${healthplanStatus.plan_name}`
+                            : `Activate ${healthplanStatus.plan_name}`}
                     </p>
                     <div className="text-right mt-6">
                         <Button
@@ -753,14 +757,21 @@ const ViewHealthPlan = () => {
                         >
                             Cancel
                         </Button>
-                        <Button variant="solid" onClick={() => updateProviderStatus(providerStatus.id, providerStatus)}>
+                        <Button
+                            variant="solid"
+                            onClick={() =>
+                                updateHealthPlanStatus(
+                                    healthplanStatus.id,
+                                    healthplanStatus.disabled_plan
+                                )
+                            }
+
+                        >
                             Okay
                         </Button>
                     </div>
-
                 </Dialog>
-            }
-
+            )}
         </>
     )
 }

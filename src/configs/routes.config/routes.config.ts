@@ -3,13 +3,14 @@ import authRoute from './authRoute'
 import type { Routes } from '@/@types/routes'
 import { components } from 'react-select'
 
-export const publicRoutes: Routes = [...authRoute,
-{
-    key: 'test',
-    path: '/test',
-    component: lazy(() => import('@/views/Home')),
-    authority: []
-}
+export const publicRoutes: Routes = [
+    ...authRoute,
+    {
+        key: 'test',
+        path: '/test',
+        component: lazy(() => import('@/views/Home')),
+        authority: [],
+    },
 ]
 
 export const protectedRoutes = [
@@ -23,19 +24,19 @@ export const protectedRoutes = [
         key: 'provider.create',
         path: '/provider/create',
         component: lazy(() => import('@/views/provider/CreateProvider')),
-        authority: []
+        authority: [],
     },
     {
         key: 'provider.view',
         path: '/provider/view',
         component: lazy(() => import('@/views/provider/ViewAllProvider')),
-        authority: []
+        authority: [],
     },
     {
         key: 'provider.edit',
         path: '/provider/edit',
         component: lazy(() => import('@/views/provider/EditProvider')),
-        authority: []
+        authority: [],
     },
     {
         key: 'healthplan.create',
@@ -76,28 +77,36 @@ export const protectedRoutes = [
     {
         key: 'healthplan.category.create',
         path: '/healthplan/category/create',
-        component: lazy(() => import('@/views/healthplan/CreateHealthPlanCategory')),
+        component: lazy(
+            () => import('@/views/healthplan/CreateHealthPlanCategory'),
+        ),
         authority: [],
     },
     // view single page for health plan category
     {
         key: 'healthplan.category.single.view',
         path: '/healthplan/category/singleview',
-        component: lazy(() => import('@/views/healthplan/SingleViewHealthPlanCategory')),
+        component: lazy(
+            () => import('@/views/healthplan/SingleViewHealthPlanCategory'),
+        ),
         authority: [],
     },
     // attach health plan benefits
     {
         key: 'healthplan.benefit.attach',
         path: '/healthplan/benefits/attach',
-        component: lazy(() => import('@/views/healthplan/AttachHealthPlanBenefit')),
+        component: lazy(
+            () => import('@/views/healthplan/AttachHealthPlanBenefit'),
+        ),
         authority: [],
     },
     // edit heath plan benefits
     {
         key: 'healthplan.benefit.attach',
         path: '/healthplan/benefits/attach/edit',
-        component: lazy(() => import('@/views/healthplan/EditAttachHealthPlanBenefit')),
+        component: lazy(
+            () => import('@/views/healthplan/EditAttachHealthPlanBenefit'),
+        ),
         authority: [],
     },
     // create nhia drug tarrif
@@ -148,6 +157,36 @@ export const protectedRoutes = [
         component: lazy(() => import('@/views/enrollee/CreateNHIAEnrollee')),
         authority: [],
     },
+    {
+        key: 'nhia.enrollee.private',
+        path: 'privates/viewclients',
+        component: lazy(() => import('@/views/privates/ViewClients')),
+        authority: [],
+    },
+    {
+        key: 'nhia.enrollee.onboard',
+        path: 'privates/enrollee/onboard',
+        component: lazy(() => import('@/views/privates/Onboarding')),
+        authority: [],
+    },
+    {
+      key: 'nhia.enrollee.comapanyinfo',
+      path: 'privates/enrollee/companyinfo',
+      component: lazy(() => import('@/views/privates/CompanyInfo')),
+      authority: [],
+  },
+   {
+    key: 'nhia.enrollee.enroleeview',
+    path: 'privates/enrollee/view',
+    component: lazy(() => import('@/views/privates/ViewPrivateEnrollees')),
+    authority: [],
+   },
+   {
+   key: 'nhia.enrollee.comapanyinfo',
+   path: 'privates/enrollee/add',
+   component: lazy(() => import('@/views/privates/EnrolleeEntryForm')),
+   authority: [],
+  },
     // create nhia claims
     {
         key: 'nhia.claims.create',
@@ -162,41 +201,6 @@ export const protectedRoutes = [
         component: lazy(() => import('@/views/profile/UserPermissions')),
         authority: [],
     },
-    /** Example purpose only, please remove */
-    {
-        key: 'collapseMenu.item1',
-        path: '/collapse-menu-item-view-1',
-        component: lazy(() => import('@/views/demo/CollapseMenuItemView1')),
-        authority: [],
-    },
-    {
-        key: 'collapseMenu.item2',
-        path: '/collapse-menu-item-view-2',
-        component: lazy(() => import('@/views/demo/CollapseMenuItemView2')),
-        authority: [],
-    },
-    {
-        key: 'groupMenu.single',
-        path: '/group-single-menu-item-view',
-        component: lazy(() =>
-            import('@/views/demo/GroupSingleMenuItemView')
-        ),
-        authority: [],
-    },
-    {
-        key: 'groupMenu.collapse.item1',
-        path: '/group-collapse-menu-item-view-1',
-        component: lazy(() =>
-            import('@/views/demo/GroupCollapseMenuItemView1')
-        ),
-        authority: [],
-    },
-    {
-        key: 'groupMenu.collapse.item2',
-        path: '/group-collapse-menu-item-view-2',
-        component: lazy(() =>
-            import('@/views/demo/GroupCollapseMenuItemView2')
-        ),
-        authority: [],
-    },
+
+
 ]

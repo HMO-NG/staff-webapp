@@ -11,7 +11,9 @@ import {
     CreateAttachedBenefitService,
     GetAttachedBenefitServiceByHealthPlanID,
     UpdateAttachedBenefitService,
-    DeleteAttachedBenefitService
+    DeleteAttachedBenefitService,
+    UpdateHealthPlanService,
+    UpdateHealthPlanStatusService
 
 } from "@/services/HealthPlanService"
 
@@ -38,7 +40,8 @@ export type healthPlan = {
     health_plan_category_code: string,
     health_plan_category_band: string,
     user_id: string,
-    entered_by: string
+    entered_by: string,
+    disabled_plan:boolean
 }
 
 export type benefitList = {
@@ -420,7 +423,7 @@ function useHealthPlan() {
         }
 
     }
-    
+
     const useUpdateAttachedBenefitAuth = async (data: any): Promise<{
         message: string,
         data?: any,
@@ -473,6 +476,59 @@ function useHealthPlan() {
 
     }
 
+
+      const useUpdateHealthPlanAuth = async (id:any,data: any): Promise<{
+      message: string,
+      data?: any,
+      status: Status
+  }> => {
+      try {
+          const response = await UpdateHealthPlanService(id,data)
+
+          return {
+              message: response.data.message,
+              data: response.data.data,
+              status: 'success'
+
+          }
+
+
+      }catch (error: any) {
+
+          return {
+              status: 'failed',
+              message: error?.response?.data?.message || error.toString(),
+          }
+      }
+
+  }
+  const useUpdateHealthPlanStatusAuth = async (id:any,data: any): Promise<{
+    message: string,
+    data?: any,
+    status: Status
+}> => {
+    try {
+        const response = await UpdateHealthPlanStatusService(id,data)
+
+        return {
+            message: response.data.message,
+            data: response.data.data,
+            status: 'success'
+
+        }
+
+
+    }catch (error: any) {
+
+        return {
+            status: 'failed',
+            message: error?.response?.data?.message || error.toString(),
+        }
+    }
+
+}
+
+
     return {
         useCreateHealthPlanAuth,
         useCreateBenefitAuth,
@@ -488,7 +544,9 @@ function useHealthPlan() {
         useCreateAttachedBenefitAuth,
         useGetAttachedBenefitByHealthPlanIdAuth,
         useUpdateAttachedBenefitAuth,
-        useDeleteAttachedBenefitAuth
+        useDeleteAttachedBenefitAuth,
+        useUpdateHealthPlanAuth,
+        useUpdateHealthPlanStatusAuth
     }
 }
 

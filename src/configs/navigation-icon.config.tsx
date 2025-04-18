@@ -7,7 +7,8 @@ import {
     HiIdentification
 
 } from 'react-icons/hi'
-
+import { RiGitRepositoryPrivateFill,RiGitRepositoryPrivateLine } from "react-icons/ri";
+import { MdOutlineHealthAndSafety } from "react-icons/md";
 export type NavigationIcons = Record<string, JSX.Element>
 
 const navigationIcon: NavigationIcons = {
@@ -16,7 +17,9 @@ const navigationIcon: NavigationIcons = {
     collapseMenu: <HiOutlineTemplate />,
     groupSingleMenu: <HiOutlineDesktopComputer />,
     groupCollapseMenu: <HiOutlineColorSwatch />,
-    hiIdentification:<HiIdentification/>
+    hiIdentification:<HiIdentification/>,
+    RiGitRepositoryPrivateLine:<RiGitRepositoryPrivateLine />,
+    MdOutlineHealthAndSafety:<MdOutlineHealthAndSafety />
 }
 
 export default navigationIcon

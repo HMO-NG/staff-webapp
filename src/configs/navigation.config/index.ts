@@ -63,7 +63,7 @@ const navigationConfig: NavigationTree[] = [
                 path: '',
                 title: 'Health Plan Menu',
                 translateKey: 'nav.healthplan.create',
-                icon: 'menu',
+                icon: 'MdOutlineHealthAndSafety',
                 type: NAV_ITEM_TYPE_COLLAPSE,
                 authority: [],
                 subMenu: [
@@ -146,10 +146,70 @@ const navigationConfig: NavigationTree[] = [
                         authority: [],
                         subMenu: []
                     },
-                ]
+
+              ]
             },
         ],
     },
+    //privates
+    {
+      key: 'private-title',
+      path: '',
+      title: '',
+      translateKey: 'Privates',
+      icon: '',
+      type: NAV_ITEM_TYPE_TITLE,
+      authority: [],
+      subMenu: [
+          {
+              key: 'private',
+              path: '',
+              title: 'Privates',
+              translateKey: 'enrollee-private',
+              icon: 'RiGitRepositoryPrivateLine',
+              type: NAV_ITEM_TYPE_COLLAPSE,
+              authority: [],
+              subMenu: [
+
+
+                // create private enrollees
+                {
+                    key: 'private.company',
+                    path: 'privates/viewclients',
+                    title: 'View Clients',
+                    translateKey: 'private.company',
+                    icon: 'groupCollapseMenu',
+                    type: NAV_ITEM_TYPE_ITEM,
+                    authority: [],
+                    subMenu: []
+                },
+                 // create private enrollees
+                 {
+                   key: 'private.employee',
+                   path: 'privates/enrollee/onboard',
+                   title: 'Onboard Private Employees',
+                   translateKey: 'private.employee',
+                   icon: 'groupCollapseMenu',
+                   type: NAV_ITEM_TYPE_ITEM,
+                   authority: [],
+                   subMenu: []
+                },
+                {
+                  key: 'private.employee.view',
+                  path: 'privates/enrollee/view',
+                  title: 'view Private Employees',
+                  translateKey: 'private.employee.view',
+                  icon: 'groupCollapseMenu',
+                  type: NAV_ITEM_TYPE_ITEM,
+                  authority: [],
+                  subMenu: []
+               },
+
+            ]
+          },
+      ],
+  },
+
     // nhis
     {
         key: 'nhis-title',
@@ -226,90 +286,6 @@ const navigationConfig: NavigationTree[] = [
         ],
     }
 
-    /** Example purpose only, please remove */
-    // {
-    //     key: 'collapseMenu',
-    //     path: '',
-    //     title: 'Collapse Menu',
-    //     translateKey: 'nav.collapseMenu.collapseMenu',
-    //     icon: 'collapseMenu',
-    //     type: NAV_ITEM_TYPE_COLLAPSE,
-    //     authority: [],
-    //     subMenu: [
-    //         {
-    //             key: 'collapseMenu.item1',
-    //             path: '/collapse-menu-item-view-1',
-    //             title: 'Collapse menu item 1',
-    //             translateKey: 'nav.collapseMenu.item1',
-    //             icon: '',
-    //             type: NAV_ITEM_TYPE_ITEM,
-    //             authority: [],
-    //             subMenu: [],
-    //         },
-    //         {
-    //             key: 'collapseMenu.item2',
-    //             path: '/collapse-menu-item-view-2',
-    //             title: 'Collapse menu item 2',
-    //             translateKey: 'nav.collapseMenu.item2',
-    //             icon: '',
-    //             type: NAV_ITEM_TYPE_ITEM,
-    //             authority: [],
-    //             subMenu: [],
-    //         },
-    //     ],
-    // },
-    // {
-    //     key: 'groupMenu',
-    //     path: '',
-    //     title: 'Group Menu',
-    //     translateKey: 'nav.groupMenu.groupMenu',
-    //     icon: '',
-    //     type: NAV_ITEM_TYPE_TITLE,
-    //     authority: [],
-    //     subMenu: [
-    //         {
-    //             key: 'groupMenu.single',
-    //             path: '/group-single-menu-item-view',
-    //             title: 'Group single menu item',
-    //             translateKey: 'nav.groupMenu.single',
-    //             icon: 'groupSingleMenu',
-    //             type: NAV_ITEM_TYPE_ITEM,
-    //             authority: [],
-    //             subMenu: [],
-    //         },
-    //         {
-    //             key: 'groupMenu.collapse',
-    //             path: '',
-    //             title: 'Group collapse menu',
-    //             translateKey: 'nav.groupMenu.collapse.collapse',
-    //             icon: 'groupCollapseMenu',
-    //             type: NAV_ITEM_TYPE_COLLAPSE,
-    //             authority: [],
-    //             subMenu: [
-    //                 {
-    //                     key: 'groupMenu.collapse.item1',
-    //                     path: '/group-collapse-menu-item-view-1',
-    //                     title: 'Menu item 1',
-    //                     translateKey: 'nav.groupMenu.collapse.item1',
-    //                     icon: '',
-    //                     type: NAV_ITEM_TYPE_ITEM,
-    //                     authority: [],
-    //                     subMenu: [],
-    //                 },
-    //                 {
-    //                     key: 'groupMenu.collapse.item2',
-    //                     path: '/group-collapse-menu-item-view-2',
-    //                     title: 'Menu item 2',
-    //                     translateKey: 'nav.groupMenu.collapse.item2',
-    //                     icon: '',
-    //                     type: NAV_ITEM_TYPE_ITEM,
-    //                     authority: [],
-    //                     subMenu: [],
-    //                 },
-    //             ],
-    //         },
-    //     ],
-    // },
 ]
 
 export default navigationConfig
