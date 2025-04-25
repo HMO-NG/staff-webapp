@@ -10,6 +10,7 @@ import useProvider from '@/utils/customAuth/useProviderAuth'
 import Button from '@/components/ui/Button'
 import toast from '@/components/ui/toast'
 import Select from '@/components/ui/Select'
+import CreatableSelect from 'react-select/creatable'
 import { SingleValue } from "react-select";
 import usePrivates from '@/utils/customAuth/usePrivatesAuth'
 import { useParams } from "react-router-dom";
@@ -18,6 +19,8 @@ import IconText from '@/components/shared/IconText'
 import { useNavigate } from 'react-router-dom'
 import ActionLink from '@/components/shared/ActionLink'
 import Tabs from '@/components/ui/Tabs'
+import useHealthPlan from '@/utils/customAuth/useHealthPlanAuth'
+import { healthPlan,PlanCategory } from '@/utils/customAuth/useHealthPlanAuth'
 
 const { TabNav, TabList, TabContent } = Tabs
 
@@ -90,9 +93,12 @@ const select_strength = [
 
 const CreateTariff=()=>{
     const [provider, setProvider] = useState<Select_Type>()
+    const [selected_drug_strength,setSelected_drug_strength] =useState<Select_Type>()
+    const [healthPlan, setHealthPlan] = useState<PlanCategory[]>([])
     const {useCreateProviderServiceTariffAuth,usegetProviderServiceTariffByIdAuth,useCreateProviderDrugTariffAuth,
     usegetProviderDrugTariffByIdAuth,useGetProviderByID,} = useProvider()
     const {usegetPrivateProviderAuth}=usePrivates()
+    const { useGetHealthPlanAuth,useGetHealthPlanCategoryAuth } = useHealthPlan()
     const {provider_id}=useParams();
     const navigate = useNavigate()
 
@@ -129,6 +135,7 @@ const CreateTariff=()=>{
           }
           else if (data.status=='failed'){
             openNotification(data.message,'danger')
+            setSubmitting(false)
           }
         }, 3000)
     }
@@ -157,6 +164,7 @@ const onCreateDrugTariff = async (values: any,
         }
         else if (data.status=='failed'){
           openNotification(data.message,'danger')
+          setSubmitting(false)
         }
 
       }, 3000)
@@ -180,7 +188,20 @@ useEffect(()=>{
       setProvider(formattedProviders)
     }}
 
-fetchData()
+  const fetchData2 = async () => {
+    const response = await useGetHealthPlanCategoryAuth()
+
+    if (response.status === 'success' && response.data) {
+        setHealthPlan(response.data)
+    }
+
+    if (response.status === 'failed') {
+        openNotification(response.message, 'danger')
+    }
+}
+
+  fetchData2()
+  fetchData()
 },[])
   return(
     <>
@@ -208,7 +229,7 @@ fetchData()
                           item_price:"",
                           description:"",
                           provider_id:provider_id,
-                          // insurance_plan_type:"",
+                          insurance_plan_type:"",
                           hcpcs_code:"",
                           is_surgical:false,
                           patient_type:"",
@@ -357,6 +378,32 @@ fetchData()
                             </FormItem>
                             {/* category */}
 
+                           {/* insurance_plan_type */}
+                           <FormItem
+                               label="Plan Type"
+                               invalid={errors.insurance_plan_type && touched.insurance_plan_type}
+                               errorMessage={errors.insurance_plan_type}>
+                               <Field
+                                   name="insurance_plan_type">
+                                   {({ field, form }: FieldProps<FormModel>) => (
+                                       <Select
+                                           options={healthPlan}
+                                           placeholder={"Select Health Plan Type"}
+                                           value={healthPlan.filter((item) =>
+                                               item.value === values.insurance_plan_type
+                                           )}
+                                           onChange={(data) => {
+                                               form.setFieldValue(
+                                                   field.name,
+                                                   data?.value
+                                               )
+                                           }}
+                                       />
+                                   )}
+                                </Field>
+                                </FormItem>
+                            {/* insurance_plan_type */}
+
 
                             <FormItem>
                                 <Button
@@ -383,7 +430,7 @@ fetchData()
                           item_price:"",
                           description:"",
                           provider_id:provider_id,
-                          // insurance_plan_type:"",
+                          insurance_plan_type:"",
                           formulation:"",
                           unit_of_measure:"",
                           strength:"",
@@ -399,6 +446,7 @@ fetchData()
                     <Form>
 
                         <FormContainer>
+                            {/* Name */}
                             <FormItem label="Item Name"
                             asterisk
                             invalid={errors.item_name && touched.item_name}
@@ -411,7 +459,9 @@ fetchData()
                                     component={Input}
                                 />
                             </FormItem>
+                            {/* Name */}
 
+                            {/* Price */}
                             <FormItem label="Price"
                             asterisk
                             invalid={errors.item_price && touched.item_price}
@@ -424,6 +474,7 @@ fetchData()
                                     component={Input}
                                 />
                             </FormItem>
+                            {/* Price */}
 
                             {/* description */}
                             <FormItem label="Description"
@@ -440,6 +491,7 @@ fetchData()
                             </FormItem>
                            {/* description */}
 
+                           {/* formulation */}
                             <FormItem
                              asterisk
                              label="formulation?"
@@ -466,6 +518,9 @@ fetchData()
                                  )}
                              </Field>
                             </FormItem>
+                            {/* formulation */}
+
+                            {/* Unit Of Measurement */}
                             <FormItem label="Unit Of Measurement"
                             asterisk
                             invalid={errors.unit_of_measure && touched.unit_of_measure}
@@ -490,7 +545,9 @@ fetchData()
                                  )}
                              </Field>
                             </FormItem>
+                            {/* Unit Of Measurement */}
 
+                            {/* strength */}
                             <FormItem label="Strength"
                             asterisk
                             invalid={errors.strength && touched.strength}
@@ -502,20 +559,20 @@ fetchData()
                                          field={field}
                                          form={form}
                                          options={select_strength}
-                                         value={select_strength?.filter(
-                                             (items) =>
-                                                 items.value === values.strength
-                                            )}
-                                         onChange={(items) =>
-                                             form.setFieldValue(
-                                                 field.name,
-                                                 items?.value
-                                             )
-                                         } />
+                                        value={selected_drug_strength}
+                                         onChange={(items:SingleValue<Select_Type>) =>{
+                                             form.setFieldValue(field.name,items?.value)
+                                             setSelected_drug_strength({label:`${items?.label}`,value:`${items?.value}`})
+
+                                         }}
+                                          placeholder="Select strength..."
+                                         componentAs={CreatableSelect}/>
                                  )}
                              </Field>
                             </FormItem>
+                            {/* strength */}
 
+                            {/* Category */}
                             <FormItem label="Category"
                             asterisk
                             invalid={errors.category && touched.category}
@@ -528,7 +585,36 @@ fetchData()
                                     component={Input}
                                 />
                             </FormItem>
+                            {/* Category */}
 
+                            {/* insurance_plan_type */}
+                                <FormItem
+                                    label="Plan Type"
+                                    invalid={errors.insurance_plan_type && touched.insurance_plan_type}
+                                    errorMessage={errors.insurance_plan_type}>
+
+                                    <Field
+
+                                        name="insurance_plan_type">
+                                        {({ field, form }: FieldProps<FormModel>) => (
+
+                                            <Select
+                                                options={healthPlan}
+                                                placeholder={"Select Health Plan Type"}
+                                                value={healthPlan.filter((item) =>
+                                                    item.value === values.insurance_plan_type
+                                                )}
+                                                onChange={(data) => {
+                                                    form.setFieldValue(
+                                                        field.name,
+                                                        data?.value
+                                                    )
+                                                }}
+                                            />
+                                        )}
+                                    </Field>
+                                </FormItem>
+                            {/* insurance_plan_type */}
 
                             <FormItem>
                                 <Button
