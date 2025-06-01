@@ -209,6 +209,99 @@ const navigationConfig: NavigationTree[] = [
           },
       ],
   },
+      // authorisation
+      {
+        key: 'authorization-title',
+        path: '',
+        title: '',
+        translateKey: '',
+        icon: '',
+        type: NAV_ITEM_TYPE_TITLE,
+        authority: [],
+        subMenu: [
+            {
+                key: 'authorization-create',
+                path: '',
+                title: 'PreAuthorization',
+                translateKey: 'PreAuthorization-create',
+                icon: 'hiIdentification',
+                type: NAV_ITEM_TYPE_COLLAPSE,
+                authority: [],
+                subMenu: [
+                    // create PA
+                    {
+                        key: 'provider.PA.create',
+                        path: '/provider/preauthorization/create',
+                        title: 'Create New PreAuthorization',
+                        translateKey: 'provider.PA.create',
+                        icon: 'groupCollapseMenu',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [],
+                        subMenu: []
+                    },
+                    // create PA
+                    {
+                      key: 'provider.PA.view',
+                      path: '/provider/preauthorization',
+                      title: 'View PA Requests',
+                      translateKey: 'provider.PA.view',
+                      icon: 'groupCollapseMenu',
+                      type: NAV_ITEM_TYPE_ITEM,
+                      authority: [],
+                      subMenu: []
+                    },
+
+              ]
+            },
+        ],
+      },
+       {
+        key: 'private-claim-title',
+        path: '',
+        title: '',
+        translateKey: '',
+        icon: '',
+        type: NAV_ITEM_TYPE_TITLE,
+        authority: [],
+        subMenu: [
+            {
+                key: 'private-claims',
+                path: '',
+                title: 'Claims',
+                translateKey: 'private-claims',
+                icon: 'hiIdentification',
+                type: NAV_ITEM_TYPE_COLLAPSE,
+                authority: [],
+                subMenu: [
+                    // create claim
+                    // {
+                    //     key: 'private.claim.create',
+                    //     path: '/privates/claim/create',
+                    //     title: 'Create Claim',
+                    //     translateKey: 'private.claim.create',
+                    //     icon: 'groupCollapseMenu',
+                    //     type: NAV_ITEM_TYPE_ITEM,
+                    //     authority: [],
+                    //     subMenu: []
+                    // },
+
+                    //view claims
+                    {
+                        key: 'private.claim.viewall',
+                        path: '/privates/claim/view',
+                        title: 'View Claims',
+                        translateKey: 'private.claim.view',
+                        icon: 'groupCollapseMenu',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [],
+                        subMenu: []
+                    },
+
+
+              ]
+            },
+        ],
+      },
 
     // nhis
     {
