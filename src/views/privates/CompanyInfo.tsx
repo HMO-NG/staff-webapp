@@ -1,5 +1,4 @@
 import { Field, Form, Formik } from 'formik'
-import type { FieldProps } from 'formik'
 import { FormItem, FormContainer } from '@/components/ui/Form'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
@@ -19,25 +18,6 @@ import useTimeOutMessage from '@/utils/hooks/useTimeOutMessage'
 import Card from '@/components/ui/Card'
 import { FcImageFile } from 'react-icons/fc'
 import axios from 'axios';
-import DatePicker from '@/components/ui/DatePicker'
-import Select from '@/components/ui/Select'
-import { SingleValue } from 'react-select'
-import useHealthPlan from '@/utils/customAuth/useHealthPlanAuth'
-import { healthPlan,PlanCategory } from '@/utils/customAuth/useHealthPlanAuth'
-
-type FormModel = {
-    input: string
-    select: string
-    multipleSelect: string[]
-    date: Date | null
-    time: Date | null
-    singleCheckbox: boolean
-    multipleCheckbox: Array<string | number>
-    radio: string
-    switcher: boolean
-    segment: string[]
-    upload: File[]
-}
 
 type PrivateCompany={
   id: string
@@ -50,19 +30,6 @@ type PrivateCompany={
   user_id:string
   enrolled_by:string
 }
-type Select_Type={
-  label: string
-   value: string
-}
-const select_payment_type=[
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'monthly', label: 'Monthly'},
-  { value: 'quaterly', label: 'Quaterly'},
-  { value: 'yearly', label: 'Yearly'},
-  { value: 'bi-annually', label: 'Bi-annually'},
-  { value: 'capitation', label: 'Capitation'},
-]
-
 const validationSchema = Yup.object().shape({
     company_name: Yup.string().required(' company_name Required'),
     business_type: Yup.string().required(' business_type Required'),
@@ -76,7 +43,6 @@ const validationSchema = Yup.object().shape({
 const CompanyInfo = () => {
   const {useGetCompanyAuth,useCreateCompanyAuth}=usePrivates()
   const {addDocumentAuth,uploadRawFilesTocloudinaryAuth,uploadImagesTocloudinaryAuth}=useDouments()
-  const { useGetHealthPlanAuth,useGetHealthPlanCategoryAuth } = useHealthPlan()
   const navigate = useNavigate()
   const { getItem,setItem,removeItem } = useLocalStorage()
   const [companyId, setcompanyId] = useState<{
@@ -92,11 +58,6 @@ const CompanyInfo = () => {
     const [is_upload_disabled, setis_upload_disabled] = useState<boolean>(true)
     const [registered_company_data, setregistered_company_data] = useState<PrivateCompany | undefined>(undefined)
     const [open_add_doc, setopen_add_doc] = useState<boolean>(false)
-    const [selectedPlans, setSelectedPlans] = useState([]);
-     const [formData, setFormData] = useState({
-    health_plan_id: [],
-  });
-  const [healthPlan, setHealthPlan] = useState<healthPlan[]>([])
     function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
     toast.push(
         <Notification
@@ -148,7 +109,6 @@ const CompanyInfo = () => {
               const { getItem } = useLocalStorage()
 
               values.user_id = getItem("user")
-              values.health_plan_id=formData.health_plan_id
 
               const data = await useCreateCompanyAuth(values)
 
@@ -172,12 +132,6 @@ const CompanyInfo = () => {
               }
 
           }
-  //     const handleChange = (selected:any) => {
-  //         setSelectedPlans(selected);
-  //         // Extract just the values (UUIDs) from the selected options
-  //         const planIds = selected.map(option => option.value);
-  //         onChange(planIds);
-  // };
           useEffect(()=>{
            const getclient=()=>{
             let client_data1:any =sessionStorage.getItem('client')
@@ -186,19 +140,6 @@ const CompanyInfo = () => {
             setregistered_company_data(client_data2)}
            }
            getclient()
-             const fetchData2 = async () => {
-    const response = await useGetHealthPlanAuth({ sort: { order: 'asc' } })
-
-    if (response.status === 'success' && response.data) {
-        setHealthPlan(response.data)
-    }
-
-    if (response.status === 'failed') {
-        openNotification(response.message, 'danger')
-    }
-}
-
-  fetchData2()
           },[])
     return (
       <>
@@ -211,12 +152,6 @@ const CompanyInfo = () => {
               primary_contact_position: "",
               primary_contact_email: "",
               primary_contact_phonenumber: "",
-
-              number_of_enrollees: "",
-              payment_start_date: "",
-              payment_end_date: "",
-              payment_type: "",
-              health_plan_id: "",
 
                }}
                validationSchema={validationSchema}
@@ -300,7 +235,7 @@ const CompanyInfo = () => {
                             />
                         </FormItem>
 
-                        <FormItem label="Company Headquaters"
+                        <FormItem label="Company Heaadquaters"
                         invalid={errors.company_heaadquaters && touched.company_heaadquaters}
                         errorMessage={errors.company_heaadquaters}>
                             <Field
@@ -339,108 +274,12 @@ const CompanyInfo = () => {
                         invalid={errors.primary_contact_phonenumber && touched.primary_contact_phonenumber}
                         errorMessage={errors.primary_contact_phonenumber}>
                             <Field
-                                type="number"
+                                type="txt"
                                 autoComplete="off"
                                 name="primary_contact_phonenumber"
                                 placeholder="Enter primary contact phonenumber"
                                 component={Input}
                             />
-                        </FormItem>
-
-                      <FormItem label="Number Of Enrollees"
-                        invalid={errors.number_of_enrollees && touched.number_of_enrollees}
-                        errorMessage={errors.number_of_enrollees}>
-                            <Field
-                                type="number"
-                                autoComplete="off"
-                                name="number_of_enrollees"
-                                placeholder="Enter Number Of Enrollees"
-                                component={Input}
-                            />
-                        </FormItem>
-
-                       <FormItem label="Payment Start Date"
-                        invalid={errors.payment_start_date && touched.payment_start_date}
-                        errorMessage={errors.payment_start_date}>
-                           <Field name="payment_start_date">
-                                 {({
-                                   field,form
-                                 }: FieldProps<FormModel>) => (
-                                 <DatePicker placeholder="Enter Encounter Date"
-                                              onChange={(value)=>{
-                                               form.setFieldValue(field.name,value)
-                                             }}
-                                  />
-                                   )}
-                                   </Field>
-                        </FormItem>
-                     <FormItem label="Payment End Date"
-                        invalid={errors.payment_end_date && touched.payment_end_date}
-                        errorMessage={errors.payment_end_date}>
-                          <Field name="payment_end_date">
-                                 {({
-                                   field,form
-                                 }: FieldProps<FormModel>) => (
-                                 <DatePicker placeholder="Enter Payment End Date"
-                                              onChange={(value)=>{
-                                               form.setFieldValue(field.name,value)
-                                             }}
-                                  />
-                                   )}
-                                   </Field>
-                        </FormItem>
-                      <FormItem label="Payment Type"
-                        invalid={errors.payment_type && touched.payment_type}
-                        errorMessage={errors.payment_type}>
-
-                             <Field name="payment_type">
-                                  {({
-                                      field,
-                                      form,
-                                  }: FieldProps<FormModel>) => (
-                                      <Select
-                                          options={select_payment_type}
-                                          // value={selectedProvider}
-                                          onChange={(option: SingleValue<Select_Type>,) => {
-                                              // Update both Formik and any external state if needed
-                                              form.setFieldValue(field.name,option?.value,)
-
-                                          }}
-                                          isSearchable={true}
-                                          placeholder="Select Payment Type..."
-                                      />
-                                  )}
-                              </Field>
-                        </FormItem>
-                        <FormItem label="Health Plan"
-                        invalid={errors.health_plan_id && touched.health_plan_id}
-                        errorMessage={errors.health_plan_id}>
-
-                             <Field name="health_plan_id">
-                                  {({
-                                      field,
-                                      form,
-                                  }: FieldProps<FormModel>) => (
-                                      <Select
-                                          options={healthPlan}
-                                          isMulti
-                                          // onChange={(option: SingleValue<Select_Type>,) => {
-                                          //     // Update both Formik and any external state if needed
-                                          //     form.setFieldValue(field.name,option?.value,)
-
-                                          // }}
-                                          isSearchable={true}
-                                           onChange={(selectedOptions) => {
-                                            const selectedIds = selectedOptions.map(option => option.value); // Extract UUIDs
-                                                setFormData(prev => ({
-                                                  ...prev,
-                                                  health_plan_id: selectedIds
-                                                }));
-                                              }}
-                                          placeholder="Select Health Plans..."
-                                      />
-                                  )}
-                              </Field>
                         </FormItem>
 
                         <FormItem>

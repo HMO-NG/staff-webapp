@@ -20,7 +20,6 @@ import { FormItem, FormContainer } from '@/components/ui/Form'
 import Input from '@/components/ui/Input'
 import Avatar from '@/components/ui/Avatar'
 import { HiOutlineUser } from 'react-icons/hi'
-import type {PrivateEnrollee} from '@/utils/customAuth/usePrivatesAuth'
 
 type PrivateCompany={
   id: string
@@ -34,7 +33,31 @@ type PrivateCompany={
   user_id:string
   enrolled_by:string
 }
-
+type PrivateEnrollee={
+  id:string
+  first_name:string
+  last_name:string
+  middle_name:string
+  email:string
+  phone_number:string
+  passport_url:string
+  sex:string
+  department:string
+  position:string
+  dob:string
+  beneficiary_type:string
+  family_size:string
+  state:string
+  city:string
+  address:string
+  is_active:boolean
+  company_id:string
+  provider_id:string
+  provider_name:string
+  company_name:string
+  linked_to_user:string
+  enrolled_by:string
+}
 const ViewClients = () => {
       const {useGetCompanyAuth,updateClientStatusAuth,updateClientAuth,usegetPrivateEnrolleeByCompanyIdAuth}=usePrivates()
       const navigate = useNavigate()
@@ -375,8 +398,7 @@ const ViewClients = () => {
                  no Profile
                 </Button>):
                 ( <Button size="xs" variant="solid"
-                   onClick={() => navigate(`/privates/enrollee/${props.cell.row.original.id}`)}
-                  >
+                  onClick={() => navigate('/home')}>
                  Go to Profile
                 </Button>)}
                   </div>

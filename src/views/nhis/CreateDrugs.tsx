@@ -122,17 +122,13 @@ const createDrugs = () => {
                     const sheetName = workbook.SheetNames[0];
                     const sheet = workbook.Sheets[sheetName];
                     const jsonData = XLSX.utils.sheet_to_json(sheet);
-                    const { getItem } = useLocalStorage()
-
-                    const user_id = getItem('user');
 
                     const BATCH_SIZE = 10;
                     let response;
 
                     for (let i = 0; i < jsonData.length; i += BATCH_SIZE) {
                         const batch = jsonData.slice(i, i + BATCH_SIZE);
-                        // response = await Promise.all(batch.map((item: any) => useCreateNhiaDrugTarrifAuth(item)));
-                         response = await Promise.all(batch.map((item: any) => useCreateNhiaDrugTarrifAuth({...item,user_id})));
+                        response = await Promise.all(batch.map((item: any) => useCreateNhiaDrugTarrifAuth(item)));
                         console.log(response)
                         openNotification(`uploading batch ${i / BATCH_SIZE + 1}`, 'info')
                     }

@@ -2,7 +2,6 @@ import { useNavigate ,Link} from 'react-router-dom'
 import type { ColumnDef, OnSortParam, CellContext, Row } from '@/components/shared/DataTable'
 import DataTable from '@/components/shared/DataTable'
 import usePrivates from '@/utils/customAuth/usePrivatesAuth'
-import type {PrivateEnrollee} from '@/utils/customAuth/usePrivatesAuth'
 import { useState, useEffect, useMemo, useRef, ChangeEvent } from 'react'
 import Button from '@/components/ui/Button'
 import Dropdown from '@/components/ui/Dropdown'
@@ -20,39 +19,34 @@ import { useLocalStorage } from '@/utils/localStorage'
 import { Field, Form, Formik,FieldArray } from 'formik'
 import { FormItem, FormContainer } from '@/components/ui/Form'
 import Input from '@/components/ui/Input'
-import { AiOutlineEye } from 'react-icons/ai';
 
-// type PrivateEnrollee={
-//   id:string
-//   first_name:string
-//   last_name:string
-//   middle_name:string
-//   email:string
-//   phone_number:string
-//   passport_url:string
-//   sex:string
-//   department:string
-//   position:string
-//   dob:string
-//   beneficiary_type:string
-//   family_size:string
-//   state:string
-//   city:string
-//   address:string
-//   is_active:boolean
-//   company_id:string
-//   provider_id:string
-//   provider_name:string
-//   company_name:string
-//   linked_to_user:string
-//   enrolled_by:string
-// }
+type PrivateEnrollee={
+  id:string
+  first_name:string
+  last_name:string
+  middle_name:string
+  email:string
+  phone_number:string
+  passport_url:string
+  sex:string
+  department:string
+  position:string
+  dob:string
+  beneficiary_type:string
+  family_size:string
+  state:string
+  city:string
+  address:string
+  is_active:boolean
+  company_id:string
+  provider_id:string
+  provider_name:string
+  company_name:string
+  linked_to_user:string
+  enrolled_by:string
+}
 const ViewPrivateEnrollees = () => {
-      const {useGetCompanyAuth,
-             useGetPrivateEnrolleeAuth,
-             usegetPrivateEnrolleeByCompanyIdAuth,
-             usegetSinglePrivateEnrolleeAuth,
-             }=usePrivates()
+      const {useGetCompanyAuth,useGetPrivateEnrolleeAuth,usegetPrivateEnrolleeByCompanyIdAuth}=usePrivates()
       const navigate = useNavigate()
       const [data, setData] = useState<PrivateEnrollee[]>([])
       const [loading, setLoading] = useState(false)
@@ -128,14 +122,107 @@ const ViewPrivateEnrollees = () => {
               enrolled_by: "",
           })
 
-
+       const [editPrivateEnrollee, setEditPrivateEnrollee] = useState<PrivateEnrollee>({
+        id: "",
+        first_name: "",
+        last_name: "",
+        middle_name: "",
+        email: "",
+        phone_number: "",
+        passport_url: "",
+        sex: "",
+        department: "",
+        position: "",
+        dob: "",
+        beneficiary_type: "",
+        family_size: "",
+        state: "",
+        city: "",
+        address: "",
+        is_active: false,
+        company_id: "",
+        provider_id: "",
+        provider_name: "",
+        company_name: "",
+        linked_to_user:"",
+        enrolled_by: "",
+       });
+       const [PrivateEnrolleeStatus, setPrivateEnrolleeStatus] = useState<
+          {
+              id: string;
+              is_active: boolean,
+              // user_id: string,
+              first_name: string,
+              last_name: string,
+          }>({
+              id: "",
+              is_active: false,
+              // user_id: "",
+              first_name: "",
+              last_name: "",
+          })
+        const dropdownItems = [
+            { key: 'view', name: 'View' },
+            { key: 'edit', name: 'Edit' },
+            { key: 'status', name: 'Set Status' },
+        ]
+        const [editDialog, setEditDialog] = useState(false)
+        const [viewDialog, setViewDialog] = useState(false)
+        const [statusDialog, setStatusDialog] = useState(false)
         const permissionRole = [ 'user']
         const { getItem,setItem,removeItem } = useLocalStorage()
 
      const onDropdownItemClick = (eventKey: string, e: SyntheticEvent) => {
                 console.log('Dropdown Item Clicked', eventKey, e)
       }
+    const handleAction = async (cellProps: CellContext<PrivateEnrollee, unknown>, key: any) => {
 
+        switch (key) {
+            case 'view':
+                // setCompany(
+                //     {
+                //         id: cellProps.row.original.id,
+                //         company_name: cellProps.row.original.company_name,
+                //         business_type: cellProps.row.original.business_type,
+                //         company_heaadquaters: cellProps.row.original.company_heaadquaters,
+                //         primary_contact_position: cellProps.row.original.primary_contact_position,
+                //         primary_contact_email: cellProps.row.original.primary_contact_email,
+                //         primary_contact_phonenumber: cellProps.row.original.primary_contact_phonenumber,
+                //         user_id: cellProps.row.original.user_id,
+                //         enrolled_by: cellProps.row.original.enrolled_by
+                //     }
+                // )
+
+                setViewDialog(true)
+                break;
+            case 'edit':
+
+              // setEditPrivateEnrollee(
+              //       {
+              //           id: cellProps.row.original.id,
+              //           company_name: cellProps.row.original.company_name,
+              //           enrolled_by: cellProps.row.original.enrolled_by
+              //       }
+              //   )
+                setEditDialog(true)
+                break;
+            case 'status':
+                setPrivateEnrolleeStatus(
+                    {
+                        id: cellProps.row.original.id,
+                        is_active: cellProps.row.original.is_active,
+                        first_name: cellProps.row.original.first_name,
+                        last_name: cellProps.row.original.last_name,
+
+                    }
+                )
+                setStatusDialog(true)
+                break;
+            // ... more cases
+            default:
+            // Code to execute if expression doesn't match any case
+        }
+      }
     const handleBatchAction = () => {
         console.log('selectedRows', selectedRows)
     }
@@ -182,75 +269,73 @@ const ViewPrivateEnrollees = () => {
               setSelectedRows([])
           }
       }
-      const FormatDate =(d:any)=>{
-            const date = new Date(d);
-            const formattedDate = date.toLocaleDateString('en-GB', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true
-            });
-            return formattedDate
-    }
      const columns: ColumnDef<PrivateEnrollee>[] = useMemo(() => (
             [
                 {
-                  header: 'Name',
-                  cell:(props)=> `${props.cell.row.original.first_name} ${props.cell.row.original.first_name}`,
+                    header: 'first_name',
+                    cell:(props)=> `${props.cell.row.original.first_name} ${props.cell.row.original.first_name}`,
                 },
 
                 {
                   header: 'email',
                   accessorKey: 'email',
+              },
+              {
+              header: 'beneficiary_type',
+              accessorKey: 'beneficiary_type',
+              },
+              {
+                header: 'family size',
+                accessorKey: 'family_size',
                 },
                 {
-                  header: 'type',
-                  accessorKey: 'enrollee_type',
-                },
-
-                {
-                  header: 'Plan',
-                  accessorKey: 'plan_name',
-                },
+                  header: 'company name',
+                  accessorKey: 'company_name',
+                  },
+              {
+            header: 'Enrolled by',
+            accessorKey: 'enrolled_by',
+               },
                {
                 header: 'Status',
                 cell: (props) => (
                     <div>
                         {
                             props.cell.row.original.is_active ?
-                                <Tag className='bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-100 border-0'>
+                                <Tag className='text-white bg-indigo-600 border-0'>
                                     Active
                                 </Tag> :
-                                <Tag className='text-red-600 bg-red-100 dark:text-red-100 dark:bg-red-500/20 border-0'>
+                                <Tag className='text-white bg-red-700 border-0'>
                                     Inactive
                                 </Tag>
 
                         }
                     </div>
                 )
-               },
-
+            },
                {
-                  header: 'Created At',
-                  cell:(props)=> FormatDate(props.cell.row.original.created_at)
-              },
+                header: '',
+                id: 'action',
+                cell: (props) => (
+                    <div>
+                       hbcjccn
+                        <Dropdown
+                            placement='bottom-end'>
 
-               {
-                   header: '',
-                   id: 'action',
-                   cell: (props) => (
-                       <div>
-                         <Button
-                         variant="plain"
-                         icon={<AiOutlineEye/>}
-                         onClick={() => navigate(`/privates/enrollee/${props.cell.row.original.id}`)}
-                         >
-                           View Profile</Button>
-                       </div>
-                   ),
-               },
+                            {dropdownItems.map((item) => (
+                                <Dropdown.Item
+                                    key={item.key}
+                                    eventKey={item.key}
+                                    onSelect={onDropdownItemClick}
+                                    onClick={() => handleAction(props, item.key)}
+                                >
+                                    {item.name}
+                                </Dropdown.Item>
+                            ))}
+                        </Dropdown>
+                    </div>
+                ),
+            },
 
 
             ]
@@ -325,7 +410,221 @@ const ViewPrivateEnrollees = () => {
                 onCheckBoxChange={handleRowSelect}
                 onIndeterminateCheckBoxChange={handleAllRowSelect}
             />
+             {
+                viewDialog && <Dialog
+                    isOpen={viewDialog}
+                    onClose={() => setViewDialog(false)}
+                    onRequestClose={() => setViewDialog(false)}
+                    width={1000}
+                    shouldCloseOnOverlayClick={false}
+                    shouldCloseOnEsc={false}
+                >
+                    <div className="flex flex-col h-full justify-between">
 
+
+                        <h5 className="mb-4">View Provider</h5>
+                        <div className="max-h-96 overflow-y-auto">
+
+
+                            <div className="prose dark:prose-invert mx-auto">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Field</th>
+                                            <th>Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Name</td>
+                                            <td><b>{PrivateEnrollee.first_name}</b></td>
+                                        </tr>
+
+
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="text-right mt-6">
+                                <Button
+                                    className="ltr:mr-2 rtl:ml-2"
+                                    variant="plain"
+                                    onClick={() => setViewDialog(false)}
+                                >
+                                    Cancel
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </Dialog>
+            }
+            {
+                editDialog && <Dialog
+                    isOpen={editDialog}
+                    onClose={() => setEditDialog(false)}
+                    onRequestClose={() => setEditDialog(false)}
+                    width={1000}
+                    shouldCloseOnOverlayClick={false}
+                    shouldCloseOnEsc={false}
+                >
+                    <div className="flex flex-col h-full justify-between">
+
+
+                        <h5 className="mb-4">Edit Provider</h5>
+                        <div className="max-h-96 overflow-y-auto">
+
+                            <div className="prose dark:prose-invert mx-auto">
+                                <Formik
+                                    initialValues={{
+                                        id: editPrivateEnrollee.id,
+                                        company_name: editPrivateEnrollee.company_name,
+                                        email: editPrivateEnrollee.email,
+                                        address: editPrivateEnrollee.address,
+                                        phone_number: editPrivateEnrollee.phone_number,
+
+
+                                    }}
+                                    onSubmit={(values, { resetForm, setSubmitting }) => {
+                                        // updateProvider(values)
+                                    }
+                                    }
+
+                                >
+                                    {({ touched, errors, resetForm }) => (
+                                        <Form>
+                                            <FormContainer>
+                                                {/* Name */}
+                                                <FormItem
+                                                    label="Name"
+                                                >
+                                                    <Field
+                                                        type="text"
+                                                        autoComplete="off"
+                                                        name="name"
+                                                        component={Input}
+                                                    />
+                                                </FormItem>
+                                                {/* Email */}
+                                                <FormItem
+                                                    label="Email"
+                                                >
+                                                    <Field
+                                                        type="text"
+                                                        autoComplete="off"
+                                                        name="email"
+                                                        component={Input}
+                                                    />
+                                                </FormItem>
+                                                {/* Address */}
+                                                <FormItem
+                                                    label="Address"
+                                                >
+                                                    <Field
+                                                        type="text"
+                                                        autoComplete="off"
+                                                        name="address"
+                                                        component={Input}
+                                                    />
+                                                </FormItem>
+                                                {/* phone number */}
+                                                <FormItem
+                                                    label="Phone Number"
+                                                >
+                                                    <Field
+                                                        type="text"
+                                                        autoComplete="off"
+                                                        name="phone_number"
+                                                        component={Input}
+                                                    />
+                                                </FormItem>
+                                                {/* Medical Director's Name */}
+                                                <FormItem
+                                                    label="Medical Director's Name"
+                                                >
+                                                    <Field
+                                                        type="text"
+                                                        autoComplete="off"
+                                                        name="medical_director_name"
+                                                        component={Input}
+                                                    />
+                                                </FormItem>
+                                                {/*medical_director_phone_no*/}
+                                                <FormItem
+                                                    label="Medical Director's Phone No."
+                                                >
+                                                    <Field
+                                                        type="text"
+                                                        autoComplete="off"
+                                                        name="medical_director_phone_no"
+                                                        component={Input}
+                                                    />
+                                                </FormItem>
+                                                {/* state */}
+                                                <FormItem
+                                                    label="State"
+                                                >
+                                                    <Field
+                                                        type="text"
+                                                        autoComplete="off"
+                                                        name="state"
+                                                        component={Input}
+                                                    />
+                                                </FormItem>
+
+                                                <FormItem>
+                                                    <Button variant="solid" type="submit">
+                                                        SAVE
+                                                    </Button>
+                                                </FormItem>
+                                            </FormContainer>
+                                        </Form>
+                                    )}
+                                </Formik>
+                            </div>
+                            <div className="text-right mt-6">
+                                <Button
+                                    className="ltr:mr-2 rtl:ml-2"
+                                    variant="plain"
+                                    onClick={() => setEditDialog(false)}
+                                >
+                                    Cancel
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </Dialog >
+            }
+            {
+                statusDialog && <Dialog
+                    isOpen={statusDialog}
+                    onClose={() => setStatusDialog(false)}
+                    onRequestClose={() => setStatusDialog(false)}
+                    width={1000}
+                    shouldCloseOnOverlayClick={false}
+                    shouldCloseOnEsc={false}
+                >
+
+                    <h5 className="mb-4">Set Provider Status</h5>
+                    <p>
+                        {PrivateEnrolleeStatus.is_active ?
+                            `Deactivate ${PrivateEnrolleeStatus.first_name} '' ${PrivateEnrolleeStatus.last_name}` :
+                            `Activate ${PrivateEnrolleeStatus.first_name} '' ${PrivateEnrolleeStatus.last_name}`
+                        }
+                    </p>
+                    <div className="text-right mt-6">
+                        <Button
+                            className="ltr:mr-2 rtl:ml-2"
+                            variant="plain"
+                            onClick={() => setStatusDialog(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button variant="solid" >
+                            Okay
+                        </Button>
+                    </div>
+
+                </Dialog >
+            }
     </>
 
   )

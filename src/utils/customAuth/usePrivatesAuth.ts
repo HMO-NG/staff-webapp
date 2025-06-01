@@ -6,7 +6,6 @@ import {createCompanyService,
   OnboardIndividualEnrolleesService,
   getSinglePrivateEnrolleeService,
   createPrivateEnrolleeDependantsService,
-  updatePrivateEnrolleeService,
 
 }from "@/services/PrivatesService";
 
@@ -21,25 +20,12 @@ type PrivateCompany={
   primary_contact_position: string
   primary_contact_email: string
   primary_contact_phonenumber:string
-  number_of_enrollees:number
   is_active:boolean
   user_id:string
   enrolled_by:string
-  count:number
-}
-type EnrolleeMedicalData={
-  // id:string,
-  // enrollee_id:string,
-  blood_group: string,
-  genotype: string,
-  disabilities: string,
-  allergies: string,
-  pre_existing_conditions:string,
-  past_surgeries: string,
-  family_medical_history: string,
 }
 
-export type PrivateEnrollee={
+type PrivateEnrollee={
       id:string
       first_name:string
       last_name:string
@@ -52,8 +38,7 @@ export type PrivateEnrollee={
       position:string
       dob:string
       beneficiary_type:string
-      enrollee_type:string
-      family_size:number
+      family_size:string
       state:string
       city:string
       address:string
@@ -62,57 +47,18 @@ export type PrivateEnrollee={
       provider_id:string
       provider_name:string
       company_name:string
-      plan_name:string
 
-      medical_data?: EnrolleeMedicalData
+      blood_group: string,
+      genotype: string,
+      disabilities: string,
+      allergies: string,
+      pre_existing_conditions:string,
+      past_surgeries: string,
+      family_medical_history: string,
 
       linked_to_user:string
       enrolled_by:string
-      created_at:string
 }
-
-export const defaultEnrolleeMedicalData: EnrolleeMedicalData = {
-  // id: '',
-  // enrollee_id: '',
-  blood_group: '',
-  genotype: '',
-  disabilities: '',
-  allergies: '',
-  pre_existing_conditions: '',
-  past_surgeries: '',
-  family_medical_history: '',
-};
-export const defaultPrivateEnrollee: PrivateEnrollee = {
-  id: '',
-  first_name: '',
-  last_name: '',
-  middle_name: '',
-  email: '',
-  phone_number: '',
-  passport_url: '',
-  sex: '',
-  department: '',
-  position: '',
-  dob: '',
-  beneficiary_type: '',
-  enrollee_type: '',
-  family_size: 0,
-  state: '',
-  city: '',
-  address: '',
-  is_active: false,
-  company_id: '',
-  provider_id: '',
-  provider_name: '',
-  company_name: '',
-  plan_name: '',
-
-  medical_data:defaultEnrolleeMedicalData,
-
-  linked_to_user: '',
-  enrolled_by: '',
-  created_at: '',
-};
 
 
 function usePrivates() {
@@ -162,9 +108,8 @@ function usePrivates() {
                         primary_contact_position: items.primary_contact_position,
                         primary_contact_email: items.primary_contact_email,
                         primary_contact_phonenumber:items.primary_contact_phonenumber,
-                        number_of_enrollees:items.number_of_enrollees,
                         is_active:items.is_active,
-                        count:items.count,
+                        // user_id:items.primary_contact_position,
                         enrolled_by:items.enrolled_by
                       }
                   }),
@@ -300,7 +245,6 @@ function usePrivates() {
                       position:items.position,
                       dob:items.dob,
                       beneficiary_type:items.beneficiary_type,
-                      enrollee_type:items.enrollee_type,
                       family_size:items.family_size,
                       state:items.state,
                       city:items.city,
@@ -310,10 +254,8 @@ function usePrivates() {
                       provider_id:items.provider_id,
                       provider_name:items.provider_name,
                       company_name:items.company_name,
-                      plan_name:items.plan_name,
                       linked_to_user:items.linked_to_user,
-                      enrolled_by:items.enrolled_by,
-                      created_at:items.created_at,
+                      enrolled_by:items.enrolled_by
                     }
                 }),
                 status: 'success'
@@ -356,7 +298,6 @@ function usePrivates() {
                     position:items.position,
                     dob:items.dob,
                     beneficiary_type:items.beneficiary_type,
-                    enrollee_type:items.enrollee_type,
                     family_size:items.family_size,
                     state:items.state,
                     city:items.city,
@@ -366,10 +307,8 @@ function usePrivates() {
                     provider_id:items.provider_id,
                     provider_name:items.provider_name,
                     company_name:items.company_name,
-                    plan_name:items.plan_name,
                     linked_to_user:items.linked_to_user,
-                    enrolled_by:items.enrolled_by,
-                    created_at:items.created_at,
+                    enrolled_by:items.enrolled_by
                   }
               }),
               count: response.data.count,
@@ -421,17 +360,17 @@ function usePrivates() {
 
 const usegetSinglePrivateEnrolleeAuth = async (id:string): Promise<{
   message: string,
-  data?:PrivateEnrollee,
+  data?: Omit<PrivateEnrollee, 'provider_name'|'company_name'>,
   status: Status
 }> => {
 
   try {
 
       const response = await getSinglePrivateEnrolleeService(id);
-      // const { provider_name, company_name, ...enrolleeData } = response.data.data;
+      const { provider_name, company_name, ...enrolleeData } = response.data.data;
       return {
           message: response.data.message,
-          data: response.data.data,
+          data: enrolleeData,
 
           status: 'success'
 
@@ -470,29 +409,6 @@ const createPrivateEnrolleeDependantsAuth = async (id: string,data:any): Promise
   }
 }
 
-const updatePrivateEnrolleeAuth = async (id: string,data:any): Promise<{
-  message: string,
-  data?: any,
-  status: Status
-}> => {
-  try {
-      const response = await updatePrivateEnrolleeService(id,data)
-
-      return {
-          message: response.data.message,
-          data: response.data.data,
-          status: "success"
-      }
-
-  } catch (error: any) {
-
-      return {
-          status: 'failed',
-          message: error?.response?.data?.message || error.toString(),
-      }
-
-  }
-}
 
 
 
@@ -509,7 +425,6 @@ const updatePrivateEnrolleeAuth = async (id: string,data:any): Promise<{
         usegetPrivateProviderAuth,
         usegetSinglePrivateEnrolleeAuth,
         createPrivateEnrolleeDependantsAuth,
-        updatePrivateEnrolleeAuth,
       }
 }
 

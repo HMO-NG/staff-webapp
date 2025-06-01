@@ -2,7 +2,6 @@ import Select from '@/components/ui/Select'
 import { SingleValue } from 'react-select'
 import Card from '@/components/ui/Card'
 import usePrivates from '@/utils/customAuth/usePrivatesAuth'
-import type {PrivateEnrollee} from '@/utils/customAuth/usePrivatesAuth'
 import { FormItem, FormContainer } from '@/components/ui/Form'
 import { Field, Form, Formik, FieldArray } from 'formik'
 import type { FieldProps } from 'formik'
@@ -19,11 +18,11 @@ import { healthPlan } from '@/utils/customAuth/useHealthPlanAuth'
 import Notification from '@/components/ui/Notification'
 import toast from '@/components/ui/toast'
 import useProvider from '@/utils/customAuth/useProviderAuth'
+import type {
+    ProviderServiceTariffType,
+    ProviderDrugTariffType,
+} from '@/utils/customAuth/useProviderAuth'
 import { useLocalStorage } from '@/utils/localStorage'
-import Dialog from '@/components/ui/Dialog'
-import Avatar from '@/components/ui/Avatar'
-import { HiOutlineUser } from 'react-icons/hi'
-import Tag from '@/components/ui/Tag'
 
 type FormModel = {
     input: string
@@ -50,14 +49,10 @@ type Select_Type2 = {
 type pa_tariffs={
   id?:string
   quantity?:number
-  approved_quantity?:number
   item_name?:string
   item_price?:string
-  approved_price?:string
   status?:"pending"
   comment?:string| null;
-  total_price?:string
-  approved_total?:number
 }
 type related_doc_type={
   url: string
@@ -66,14 +61,10 @@ type related_doc_type={
 const defaultTariff: pa_tariffs = {
   id: '',
   quantity: 1,
-  approved_quantity:0,
   item_name: "",
   item_price: "",
-  approved_price: "",
   status: "pending",
   comment: null,
-  total_price:"",
-  approved_total:0
 };
 
 const validationSchema = Yup.object().shape({
@@ -83,13 +74,17 @@ const validationSchema = Yup.object().shape({
 
 })
 
-const PreAuthorization = () => {
-    const {usegetPrivateProviderAuth,
-           usegetSinglePrivateEnrolleeAuth,
+const EnrolleeEntryForm = () => {
+    const {
+        usegetPrivateProviderAuth,
+        OnboardIndividualPrivateEnrolleesAuth,
+        usegetSinglePrivateEnrolleeAuth,
     } = usePrivates()
-    const {uploadRawFilesTocloudinaryAuth } = useDouments()
+    const { addDocumentAuth, uploadRawFilesTocloudinaryAuth } = useDouments()
+    const { useGetHealthPlanAuth } = useHealthPlan()
     const {
         usegetProviderServiceTariffByIdAuth,
+        usegetProviderDrugTariffByIdAuth,
         useCreatePreAuthorizationAuth,
     } = useProvider()
     const {useGetPrivateEnrolleeAuth}=usePrivates()
@@ -103,16 +98,14 @@ const PreAuthorization = () => {
     const [uploadedUrls, setUploadedUrls] = useState<related_doc_type[]>([]);
 
     const [SelectserviceTariffData, setSelectServiceTariffData] = useState<Select_Type2[]>([])
+    const [SelectDrugTariffData, setSelectsetDrugTariffData] = useState<Select_Type2[]>([])
 
     const [InputTariffServices, setInputTariffServices] = useState<pa_tariffs>({})
+    const [InputTariffDrug, setInputTariffDrug] = useState<pa_tariffs>({})
     const [combindedServices, setCombindedServices] = useState<pa_tariffs[]>([])
+    const [combindedDrugs, setCombindedDrugs] = useState<pa_tariffs[]>([])
 
     const [EnableTariff, setEnableTariff] = useState<boolean>(true)
-    const [viewReviewDialog, setReviewDialog] = useState(false)
-    const [selectedTariffData, setselectedTariffData] = useState<pa_tariffs>(defaultTariff)
-    const [selectKey, setSelectKey] = useState(0);
-    const [selectKey2, setSelectKey2] = useState(0);
-    const [enrolleeData, setEnrolleeData] = useState<PrivateEnrollee>()
 
     function openNotification(msg: string,notificationType: 'success' | 'warning' | 'danger' | 'info') {
         toast.push(
@@ -125,7 +118,10 @@ const PreAuthorization = () => {
         )
     }
     const onselect_provider = async (v: any) => {
+        // const getservice=await usegetProviderServiceTariffByIdAuth(`${selectedProvider?.value}`)
+        // const getdrug=await usegetProviderDrugTariffByIdAuth(`${selectedProvider?.value}`)
         const getservice = await usegetProviderServiceTariffByIdAuth(v)
+        const getdrug = await usegetProviderDrugTariffByIdAuth(v)
         if (getservice.data) {
             setSelectServiceTariffData(
                 getservice.data.map((data: any) => {
@@ -136,17 +132,27 @@ const PreAuthorization = () => {
                     }
                 }),
             )
+            // setServiceTariffData(getservice?.data)
         }
-
+        if (getdrug.data) {
+            setSelectsetDrugTariffData(
+                getdrug.data.map((data: any) => {
+                    return {
+                        label: data.item_name,
+                        value: data.id,
+                        item_price: data.item_price,
+                    }
+                }),
+            )
+        }
     }
-    async function on_submit_service() {
-      const updatedTariff = calculateTotals(InputTariffServices);
-      setCombindedServices((prevServiceAmount: pa_tariffs[]) => [...prevServiceAmount, updatedTariff,])
-      console.log(updatedTariff)
-      setInputTariffServices(defaultTariff)
-      setSelectKey(prev => prev + 1);
-      setSelectKey2(prev => prev + 1);
+    function on_submit_service() {
+      setCombindedServices((prevServiceAmount: pa_tariffs[]) => [...prevServiceAmount, InputTariffServices,])
+      console.log(InputTariffServices)
    }
+    function on_submit_drug() {
+    setCombindedDrugs((prevServiceAmount) => [...prevServiceAmount, InputTariffDrug,])
+    }
     const upload_to_cloudinary= async()=>{
       let all_data: related_doc_type[] = [];
 
@@ -176,14 +182,11 @@ const PreAuthorization = () => {
         setSubmitting(true)
         let data= values
         const r=await upload_to_cloudinary()
-        const totalServiceAmount = combindedServices.reduce((acc, item) => {
-          return acc + parseFloat(item.total_price || '0');
-        }, 0);
 
         values.created_by = getItem('user')
-        values.selected_tariffs=JSON.stringify(combindedServices, null, 2)
+        values.service_tariffs=JSON.stringify(combindedServices, null, 2)
+        values.drug_tariffs=JSON.stringify(combindedDrugs, null, 2)
         values.related_documents=JSON.stringify(r, null, 2)
-        values.requested_total_price=totalServiceAmount
 
         const response = await useCreatePreAuthorizationAuth(values)
 
@@ -193,11 +196,6 @@ const PreAuthorization = () => {
               openNotification(response.message,'success')
               setSubmitting(false)
               resetForm()
-              setCombindedServices([])
-              setselectedTariffData({})
-              setInputTariffServices({})
-              setselectedProvider(null)
-
              }
              else if (response.status=="failed"){
               openNotification(response.message,"danger")
@@ -210,84 +208,7 @@ const PreAuthorization = () => {
 
 
    }
-   function calculateTotals(items: any) {
-    let total_price = '';
 
-        const serviceQuantity = Number(items.quantity) || 0;
-
-        // for nhia service price quantity
-        if (items.item_price) {
-            const servicePrice = parseFloat(items.item_price) || 0;
-            // total_price = servicePrice * serviceQuantity;
-            total_price = (servicePrice * serviceQuantity).toFixed(2);
-
-          }
-
-    return {
-      ...items,
-      total_price,
-    };
-}
-   const removeTariff = (tariffId: string) => {
-     setCombindedServices(prev =>
-       prev.filter(tariff => tariff.id !== tariffId)
-     );
-   };
-   const editTariff = (tariff_id:string,updatedTariff: pa_tariffs) => {
-    setCombindedServices(prev =>
-      prev.map(tariff =>
-        tariff.id === tariff_id ? { ...tariff, ...updatedTariff } : tariff
-      )
-    );
-  };
-  const getEnrollee=async(id:string)=>{
-      const enr= await usegetSinglePrivateEnrolleeAuth(id)
-      if (enr){
-        setEnrolleeData(enr.data)
-      }
-    }
-   function calculateAge(dobString: string): number {
-        const dob = new Date(dobString);
-        const today = new Date();
-
-        let age = today.getFullYear() - dob.getFullYear();
-
-        const hasHadBirthdayThisYear =
-          today.getMonth() > dob.getMonth() ||
-          (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
-
-        if (!hasHadBirthdayThisYear) {
-          age -= 1;
-        }
-
-   return age;
-  }
-   const profileHeader=(
-             <>
-             <div className='grid lg:grid-cols-4 md:grid-cols-3 gap-4 '>
-               <div className='lg:col-span-1 md:col-span-1'>
-                  <Avatar size={60} shape="circle" className="mr-4"
-                       src={enrolleeData?.passport_url || undefined}
-                       icon={!enrolleeData?.passport_url ? <HiOutlineUser /> : undefined} />
-               </div>
-               <div className='lg:col-span-3 md:col-span-1 '>
-                  <h5>{enrolleeData?.first_name ||'-'}</h5>
-                        {
-                             enrolleeData?.is_active ?
-                                 <Tag className='w-fit bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-100 border-0'>
-                                     Active
-                                 </Tag> :
-                                 <Tag className='w-fit text-red-600 bg-red-100 dark:text-red-100 dark:bg-red-500/20 border-0'>
-                                     Inactive
-                                 </Tag>
-
-                         }
-               </div>
-
-             </div>
-              </>
-
-     )
     useEffect(() => {
         const fetchData = async () => {
             const response = await usegetPrivateProviderAuth()
@@ -326,9 +247,9 @@ const PreAuthorization = () => {
                             diagnosis: '',
                             provider_id: '',
                             enrollee_id: '',
-                            selected_tariffs: [{}],
+                            drug_tariffs: [{}],
+                            service_tariffs: [{}],
                             related_documents: [{}],
-                            requested_total_price:'',
                             created_by: '',
                         }}
                         validationSchema={validationSchema}
@@ -399,7 +320,6 @@ const PreAuthorization = () => {
                                                              ) }
                                                             onChange={(option: SingleValue<Select_Type>,) => {
                                                                 form.setFieldValue('enrollee_id',option?.value,)
-                                                                getEnrollee(option?.value || '')
                                                             }}
                                                             isSearchable={true}
                                                             placeholder="Select Enrollee..."
@@ -469,7 +389,6 @@ const PreAuthorization = () => {
                                                             form,
                                                         }: FieldProps<FormModel>) => (
                                                             <Select
-                                                               key={selectKey}
                                                                 isDisabled={EnableTariff}
                                                                 options={SelectserviceTariffData }
                                                                 //  value={selectedProvider}
@@ -479,7 +398,8 @@ const PreAuthorization = () => {
                                                                       id:`${option?.value}`,
                                                                       item_price:`${option?.item_price}`,
                                                                       item_name:`${option?.label}`})
-                                                                      console.log(option)
+                                                                    // setInputTariffServices({'id':`${option?.value}`,'item_price':`${option?.item_price}`,'item_name':`${option?.label}`,'status':'pending','comment':''})
+                                                                    console.log(option)
                                                                 }}
                                                                 isSearchable={true}
                                                                 placeholder="Select provider..."
@@ -490,17 +410,16 @@ const PreAuthorization = () => {
                                                 <FormItem
                                                     label="Quantity"
                                                     asterisk
-                                                    // invalid={
-                                                    //     errors.diagnosis &&
-                                                    //     touched.diagnosis
-                                                    // }
-                                                    // errorMessage={
-                                                    //     errors.diagnosis
-                                                    // }
+                                                    invalid={
+                                                        errors.diagnosis &&
+                                                        touched.diagnosis
+                                                    }
+                                                    errorMessage={
+                                                        errors.diagnosis
+                                                    }
                                                 >
                                                     <Field
                                                         disabled={EnableTariff}
-                                                        key={selectKey2}
                                                         type="number"
                                                         autoComplete="off"
                                                         name="quantity"
@@ -520,7 +439,7 @@ const PreAuthorization = () => {
                                                         disabled={EnableTariff}
                                                         type="number"
                                                         autoComplete="off"
-                                                        name="item_price"
+                                                        name="quantity"
                                                         placeholder="Enter quantity"
                                                         component={Input}
                                                         value={
@@ -535,18 +454,102 @@ const PreAuthorization = () => {
                                                disabled={EnableTariff}
                                                 variant="twoTone"
                                                 type="button"
-                                                onClick={()=>{
-
-                                                  on_submit_service()
-
-
-                                                }}
+                                                onClick={on_submit_service}
                                             >
                                                 Add Service
                                             </Button>
                                         </div>
                                         {/* service Tariff */}
 
+                                        {/* Drug Tariff */}
+                                        <div className="mt-10">
+                                            <div className="grid lg:grid-cols-3 md:grid-cols-3 gap-4">
+                                                <FormItem
+                                                    label="Drug"
+                                                    asterisk
+                                                    invalid={
+                                                        errors.provider_id &&
+                                                        touched.provider_id
+                                                    }
+                                                    errorMessage={
+                                                        errors.provider_id
+                                                    }
+                                                >
+                                                    <Field>
+                                                        {({
+                                                            field,
+                                                            form,
+                                                        }: FieldProps<FormModel>) => (
+                                                            <Select
+                                                                isDisabled={EnableTariff }
+                                                                options={SelectDrugTariffData }
+                                                                isClearable={true}
+                                                                onChange={(
+                                                                    option: SingleValue<Select_Type2>) => {
+                                                                      setInputTariffDrug({...defaultTariff,
+                                                                        id:`${option?.value}`,
+                                                                        item_price:`${option?.item_price}`,
+                                                                        item_name:`${option?.label}`})
+                                                                    console.log(option)
+                                                                }}
+                                                                isSearchable={true}
+                                                                placeholder="Select Drug Tariff..."
+                                                            />
+                                                        )}
+                                                    </Field>
+                                                </FormItem>
+                                                <FormItem
+                                                    label="Quantity"
+                                                    asterisk
+                                                >
+                                                    <Field
+                                                        disabled={EnableTariff}
+                                                        type="number"
+                                                        autoComplete="off"
+                                                        name="quantity"
+                                                        placeholder="Enter quantity"
+                                                        component={Input}
+                                                        onChange={(i:any) => {
+                                                          setInputTariffDrug({ ...InputTariffDrug, quantity: i.target.value })
+                                                      }
+                                                      }
+                                                    />
+                                                </FormItem>
+                                                <FormItem
+                                                    label="Price"
+                                                    asterisk
+                                                    invalid={
+                                                        errors.diagnosis &&
+                                                        touched.diagnosis
+                                                    }
+                                                    errorMessage={
+                                                        errors.diagnosis
+                                                    }
+                                                >
+                                                    <Field
+                                                        disabled={EnableTariff}
+                                                        type="number"
+                                                        autoComplete="off"
+                                                        name="quantity"
+                                                        placeholder="Enter quantity"
+                                                        component={Input}
+                                                        value={
+                                                          InputTariffDrug?.item_price
+                                                      }
+                                                    />
+                                                </FormItem>
+                                            </div>
+
+                                            <Button
+                                                disabled={EnableTariff}
+                                                variant="twoTone"
+                                                type="button"
+                                                onClick={on_submit_drug}
+                                            >
+                                                Add Drug
+                                            </Button>
+                                        </div>
+                                        {/* Drug Tariff */}
                                     </Card>
                                 </div>
                                 <FormItem
@@ -566,152 +569,39 @@ const PreAuthorization = () => {
                     </Formik>
                 </div>
                 <div className="col-span-1  p-4">
-                  {enrolleeData&&<Card
-                                          header={profileHeader}
-                                          className=" mb-5"
-                                       >
-                                          <div className="grid grid-cols-2 gap-6 rounded-xl">
-                                               <div className="space-y-2">
-                                                 <p className="font-light text-gray-700">Type: <span className="font-semibold text-gray-900">{enrolleeData?.enrollee_type}</span></p>
-                                                 <p className="font-light text-gray-700">Plan: <span className="font-semibold text-gray-900">{enrolleeData?.plan_name}</span></p>
-                                                  <p className="font-light text-gray-700">Beneficiary Type: <span className="font-semibold text-gray-900">{enrolleeData?.beneficiary_type}</span></p>
-                                                 <p className="font-light text-gray-700">Age: <span className="font-semibold text-gray-900">{calculateAge(enrolleeData?.dob || '')} yrs</span></p>
-                                               </div>
-                                               <div className="space-y-2">
-                                                 <p className="font-light text-gray-700">Provider: <span className="font-semibold text-gray-900">{enrolleeData?.provider_name}</span></p>
-                                                 <p className="font-light text-gray-700">Client: <span className="font-semibold text-gray-900">{enrolleeData?.company_name}</span></p>
-                                                 <p className="font-light text-gray-700">Phone number: <span className="font-semibold text-gray-900">{enrolleeData?.phone_number}</span></p>
-                                                 <p className="font-light text-gray-700">Sex: <span className="font-semibold text-gray-900">{enrolleeData?.sex}</span></p>
-                                               </div>
-                                          </div>
-                                     </Card>}
-                     {combindedServices.map((items) => {
-                           return (
                     <Card
-                        header={items?.item_name}
-                        className=" mb-5"
+                        header="Drugs & Services"
+                        // className='w-1/3'
+                        className="col-span-2 p-4"
                     >
-                        <div>
-                            <>
-                                <div className="space-y-2 mb-4">
-                                    {[
-                                    { label: "Price", value: `₦${items?.item_price}` },
-                                    { label: "Quantity", value: items?.quantity},
-                                    { label: "Total", value: `₦${items?.total_price}` },
-                                    ].map((item) => (
-                                    <div key={item.label} className="flex justify-between w-full">
-                                      <p className="font-medium heading-text ">{item.label}:</p>
-                                      <p className="text-right">{item.value || "-"}</p>
-                                    </div>
-                                  ))}
-                                 </div>
-                                 <div className='grid lg:grid-cols-2 md:grid-cols-1 gap-4'>
-                                <Button
-                                      variant='twoTone'
-                                      size='xs'
-                                      className=''
-                                      onClick={() => {
-                                        setReviewDialog(true)
-                                        setselectedTariffData(items)
-                                       }}
-                                      >
-                                     Edit Seleted Tariff
-                                  </Button>
-                                  <Button
-                                      variant='twoTone'
-                                      size='xs'
-                                      className=''
-                                      color="red-600"
-                                      onClick={() => {
-                                        removeTariff(items.id || '')
-                                        console.log('deleted',items.id)
-                                       }}
-                                      >
-                                     Remove Tariff
-                                  </Button>
-                                  </div>
+                        <div
+                        //  className='w-full'
+                        >
+                            {combindedServices.map((items) => {
+                                return (
+                                    <>
+                                        {items?.item_name && (<p>Name:<b>{items?.item_name}</b></p>)}
+                                        {items?.item_price && (<p>Price:<b>{items?.item_price}</b></p>)}
+                                        {items?.quantity && (<p>Quantity:<b>{items?.quantity}</b></p>)}
 
-                            </>
+                                    </>
+                                )
+                            })}
+                              {combindedDrugs.map((items) => {
+                                return (
+                                    <>
+                                        {items?.item_name && (<p>Name:<b>{items?.item_name}</b></p>)}
+                                        {items?.item_price && (<p>Price:<b>{items?.item_price}</b></p>)}
+                                        {items?.quantity && (<p>Quantity:<b>{items?.quantity}</b></p>)}
 
-
+                                    </>
+                                )
+                            })}
                         </div>
                     </Card>
-                      )
-                     })}
                 </div>
             </div>
-
-            {/* edit selected tariff */}
-                           {
-                                viewReviewDialog && <Dialog
-                                   isOpen={viewReviewDialog}
-                                   onClose={() => setReviewDialog(false)}
-                                   onRequestClose={() => setReviewDialog(false)}
-                                   width={450}
-                                   height={190}
-                                   style={{
-                                    content: {
-                                        marginTop: 250,
-                                    },
-                                   }}
-                                   shouldCloseOnOverlayClick={false}
-                                   shouldCloseOnEsc={false}
-                               >
-                                    <div className="">
-                                        <h5 className="mb-2">Review</h5>
-                                        <div className="overflow-y-auto">
-                                            <Formik
-                                                initialValues={{
-                                                    // item_price: selectedTariffData.approved_price || '',
-                                                    quantity: selectedTariffData.quantity || 0,
-                                                    total_price:''
-                                                }}
-                                                onSubmit={async (values, { setSubmitting, resetForm }) => {
-                                                    console.log('Form values:', values);
-                                                    let total_price = '';
-                                                    const serviceQuantity = values.quantity
-                                                    // const servicePrice = parseFloat(selectedTariffData.item_price) || 0;
-                                                    const servicePrice = Number(selectedTariffData.item_price) || 0;
-                                                    total_price = (servicePrice * serviceQuantity).toFixed(2);
-                                                    values.total_price=total_price
-                                                    // setReviewDialog(false)
-                                                    editTariff(selectedTariffData.id || '',values)
-                                                }}
-                                            >
-                                                {({ isSubmitting, errors, touched, values }) => (
-                                                    <Form>
-                                                      <FormContainer>
-                                                        {/* <div className='grid grid-cols-2 gap-4 mb-5'> */}
-                                                         <Field
-                                                              type="number"
-                                                              autoComplete="off"
-                                                              name="quantity"
-                                                              placeholder="Enter Quantity"
-                                                              component={Input}
-                                                         />
-                                                         {/* </div> */}
-
-                                                      </FormContainer>
-                                                        <div className="mt-5 'w-full flex justify-center">
-                                                            <Button
-                                                               type="submit"
-                                                               variant="solid"
-                                                               size='sm'
-                                                               loading={isSubmitting}
-                                                               >
-                                                            {isSubmitting
-                                                                ? 'Saving...'
-                                                                : 'Review Tariff'}
-                                                            </Button>
-                                                        </div>
-                                                    </Form>
-                                                )}
-                                            </Formik>
-                                        </div>
-                                    </div>
-                                </Dialog>
-                            }
         </>
     )
 }
-export default PreAuthorization
+export default EnrolleeEntryForm
