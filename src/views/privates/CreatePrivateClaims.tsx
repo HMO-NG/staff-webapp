@@ -2,6 +2,8 @@ import Select from '@/components/ui/Select'
 import { SingleValue } from 'react-select'
 import Card from '@/components/ui/Card'
 import usePrivates from '@/utils/customAuth/usePrivatesAuth'
+import type {PrivateEnrollee} from '@/utils/customAuth/usePrivatesAuth'
+import defaultPrivateEnrollee from '@/utils/customAuth/usePrivatesAuth'
 import { FormItem, FormContainer } from '@/components/ui/Form'
 import { Field, Form, Formik, FieldArray } from 'formik'
 import type { FieldProps } from 'formik'
@@ -22,6 +24,10 @@ import { useLocalStorage } from '@/utils/localStorage'
 import Dialog from '@/components/ui/Dialog'
 import usePrivateClaims from '@/utils/customAuth/usePrivateClaimAuth'
 import DatePicker from '@/components/ui/DatePicker'
+import Checkbox from '@/components/ui/Checkbox'
+import Avatar from '@/components/ui/Avatar'
+import { HiOutlineUser } from 'react-icons/hi'
+import Tag from '@/components/ui/Tag'
 
 type FormModel = {
     input: string
@@ -74,19 +80,25 @@ const defaultTariff: pa_tariffs = {
   approved_total:0
 };
 
+const paCodeRegex = /^PA4LG\/\d{2}\/\d{2}\/\d{2}\/[A-Z]{2}\/[0-9a-fA-F-]{36}$/;
+
 const validationSchema = Yup.object().shape({
     diagnosis: Yup.string().required('Please enter Diagnosis'),
     provider_id: Yup.string().required('Please Select Provider'),
     enrollee_id: Yup.string().required('Please Select enrollee'),
-    pa_code: Yup.string().required('Please enter PA Code'),
+    // pa_code: Yup.string().matches(paCodeRegex, 'Invalid PA code format')
+    // .required('PA code is required'),
 
 })
 
 const CreatePrivateClaims = () => {
-    const {usegetPrivateProviderAuth,} = usePrivates()
+    const {usegetPrivateProviderAuth,
+          usegetSinglePrivateEnrolleeAuth,
+    } = usePrivates()
     const {uploadRawFilesTocloudinaryAuth } = useDouments()
     const {
         usegetProviderServiceTariffByIdAuth,
+        usegetPreAuthorizationByPACodeAuth,
     } = useProvider()
     const {
        usecreatePrivateClaimAuth,
@@ -111,6 +123,10 @@ const CreatePrivateClaims = () => {
     const [selectedTariffData, setselectedTariffData] = useState<pa_tariffs>(defaultTariff)
     const [selectKey, setSelectKey] = useState(0);
     const [selectKey2, setSelectKey2] = useState(0);
+    const [checked,setChecked]=useState<boolean>(false)
+    const [enrolleeData, setEnrolleeData] = useState<PrivateEnrollee>()
+    const [inputPA_code,setInputPA_code]=useState('')
+    const [inputDiagnosis,setInputDiagnosis]=useState('')
 
     function openNotification(msg: string,notificationType: 'success' | 'warning' | 'danger' | 'info') {
         toast.push(
@@ -182,6 +198,7 @@ const CreatePrivateClaims = () => {
         values.selected_tariffs=JSON.stringify(combindedServices, null, 2)
         values.related_documents=JSON.stringify(r, null, 2)
         values.requested_amount=totalServiceAmount
+        // values.pa_code=va
 
         const response = await usecreatePrivateClaimAuth(values)
 
@@ -238,6 +255,91 @@ const CreatePrivateClaims = () => {
       )
     );
   };
+   const onCheck = (value: boolean, e: ChangeEvent<HTMLInputElement>) => {
+        console.log(value, e)
+        setChecked(value)
+    }
+   function calculateAge(dobString: string): number {
+        const dob = new Date(dobString);
+        const today = new Date();
+
+        let age = today.getFullYear() - dob.getFullYear();
+
+        const hasHadBirthdayThisYear =
+          today.getMonth() > dob.getMonth() ||
+          (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
+
+        if (!hasHadBirthdayThisYear) {
+          age -= 1;
+        }
+
+   return age;
+  }
+  const profileHeader=(
+          <>
+          <div className='grid lg:grid-cols-4 md:grid-cols-3 gap-4 '>
+            <div className='lg:col-span-1 md:col-span-1'>
+               <Avatar size={60} shape="circle" className="mr-4"
+                    src={enrolleeData?.passport_url || undefined}
+                    icon={!enrolleeData?.passport_url ? <HiOutlineUser /> : undefined} />
+            </div>
+            <div className='lg:col-span-3 md:col-span-1 '>
+               <h5>{enrolleeData?.first_name ||'-'}</h5>
+                     {
+                          enrolleeData?.is_active ?
+                              <Tag className='w-fit bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-100 border-0'>
+                                  Active
+                              </Tag> :
+                              <Tag className='w-fit text-red-600 bg-red-100 dark:text-red-100 dark:bg-red-500/20 border-0'>
+                                  Inactive
+                              </Tag>
+
+                      }
+            </div>
+
+          </div>
+           </>
+
+  )
+  const getEnrollee=async(id:string)=>{
+      const enr= await usegetSinglePrivateEnrolleeAuth(id)
+      if (enr){
+        setEnrolleeData(enr.data)
+      }
+    }
+    const getPAData=async(pa_code:string)=>{
+      const isValidPaCode = (pa_code: string): boolean => {
+          const pattern = /^PA4LG\/\d{2}\/\d{2}\/\d{2}\/[A-Z]{2}\/[0-9a-fA-F-]{36}$/;
+            return pattern.test(pa_code);
+           };
+      // const isValid = await validatePaCode(pa_code);
+      const isValid = isValidPaCode(pa_code)
+      if(isValid){
+      const pa_data= await usegetPreAuthorizationByPACodeAuth(pa_code)
+      if(pa_data){
+        if (pa_data.status === 'success') {
+                      setTimeout(() => {
+                      setInputDiagnosis(pa_data.data?.diagnosis || '')  
+                      getEnrollee(pa_data.data?.enrollee.id || '')
+                      setselectedProvider({label:pa_data.data?.provider.name || '',
+                                            value:pa_data.data?.provider.id || ''} )
+                      onselect_provider(pa_data.data?.provider.id)                      
+                      setEnableTariff(false)                      
+                      setCombindedServices(pa_data.data?.selected_tariffs || [])  
+                      openNotification(pa_data.message,'success')
+                       }, 3000)
+                    }
+        else if (pa_data.status === 'failed') {
+                      setTimeout(() => {
+                      openNotification(pa_data.message,'danger')
+                       }, 3000)
+
+                    }
+
+      }
+    }
+    }
+
     useEffect(() => {
         const fetchData = async () => {
             const response = await usegetPrivateProviderAuth()
@@ -275,17 +377,17 @@ const CreatePrivateClaims = () => {
                     <Formik
                         initialValues={{
                             claim_type:'outpatient',
-                            diagnosis: '',
-                            provider_id: '',
-                            enrollee_id: '',
-                            pa_code:'',
+                            diagnosis: inputDiagnosis,
+                            provider_id: selectedProvider?.value,
+                            enrollee_id: enrolleeData?.id ,
+                            pa_code:inputPA_code,
                             selected_tariffs: [{}],
                             related_documents: [{}],
-                            requested_total_price:'',
                             created_by: '',
                             encounter_date:'',
                         }}
                         validationSchema={validationSchema}
+                        enableReinitialize={true}
                         onSubmit={(values, { setSubmitting, resetForm }) => {
                           onCreateClaim(values, setSubmitting, resetForm)
 
@@ -295,8 +397,13 @@ const CreatePrivateClaims = () => {
                         {({ isSubmitting, errors, touched, values }) => (
                             <Form>
                                 <div>
-                                    <Card header="Enrollee Details">
+                                    <Card header="Enrollee Details"
+                                          headerExtra={<Checkbox onChange={onCheck}>
+                                                   Admission
+                                               </Checkbox>}
+                                    >
                                         <div className="grid lg:grid-cols-2 md:grid-cols-2 gap-4">
+                                        {/* Provider */}
                                             <FormItem
                                                 label="Provider"
                                                 asterisk
@@ -329,6 +436,8 @@ const CreatePrivateClaims = () => {
                                                     )}
                                                 </Field>
                                             </FormItem>
+                                        {/* Provider */}
+                                        {/* enrollee id */}
                                             <FormItem
                                                 asterisk
                                                 label="Select enrollee"
@@ -353,6 +462,7 @@ const CreatePrivateClaims = () => {
                                                              ) }
                                                             onChange={(option: SingleValue<Select_Type>,) => {
                                                                 form.setFieldValue('enrollee_id',option?.value,)
+                                                                getEnrollee(option?.value || '')
                                                             }}
                                                             isSearchable={true}
                                                             placeholder="Select Enrollee..."
@@ -360,6 +470,8 @@ const CreatePrivateClaims = () => {
                                                     )}
                                                 </Field>
                                             </FormItem>
+                                        {/* enrollee id */}
+                                        {/* pa code */}
                                             <FormItem
                                             label="PA Code"
                                             asterisk
@@ -375,10 +487,18 @@ const CreatePrivateClaims = () => {
                                                 name="pa_code"
                                                 placeholder="Enter PA Code"
                                                 component={Input}
-                                                //  onChange={handle_doc_name_change}
+                                                value={inputPA_code}
+                                                onChange={(e:any)=>{
+                                                  setInputPA_code(e.target.value)
+                                                  console.log('value',e.target.value)
+                                                  getPAData(e.target.value)
+                                                }
+                                                }
                                             />
-                                        </FormItem>
-                                        <FormItem
+                                            </FormItem>
+                                        {/* pa code */}
+                                        {/* encounter date */}
+                                            <FormItem
                                             label="Encounter Date"
                                             asterisk
                                             // invalid={
@@ -387,7 +507,7 @@ const CreatePrivateClaims = () => {
                                             // }
                                             // errorMessage={errors.diagnosis}
                                         >
-                                           {/* <Field name="encounter_date">
+                                           <Field name="encounter_date">
                                           {({
                                             field,form
                                           }: FieldProps<FormModel>) => (
@@ -398,37 +518,75 @@ const CreatePrivateClaims = () => {
                                                       }}
                                            />
                                             )}
-                                            </Field> */}
-                                            <Field
-                                               type="date"
-                                               autoComplete="off"
-                                               name="encounter_date"
-                                               placeholder="Enter Encounter Date"
-                                               component={Input}
-                                               //  onChange={handle_doc_name_change}
-                                           />
+                                            </Field>
+                                            </FormItem>
+                                        {/* encounter date */}
+                                        {checked&&<>
 
-                                        </FormItem>
+                                        {/* admitted_date */}
+                                            <FormItem
+                                            label="Admitted Date"
+                                            asterisk
+                                        >
+
+                                            <Field name="admitted_date">
+                                          {({
+                                            field,form
+                                          }: FieldProps<FormModel>) => (
+                                          <DatePicker placeholder="Enter Admitted Date"
+                                                       onChange={(value)=>{
+                                                        form.setFieldValue(field.name,value)
+                                                      }}
+                                           />
+                                            )}
+                                            </Field>
+
+                                            </FormItem>
+                                        {/* admitted_date */}
+
+                                        {/* discharged_date */}
+                                            <FormItem
+                                            label="Discharged Date"
+                                            asterisk
+                                        >
+
+                                           <Field name="discharged_date">
+                                          {({
+                                            field,form
+                                          }: FieldProps<FormModel>) => (
+                                          <DatePicker placeholder="Enter Discharged Date"
+                                                       onChange={(value)=>{
+                                                        form.setFieldValue(field.name,value)
+                                                      }}
+                                           />
+                                            )}
+                                            </Field>
+
+                                            </FormItem>
+                                        {/* discharged_date */}
+
+                                           </>}
                                         </div>
 
-                                        <FormItem
-                                            label="Diagnosis"
-                                            asterisk
-                                            invalid={
-                                                errors.diagnosis &&
-                                                touched.diagnosis
-                                            }
-                                            errorMessage={errors.diagnosis}
-                                        >
+                                        {/* Diagnosis */}
+                                            <FormItem
+                                               label="Diagnosis"
+                                               asterisk
+                                               invalid={
+                                                   errors.diagnosis &&
+                                                   touched.diagnosis
+                                               }
+                                              errorMessage={errors.diagnosis}
+                                            >
                                             <Field
                                                 type="txt"
                                                 autoComplete="off"
                                                 name="diagnosis"
                                                 placeholder="Enter Diagnosis"
                                                 component={Input}
-                                                //  onChange={handle_doc_name_change}
                                             />
-                                        </FormItem>
+                                            </FormItem>
+                                        {/* Diagnosis */}
                                         <div>
                                             <Upload
                                                 className="w-full flex justify-center"
@@ -492,13 +650,7 @@ const CreatePrivateClaims = () => {
                                                 <FormItem
                                                     label="Quantity"
                                                     asterisk
-                                                    // invalid={
-                                                    //     errors.diagnosis &&
-                                                    //     touched.diagnosis
-                                                    // }
-                                                    // errorMessage={
-                                                    //     errors.diagnosis
-                                                    // }
+
                                                 >
                                                     <Field
                                                         disabled={EnableTariff}
@@ -538,10 +690,7 @@ const CreatePrivateClaims = () => {
                                                 variant="twoTone"
                                                 type="button"
                                                 onClick={()=>{
-
                                                   on_submit_service()
-
-
                                                 }}
                                             >
                                                 Add Service
@@ -568,6 +717,25 @@ const CreatePrivateClaims = () => {
                     </Formik>
                 </div>
                 <div className="col-span-1  p-4">
+                  {enrolleeData&&<Card
+                        header={profileHeader}
+                        className=" mb-5"
+                     >
+                        <div className="grid grid-cols-2 gap-6 rounded-xl">
+                             <div className="space-y-2">
+                               <p className="font-light text-gray-700">Type: <span className="font-semibold text-gray-900">{enrolleeData?.enrollee_type}</span></p>
+                               <p className="font-light text-gray-700">Plan: <span className="font-semibold text-gray-900">{enrolleeData?.plan_name}</span></p>
+                                <p className="font-light text-gray-700">Beneficiary Type: <span className="font-semibold text-gray-900">{enrolleeData?.beneficiary_type}</span></p>
+                               <p className="font-light text-gray-700">Age: <span className="font-semibold text-gray-900">{calculateAge(enrolleeData?.dob || '')} yrs</span></p>
+                             </div>
+                             <div className="space-y-2">
+                               <p className="font-light text-gray-700">Provider: <span className="font-semibold text-gray-900">{enrolleeData?.provider_name}</span></p>
+                               <p className="font-light text-gray-700">Client: <span className="font-semibold text-gray-900">{enrolleeData?.company_name}</span></p>
+                               <p className="font-light text-gray-700">Phone number: <span className="font-semibold text-gray-900">{enrolleeData?.phone_number}</span></p>
+                               <p className="font-light text-gray-700">Sex: <span className="font-semibold text-gray-900">{enrolleeData?.sex}</span></p>
+                             </div>
+                        </div>
+                   </Card>}
                      {combindedServices.map((items) => {
                            return (
                     <Card

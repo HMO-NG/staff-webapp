@@ -54,6 +54,10 @@ function useAuth() {
                     )
 
                     setItem("user",resp.data.user.user_id)
+                    if (resp.data.user.client_id){
+                    setItem("client_id",resp.data.user.client_id)
+                    }
+
                 }
                 const redirectUrl = query.get(REDIRECT_URL_KEY)
                 navigate(

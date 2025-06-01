@@ -52,70 +52,33 @@ const ViewBenefit = () => {
             key: '',
         },
     })
-    const [provider, setProvider] = useState<
-        {
-            id: string;
-            email: string,
-            address: string,
-            phone_number: string,
-            medical_director_name: string,
-            medical_director_phone_no: string,
-            modified_by: string,
-            created_at: string,
-            modified_at: string,
-            name: string;
-            state: string,
-            code: string;
-            user_id: string,
-            entered_by: string
-        }>({
-            id: "",
-            email: "",
-            address: "",
-            phone_number: "",
-            medical_director_name: "",
-            medical_director_phone_no: "",
-            modified_by: "",
-            created_at: "",
-            modified_at: "",
-            name: "",
-            state: "",
-            code: "",
-            user_id: "",
-            entered_by: "",
-        })
+    const [benefit_list, setBenefit_list] = useState<{
+      id: string;
+      benefit_name: string;
+      sub_category: string,
+      category: string,
+      entered_by: string
+    }>({
+      id: "",
+      benefit_name: "",
+      sub_category: "",
+      category: "",
+      entered_by: ""
 
-    const [editProvider, setEditProvider] = useState<
+  })
+
+    const [editbenefit, setEditBenefit] = useState<
         {
-            id: string;
-            email: string,
-            address: string,
-            phone_number: string,
-            medical_director_name: string,
-            medical_director_phone_no: string,
-            modified_by: string,
-            created_at: string,
-            modified_at: string,
-            name: string;
-            state: string,
-            code: string;
-            user_id: string,
-            entered_by: string
+          id: string;
+          benefit_name: string;
+          sub_category: string,
+          category: string,
         }>({
             id: "",
-            email: "",
-            address: "",
-            phone_number: "",
-            medical_director_name: "",
-            medical_director_phone_no: "",
-            modified_by: "",
-            created_at: "",
-            modified_at: "",
-            name: "",
-            state: "",
-            code: "",
-            user_id: "",
-            entered_by: "",
+            benefit_name: "",
+            sub_category: "",
+            category: "",
+
         })
     const [providerStatus, setProviderStatus] = useState<
         {
@@ -169,21 +132,12 @@ const ViewBenefit = () => {
 
         switch (key) {
             case 'view':
-                setProvider(
+               setBenefit_list(
                     {
                         id: cellProps.row.original.id,
-                        email: cellProps.row.original.email,
-                        address: cellProps.row.original.address,
-                        phone_number: cellProps.row.original.phone_number,
-                        medical_director_name: cellProps.row.original.medical_director_name,
-                        medical_director_phone_no: cellProps.row.original.medical_director_phone_no,
-                        modified_by: cellProps.row.original.modified_by,
-                        created_at: cellProps.row.original.created_at,
-                        modified_at: cellProps.row.original.modified_at,
-                        name: cellProps.row.original.name,
-                        state: cellProps.row.original.state,
-                        code: cellProps.row.original.code,
-                        user_id: cellProps.row.original.user_id,
+                        benefit_name: cellProps.row.original.benefit_name,
+                        sub_category: cellProps.row.original.sub_category,
+                        category: cellProps.row.original.category,
                         entered_by: cellProps.row.original.entered_by
                     }
                 )
@@ -192,22 +146,13 @@ const ViewBenefit = () => {
                 break;
             case 'edit':
 
-                setEditProvider(
+            setEditBenefit(
                     {
-                        id: cellProps.row.original.id,
-                        email: cellProps.row.original.email,
-                        address: cellProps.row.original.address,
-                        phone_number: cellProps.row.original.phone_number,
-                        medical_director_name: cellProps.row.original.medical_director_name,
-                        medical_director_phone_no: cellProps.row.original.medical_director_phone_no,
-                        modified_by: cellProps.row.original.modified_by,
-                        created_at: cellProps.row.original.created_at,
-                        modified_at: cellProps.row.original.modified_at,
-                        name: cellProps.row.original.name,
-                        state: cellProps.row.original.state,
-                        code: cellProps.row.original.code,
-                        user_id: cellProps.row.original.user_id,
-                        entered_by: cellProps.row.original.entered_by
+                      id: cellProps.row.original.id,
+                      benefit_name: cellProps.row.original.benefit_name,
+                      sub_category: cellProps.row.original.sub_category,
+                      category: cellProps.row.original.category,
+
                     }
                 )
                 setEditDialog(true)
@@ -290,25 +235,25 @@ const ViewBenefit = () => {
             ...{ sort: { order, key } },
         }))
     }
-
     const handleRowSelect = (checked: boolean, row: Benefits) => {
-        console.log('row', row)
-        if (checked) {
-            setSelectedRows((prevData) => {
-                if (!prevData.includes(row.name)) {
-                    return [...prevData, ...[row.name]]
-                }
-                return prevData
-            })
-        } else {
-            setSelectedRows((prevData) => {
-                if (prevData.includes(row.name)) {
-                    return prevData.filter((id) => id !== row.name)
-                }
-                return prevData
-            })
-        }
-    }
+      console.log('row', row)
+      if (checked) {
+          setSelectedRows((prevData) => {
+              if (!prevData.includes(row.id)) {
+                  return [...prevData, ...[row.id]]
+              }
+              return prevData
+          })
+      } else {
+          setSelectedRows((prevData) => {
+              if (prevData.includes(row.id)) {
+                  return prevData.filter((id) => id !== row.id)
+              }
+              return prevData
+          })
+      }
+  }
+
 
     const handleAllRowSelect = (checked: boolean, rows: Row<Benefits>[]) => {
         console.log('rows', rows)
@@ -316,7 +261,7 @@ const ViewBenefit = () => {
             const originalRows = rows.map((row) => row.original)
             const selectedIds: string[] = []
             originalRows.forEach((row) => {
-                selectedIds.push(row.name)
+                selectedIds.push(row.benefit_name)
             })
             setSelectedRows(selectedIds)
         } else {
@@ -324,7 +269,7 @@ const ViewBenefit = () => {
         }
     }
 
-    const updateProvider = async (data: any) => {
+    const updatebenefit = async (data: any) => {
         const result = await useEditProviderById(data)
 
         setMessage(result.message)
@@ -465,54 +410,24 @@ const ViewBenefit = () => {
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td>Name</td>
-                                            <td><b>{provider.name}</b></td>
+                                            <td>Benefit Name</td>
+                                            <td><b>{benefit_list.benefit_name}</b></td>
                                         </tr>
                                         <tr>
-                                            <td>Email</td>
-                                            <td><b>{provider.email}</b></td>
+                                            <td>Sub Category</td>
+                                            <td><b>{benefit_list.sub_category}</b></td>
 
                                         </tr>
                                         <tr>
-                                            <td>Address</td>
-                                            <td><b>{provider.address}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Phone Number</td>
-                                            <td><b>{provider.phone_number}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>State</td>
-                                            <td><b>{provider.state}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Provider Code</td>
-                                            <td><b>{provider.code}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Medical Director Name</td>
-                                            <td><b>{provider.medical_director_name}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Medical Director Phone No.</td>
-                                            <td><b>{provider.medical_director_phone_no}</b></td>
+                                            <td>Category</td>
+                                            <td><b>{benefit_list.category}</b></td>
                                         </tr>
                                         <tr>
                                             <td>Entered By</td>
-                                            <td><b>{provider.entered_by}</b></td>
+                                            <td><b>{benefit_list.entered_by}</b></td>
                                         </tr>
-                                        <tr>
-                                            <td>Modified By</td>
-                                            <td><b>{provider.modified_by}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Modified At</td>
-                                            <td><b>{provider.modified_at}</b></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Created At</td>
-                                            <td><b>{provider.created_at}</b></td>
-                                        </tr>
+
+
                                     </tbody>
                                 </table>
                             </div>
@@ -553,19 +468,14 @@ const ViewBenefit = () => {
         user_id: string,
         entered_by: string */
                                     initialValues={{
-                                        id: editProvider.id,
-                                        name: editProvider.name,
-                                        email: editProvider.email,
-                                        address: editProvider.address,
-                                        phone_number: editProvider.phone_number,
-                                        medical_director_name: editProvider.medical_director_name,
-                                        medical_director_phone_no: editProvider.medical_director_phone_no,
-                                        state: editProvider.state,
-                                        user_id: editProvider.user_id
+                                        id: editbenefit.id,
+                                        benefit_name: editbenefit.benefit_name,
+                                        sub_category: editbenefit.sub_category,
+                                        category: editbenefit.category,
 
                                     }}
                                     onSubmit={(values, { resetForm, setSubmitting }) => {
-                                        updateProvider(values)
+                                        updatebenefit(values)
                                     }
                                     }
 
@@ -573,83 +483,40 @@ const ViewBenefit = () => {
                                     {({ touched, errors, resetForm }) => (
                                         <Form>
                                             <FormContainer>
-                                                {/* Name */}
+                                                {/* benefit_name */}
                                                 <FormItem
-                                                    label="Name"
+                                                    label="Benefit Name"
                                                 >
                                                     <Field
                                                         type="text"
                                                         autoComplete="off"
-                                                        name="name"
+                                                        name="benefit_name"
                                                         component={Input}
                                                     />
                                                 </FormItem>
-                                                {/* Email */}
+                                                {/* sub_category */}
                                                 <FormItem
-                                                    label="Email"
+                                                    label="Sub Category"
                                                 >
                                                     <Field
                                                         type="text"
                                                         autoComplete="off"
-                                                        name="email"
+                                                        name="sub_category"
                                                         component={Input}
                                                     />
                                                 </FormItem>
-                                                {/* Address */}
+                                                {/* category */}
                                                 <FormItem
-                                                    label="Address"
+                                                    label="category"
                                                 >
                                                     <Field
                                                         type="text"
                                                         autoComplete="off"
-                                                        name="address"
+                                                        name="category"
                                                         component={Input}
                                                     />
                                                 </FormItem>
-                                                {/* phone number */}
-                                                <FormItem
-                                                    label="Phone Number"
-                                                >
-                                                    <Field
-                                                        type="text"
-                                                        autoComplete="off"
-                                                        name="phone_number"
-                                                        component={Input}
-                                                    />
-                                                </FormItem>
-                                                {/* Medical Director's Name */}
-                                                <FormItem
-                                                    label="Medical Director's Name"
-                                                >
-                                                    <Field
-                                                        type="text"
-                                                        autoComplete="off"
-                                                        name="medical_director_name"
-                                                        component={Input}
-                                                    />
-                                                </FormItem>
-                                                {/*medical_director_phone_no*/}
-                                                <FormItem
-                                                    label="Medical Director's Phone No."
-                                                >
-                                                    <Field
-                                                        type="text"
-                                                        autoComplete="off"
-                                                        name="medical_director_phone_no"
-                                                        component={Input}
-                                                    />
-                                                </FormItem>
-                                                {/* state */}
-                                                <FormItem
-                                                    label="State"
-                                                >
-                                                    <Field
-                                                        type="text"
-                                                        autoComplete="off"
-                                                        name="state"
-                                                        component={Input}
-                                                    />
-                                                </FormItem>
+
 
                                                 <FormItem>
                                                     <Button variant="solid" type="submit">

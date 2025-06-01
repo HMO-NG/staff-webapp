@@ -45,13 +45,10 @@ type Customer = {
 
 const ViewAllProvider = () => {
 
-    const { useGetAllProvider, useEditProviderById, useUpdateProviderActivationStatus,
-      useCreateProviderServiceTariffAuth,usegetProviderServiceTariffByIdAuth,useCreateProviderDrugTariffAuth,
-      usegetProviderDrugTariffByIdAuth,} = useProvider()
+    const { useGetAllProvider, useEditProviderById, useUpdateProviderActivationStatus,usegetProviderServiceTariffByIdAuth} = useProvider()
     const navigate = useNavigate()
     const [data, setData] = useState([])
     const [serviceTariffData, setServiceTariffData] = useState<ProviderServiceTariffType[]>([])
-    const [DrugTariffData, setDrugTariffData] = useState<ProviderDrugTariffType[]>([])
     const [loading, setLoading] = useState(false)
     const [selectedRows, setSelectedRows] = useState<string[]>([])
     const [message, setMessage] = useState('')
@@ -174,7 +171,6 @@ const ViewAllProvider = () => {
     const [statusDialog, setStatusDialog] = useState(false)
     const [tariffDialog, setTariffDialog] = useState(false)
     const [providerServiceCount, setProviderServiceCount] = useState<number | undefined>(undefined)
-    const [providerDrugCount, setProviderDrugCount] = useState<number | undefined>(undefined)
 
     const onDropdownClick = (e: SyntheticEvent) => {
         console.log('Dropdown Clicked', e)
@@ -261,15 +257,10 @@ const ViewAllProvider = () => {
                 {
                     id: cellProps.row.original.id,
                 })
-              const getservice=await usegetProviderServiceTariffByIdAuth(cellProps.row.original.id)
-              const getdrug=await usegetProviderDrugTariffByIdAuth(cellProps.row.original.id)
-              if(getservice.data){
-              setServiceTariffData(getservice.data)
-              setProviderServiceCount(getservice.count)
-            }
-            if(getdrug.data){
-              setDrugTariffData(getdrug.data)
-              setProviderDrugCount(getdrug.count)
+              const gettariff=await usegetProviderServiceTariffByIdAuth(cellProps.row.original.id)
+              if(gettariff.data){
+              setServiceTariffData(gettariff.data)
+              setProviderServiceCount(gettariff.count)
             }
 
               setTariffDialog(true)
@@ -368,8 +359,8 @@ const ViewAllProvider = () => {
               accessorKey: 'category',
           },
           {
-            header: 'Insurance Plan Type',
-            accessorKey: 'insurance_plan_type',
+            header: 'Insurance Plan',
+            accessorKey: 'insurance_plan_id',
         },
           {
               header: 'Created by',
@@ -378,43 +369,7 @@ const ViewAllProvider = () => {
 
       ]
   ), [])
-  const drugTariffColumns: ColumnDef<ProviderDrugTariffType>[] = useMemo(() => (
-    [
-        {
-            header: 'Name',
-            accessorKey: 'item_name',
-        },
-        {
-            header: 'Price',
-            accessorKey: 'item_price',
-        },
-        {
-            header: 'Formulation',
-            accessorKey: 'formulation',
-        },
-        {
-            header: 'Unit_of_measure',
-            accessorKey: 'unit_of_measure',
-        },
-        {
-            header: 'Strength',
-            accessorKey: 'strength',
-        },
-        {
-            header: 'Category',
-            accessorKey: 'category',
-        },
-        {
-          header: 'Insurance Plan Type',
-          accessorKey: 'insurance_plan_type',
-      },
-        {
-            header: 'Created by',
-            cell: (props) => props.cell.row.original.created_by,
-        },
 
-    ]
-), [])
 
     const handlePaginationChange = (pageIndex: number) => {
         setTableData((prevData) => ({ ...prevData, ...{ pageIndex } }))
@@ -877,7 +832,7 @@ const ViewAllProvider = () => {
                         <div className="max-h-96 overflow-y-auto">
                         <div className="flex justify-end">
                         <Button
-                               className=""
+                               className="mb-5"
                                variant="solid"
                                onClick={() => navigate(`/provider/tariff/${providerId.id}/create`)}
                                icon={<HiPlus />}
@@ -888,16 +843,7 @@ const ViewAllProvider = () => {
 
                            </div>
                         <div>
-                         <Tabs defaultValue="tab1" >
-                               <div className='flex justify-center'>
-                                   <TabList className="w-full">
-                                       <TabNav className="w-full" value="tab1">Service Tariff</TabNav>
-                                       <TabNav className="w-full" value="tab2">Drug Tariff</TabNav>
-                                   </TabList>
-                               </div>
-                                   <div className="p-4">
-                                       <TabContent value="tab1">
-                                       {(providerServiceCount===0)?(<p>no Tariffs</p>):(
+                        {(providerServiceCount===0)?(<p>no Tariffs</p>):(
                                        <DataTable<ProviderServiceTariffType>
                                           selectable
                                           columns={serviceTariffColumns}
@@ -910,25 +856,6 @@ const ViewAllProvider = () => {
                                           // onCheckBoxChange={handleRowSelect}
                                           // onIndeterminateCheckBoxChange={handleAllRowSelect}
                                       />)}
-                                       </TabContent>
-                                       <TabContent value="tab2">
-                                       {(providerDrugCount===0)?(<p>no Tariffs</p>):(
-                                       <DataTable<ProviderDrugTariffType>
-                                          selectable
-                                          columns={drugTariffColumns}
-                                          data={DrugTariffData}
-                                          loading={loading}
-                                          pagingData={tableData}
-                                          onPaginationChange={handlePaginationChange}
-                                          onSelectChange={handleSelectChange}
-                                          onSort={handleSort}
-                                          // onCheckBoxChange={handleRowSelect}
-                                          // onIndeterminateCheckBoxChange={handleAllRowSelect}
-                                      />)}
-                                       </TabContent>
-
-                                   </div>
-                               </Tabs>
                            </div>
 
                         </div>
