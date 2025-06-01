@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, ChangeEvent } from 'react'
 import Notification from '@/components/ui/Notification'
 import toast from '@/components/ui/toast'
-import {PAType} from '@/utils/customAuth/useProviderAuth'
+
 import useProvider from '@/utils/customAuth/useProviderAuth'
 import DataTable from '@/components/shared/DataTable'
 import type { ColumnDef, OnSortParam, CellContext, Row } from '@/components/shared/DataTable'
@@ -23,6 +23,14 @@ import type { FieldProps } from 'formik'
 import { FormItem, FormContainer } from '@/components/ui/Form'
 import Input from '@/components/ui/Input'
 import IconText from '@/components/shared/IconText'
+import usePrivateClaims from '@/utils/customAuth/usePrivateClaimAuth'
+import {PrivateClaimType,defaultClaim} from '@/utils/customAuth/usePrivateClaimAuth'
+import {
+  HiPlus,
+  HiDocumentAdd,
+  HiOutlineDocumentDownload,
+} from 'react-icons/hi'
+import { useNavigate ,Link} from 'react-router-dom'
 
 type pa_tariffs={
   id?:string
@@ -48,24 +56,7 @@ const defaultTariff: pa_tariffs = {
   total_price:0,
   approved_total:0
 };
-const defaultPA: PAType = {
-  id: '',
-  pa_code:'',
-  requested_total_price:'',
-  approved_price:'',
-  diagnosis: '',
-  enrollee_id: '',
-  enrolee_plan: '',
-  enrolee_plan_name: '',
-  enrollee_name: '',
-  selected_tariffs: [{}],
-  status: "pending",
-  created_at: '',
-  provider_name: '',
-  provider_code: '',
-  provider_comment:'',
-  created_by: ''
-};
+
 type DialogTypeKey = 'info' | 'success' | 'warning' | 'danger'
 type dialogContentType='reject_tariff'|'approve_tariff'|'approve_PA'|undefined
 
@@ -77,13 +68,19 @@ type DialogType = Record<DialogTypeKey, {
     confirmText: string
     confirmButtonColor: string
 }>
-const ViewAllPARequest =()=>{
+const ViewAllPrivateClaims =()=>{
     const {
     usegetAllpreauthorizationRequestAuth,
     usegetSinglePreAuthorizationByIdAuth,
-    useUpdatePreAuthorizationAuth,
+    // useUpdatePreAuthorizationAuth,
      } = useProvider()
-    const [data, setData] = useState<PAType[]>([])
+    const {
+        usegetAllPrivateClaimAuth,
+        usegetPrivateClaimByIdAuth,
+        useupdatePrivateClaimByIdAuth
+    } = usePrivateClaims()
+    const navigate = useNavigate()
+    const [data, setData] = useState<PrivateClaimType[]>([])
     const [loading, setLoading] = useState(false)
     const [tableData, setTableData] = useState<{
             pageIndex: number
@@ -105,12 +102,11 @@ const ViewAllPARequest =()=>{
             },
     })
     const [viewDialog, setViewDialog] = useState(false)
-    const [singlePA,setSinglePA]=useState<PAType>(defaultPA)
+    const [singleClaim,setSingleClaim]=useState<PrivateClaimType>(defaultClaim)
     const [openPopupDialog, setOpenPopupDialog] = useState(false)
     const [viewReviewDialog, setReviewDialog] = useState(false)
-    const [commentDialog, setCommentDialog] = useState(false)
-    const [selectedPAData, setselectedPAData] = useState<{PA:PAType,tariff:pa_tariffs}>(
-      {PA:defaultPA,
+    const [selectedPAData, setselectedPAData] = useState<{Claim:PrivateClaimType,tariff:pa_tariffs}>(
+      {Claim:defaultClaim,
        tariff:defaultTariff})
     const [dialogtitle, setdialogtitle] = useState('')
     const [dialogtype, setdialogtype] = useState<DialogTypeKey>('info')
@@ -119,18 +115,18 @@ const ViewAllPARequest =()=>{
 
 
 
-    const getAllPa = async () => {
+    const getAllClaim = async () => {
       setLoading(true)
-      const response= await usegetAllpreauthorizationRequestAuth()
+      const response= await usegetAllPrivateClaimAuth()
       if (response.data) {
           setData(response.data)
           setLoading(false)
       }
     }
-    const getSinglePA=async (id:string) => {
-      const response = await usegetSinglePreAuthorizationByIdAuth(id)
+    const getSingleClaim=async (id:string) => {
+      const response = await usegetPrivateClaimByIdAuth(id)
       if (response.data) {
-          setSinglePA(response.data)
+          setSingleClaim(response.data)
           // setViewDialog(true)
       } else {
         openNotification('Error fetching data', 'danger')
@@ -167,17 +163,15 @@ const ViewAllPARequest =()=>{
 
         switch(dialogContentType){
           case 'approve_tariff':
-            // onUpdatePATariff(selectedPAData.id, 'approved', selectedPAData.tariff);
-            onUpdatePATariff(selectedPAData.PA.id, 'approved', selectedPAData.tariff);
+            onUpdatePATariff(selectedPAData.Claim.id, 'approved', selectedPAData.tariff);
 
             break;
           case 'reject_tariff':
-            onUpdatePATariff(selectedPAData.PA.id, 'denied', selectedPAData.tariff);
+            onUpdatePATariff(selectedPAData.Claim.id, 'denied', selectedPAData.tariff);
 
             break;
           case 'approve_PA':
-            // onUpdatePA(selectedPAData.PA.id, 'approved');
-            setselectedPAData({PA:singlePA , tariff:defaultTariff})
+            setselectedPAData({Claim:singleClaim , tariff:defaultTariff})
 
 
             break;
@@ -209,10 +203,10 @@ const ViewAllPARequest =()=>{
       });
     };
 
-    const handleView = async(props: CellContext<PAType, unknown>) => {
+    const handleView = async(props: CellContext<PrivateClaimType, unknown>) => {
         const row = props.row.original
         const id = row.id
-        getSinglePA(id)
+        getSingleClaim(id)
         setViewDialog(true)
     }
     const FormatDate =(d:any)=>{
@@ -228,19 +222,19 @@ const ViewAllPARequest =()=>{
       return formattedDate
     }
 
-    const columns: ColumnDef<PAType>[] = useMemo(() => (
+    const columns: ColumnDef<PrivateClaimType>[] = useMemo(() => (
         [
             {
               header: 'Provider',
-              accessorKey: 'provider_name',
+              accessorKey: 'provider.name',
             },
             {
                 header: 'Enrollee',
-                accessorKey: 'enrollee_name',
+                accessorKey: 'enrollee.name',
             },
             {
                 header: 'Plan',
-                accessorKey: 'enrolee_plan_name',
+                accessorKey: 'enrollee.health_plan_name',
             },
             {
               header: 'PA Code',
@@ -301,14 +295,14 @@ const ViewAllPARequest =()=>{
 
       let updatedTariffs: pa_tariffs[] = [];
       if (updateType === 'all') {
-        updatedTariffs = (singlePA?.selected_tariffs || []).map((item: pa_tariffs) => ({
+        updatedTariffs = (singleClaim?.claimed_services || []).map((item: pa_tariffs) => ({
           ...item,
           approved_quantity: item.quantity,
           approved_price: item.item_price,
           status: new_status,
         }));
     }else if (updateType === 'pending') {
-      updatedTariffs = (singlePA?.selected_tariffs || []).map((tariff: pa_tariffs) =>{
+      updatedTariffs = (singleClaim?.claimed_services || []).map((tariff: pa_tariffs) =>{
         if(tariff.status === 'pending'){
           const approved_quantity = Number(tariff.quantity) || 0;
           const approved_price = Number(tariff.item_price) || 0;
@@ -335,17 +329,14 @@ const ViewAllPARequest =()=>{
       : new_status === "denied"
         ? "deny"
         : "none";
-      const new_PA_status =determinePAStatus(singlePA?.selected_tariffs || [])
-      const PACode = CreatePACode(singlePA)
+      const new_PA_status =determinePAStatus(singleClaim?.claimed_services || [])
       let request_data:{
         status: "pending" | "approved" | "denied" | "partially approved";
-        pa_code: string;
-        selected_tariffs?: string;
+        claimed_services?: string;
         approved_price?: string;
         provider_comment?: string;
       } = {
          status: new_status,
-         pa_code:PACode,
          };
       const mainPopupDialog=await openConfirmDialog(`Are you sure you want to ${main_status} this Request`,'info','approve_PA')
 
@@ -366,8 +357,8 @@ const ViewAllPARequest =()=>{
            return; // User cancelled
          }
          let new_tariff_status:any = new_status ==='approved' ? "approved":new_status ==='denied' ? "denied":'none'
-         const selected_tariffs=await ChangeStatusOfAllTariff(new_tariff_status,'pending')
-         const totalTariffAmount = (selected_tariffs || []).reduce((total:number, tariff:pa_tariffs) => {
+         const claimed_services=await ChangeStatusOfAllTariff(new_tariff_status,'pending')
+         const totalTariffAmount = (claimed_services || []).reduce((total:number, tariff:pa_tariffs) => {
           const price: number = Number(tariff.approved_price) ||0;
           const quantity: number = Number(tariff.approved_quantity) ||0;
           const totalprice=total + (price * quantity);
@@ -376,35 +367,19 @@ const ViewAllPARequest =()=>{
           return totalprice
           // return total + (price * quantity);
         }, 0);
-         request_data.selected_tariffs=JSON.stringify(selected_tariffs)
+         request_data.claimed_services=JSON.stringify(claimed_services)
         //  request_data.approved_price=totalTariffAmount
       }
     }
     let newammm
-    // if (new_PA_status === 'approved' || new_PA_status === 'partially approved') {
-    //   const totalTariffAmount = (singlePA?.selected_tariffs || []).reduce((total:number, tariff:pa_tariffs) => {
-    //     const price: number = Number(tariff.approved_price) ||0;
-    //     const quantity: number = Number(tariff.approved_quantity) ||0;
-    //     const totalprice=total + (price * quantity);
-    //     request_data.approved_price=(totalprice).toFixed(2);
-    //     newammm=totalprice
-    //     return totalprice
-    //     // return total + (price * quantity);
-    //   }, 0);
-      // if (!isNaN(totalTariffAmount)) {
-      //   request_data.approved_price = totalTariffAmount.toFixed(2);
-      // }
-    // }
-    // console.log('hjj',newammm)
-    // console.log(PA_ID,request_data)
 
-     const response = await  useUpdatePreAuthorizationAuth(PA_ID,request_data)
+     const response = await  useupdatePrivateClaimByIdAuth(PA_ID,request_data)
 
       if (response) {
         setTimeout(() => {
            if (response.status=="success"){
-            getAllPa()
-            getSinglePA(PA_ID)
+            getAllClaim()
+            getSingleClaim(PA_ID)
             setViewDialog(false)
             setLoading(false)
             openNotification(response.message,'success')
@@ -434,22 +409,9 @@ const ViewAllPARequest =()=>{
       if (hasApproved) return 'approved';
       return 'denied'; // if only denied tariffs
     }
-    const CreatePACode=(pa_data:PAType)=>{
-      const date = new Date();
-      const year = date.getFullYear().toString().slice(-2); // Get last two digits of the year
-      const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Get month and pad with leading zero
-      const day = date.getDate().toString().padStart(2, '0'); // Get day and pad with leading zero
 
-        const initials= pa_data.created_by
-        .split(' ')
-        .map(word => word.charAt(0).toUpperCase())
-        .join('');
-
-
-      return `PA4LG/${day}/${month}/${year}/${initials}/${pa_data.id}`;
-    }
     const onUpdatePATariff=async(PA_ID:any,new_status:"pending" | "approved" | "denied",tariff:pa_tariffs)=>{
-      const updatedTariffs = (singlePA?.selected_tariffs || []).map((item: pa_tariffs) => {
+      const updatedTariffs = (singleClaim?.claimed_services || []).map((item: pa_tariffs) => {
         if (item.id === tariff.id) {
           const approved_quantity = Number(tariff.approved_quantity) || 0;
           const approved_price = Number(tariff.approved_price) || 0;
@@ -464,15 +426,15 @@ const ViewAllPARequest =()=>{
         }
         return item;
       });
-      const response = await  useUpdatePreAuthorizationAuth(PA_ID,{
-          selected_tariffs:JSON.stringify(updatedTariffs),
+      const response = await  useupdatePrivateClaimByIdAuth(PA_ID,{
+          claimed_services:JSON.stringify(updatedTariffs),
       })
 
 
       if (response) {
         setTimeout(() => {
            if (response.status=="success"){
-            getSinglePA(PA_ID)
+            getSingleClaim(PA_ID)
             openNotification(response.message,'success')
            }
            else if (response.status=="failed"){
@@ -486,7 +448,7 @@ const ViewAllPARequest =()=>{
     }
     const onReviewPATariff=async(PA_ID:any,data:any)=>{
       let tariff=selectedPAData.tariff
-      const updatedTariffs = (singlePA?.selected_tariffs || []).map((item: pa_tariffs) => {
+      const updatedTariffs = (singleClaim?.claimed_services || []).map((item: pa_tariffs) => {
         if (item.id === tariff.id) {
           const approved_quantity = Number(data.approved_quantity) || 0;
           const approved_price = Number(data.approved_price) || 0;
@@ -501,8 +463,8 @@ const ViewAllPARequest =()=>{
         }
         return item;
       });
-      const response = await  useUpdatePreAuthorizationAuth(PA_ID,{
-          selected_tariffs:JSON.stringify(updatedTariffs),
+      const response = await  useupdatePrivateClaimByIdAuth(PA_ID,{
+          claimed_services:JSON.stringify(updatedTariffs),
       })
       if (response) {
         setTimeout(() => {
@@ -510,25 +472,7 @@ const ViewAllPARequest =()=>{
             openNotification(response.message,'success')
             setReviewDialog(false)
             // getAllPa()
-            getSinglePA(PA_ID)
-           }
-           else if (response.status=="failed"){
-            openNotification(response.message,"danger")
-           }
-        }, 3000)
-
-
-    }}
-        const onAddComment=async(PA_ID:any,data:any)=>{
-      // let tariff=selectedPAData.tariff
-
-      const response = await  useUpdatePreAuthorizationAuth(PA_ID,data)
-      if (response) {
-        setTimeout(() => {
-           if (response.status=="success"){
-            openNotification(response.message,'success')
-            setCommentDialog(false)
-            getSinglePA(PA_ID)
+            getSingleClaim(PA_ID)
            }
            else if (response.status=="failed"){
             openNotification(response.message,"danger")
@@ -539,13 +483,24 @@ const ViewAllPARequest =()=>{
     }}
 
     useEffect(()=>{
-    getAllPa()
-    }, [tableData.pageIndex, tableData.sort, tableData.pageSize, tableData.query])
+    getAllClaim()
+    }, [tableData.pageIndex, tableData.sort, tableData.pageSize, tableData.query,])
 
 return(
   <>
-  <h5 className='mb-10'>View All PA</h5>
-              <DataTable<PAType>
+  <h5 className='mb-5'>View All Claims</h5>
+   <div className="  flex justify-end mb-5">
+                  <Button
+                      className="mr-2"
+                      variant="solid"
+                      onClick={() => navigate('/privates/claim/create')}
+                      icon={<HiPlus />}
+                  >
+                      <span>Create New Claim</span>
+                  </Button>
+
+              </div>
+              <DataTable<PrivateClaimType>
                   selectable
                   columns={columns}
                   data={data}
@@ -565,24 +520,24 @@ return(
                        <div className="flex flex-col h-full justify-between">
 
 
-                           <h5 className="mb-0">View PA</h5>
+                           <h5 className="mb-0">View Claims</h5>
                            <div className="overflow-y-auto">
 
                                <div className="grid grid-cols-2 gap-6 p-4 rounded-xl">
                                  <div className="space-y-2">
-                                   <p className="font-light text-gray-700">Enrollee: <span className="font-semibold text-gray-900">{singlePA?.enrollee_name}</span></p>
-                                   <p className="font-light text-gray-700">Date Created: <span className="font-semibold text-gray-900">{singlePA?.created_at}</span></p>
-                                   <p className="font-light text-gray-700">Plan: <span className="font-semibold text-gray-900">{singlePA?.enrolee_plan_name}</span></p>
-                                   <p className="font-light text-gray-700">Diagnosis: <span className="font-semibold text-gray-900">{singlePA?.diagnosis}</span></p>
+                                   <p className="font-light text-gray-700">Enrollee: <span className="font-semibold text-gray-900">{singleClaim?.enrollee.name}</span></p>
+                                   <p className="font-light text-gray-700">Date Created: <span className="font-semibold text-gray-900">{singleClaim?.created_at}</span></p>
+                                   <p className="font-light text-gray-700">Plan: <span className="font-semibold text-gray-900">{singleClaim?.enrollee.health_plan_name}</span></p>
+                                   <p className="font-light text-gray-700">Diagnosis: <span className="font-semibold text-gray-900">{singleClaim?.diagnosis}</span></p>
                                  </div>
                                  <div className="space-y-2">
-                                   <p className="font-light text-gray-700">Provider: <span className="font-semibold text-gray-900">{singlePA?.provider_name}</span></p>
-                                   <p className="font-light text-gray-700">Provider Code: <span className="font-semibold text-gray-900">{singlePA?.provider_code}</span></p>
+                                   <p className="font-light text-gray-700">Provider: <span className="font-semibold text-gray-900">{singleClaim?.provider.name}</span></p>
+                                   <p className="font-light text-gray-700">Provider Code: <span className="font-semibold text-gray-900">{singleClaim?.provider.code}</span></p>
                                  </div>
                                </div>
-                               {Array.isArray(singlePA?.selected_tariffs) &&
+                               {Array.isArray(singleClaim?.claimed_services) &&
 
-                               singlePA?.selected_tariffs?.map((tariff:pa_tariffs, index) => (
+                               singleClaim?.claimed_services?.map((tariff:pa_tariffs, index) => (
                                 <>
                                 <Card
                                 className='mb-5'
@@ -633,7 +588,7 @@ return(
                                                icon={<MdCheckCircle />}
                                                onClick={() => {
                                                 openConfirmDialog(`Are you sure you want to Approve ${tariff?.item_name}`,'info','approve_tariff')
-                                                setselectedPAData({PA:singlePA, tariff })
+                                                setselectedPAData({Claim:singleClaim, tariff })
                                                }}
                                                >
                                               Approve
@@ -646,7 +601,7 @@ return(
                                                 icon={<MdCancel />}
                                                 onClick={() => {
                                                   openConfirmDialog(`Are you sure you want to Reject ${tariff?.item_name}`,'warning','reject_tariff')
-                                                  setselectedPAData({PA:singlePA, tariff})
+                                                  setselectedPAData({Claim:singleClaim, tariff})
                                                  }}
                                                 >
                                                Reject
@@ -659,7 +614,7 @@ return(
                                                 icon={< HiOutlinePencilAlt/>}
                                                 onClick={() => {
                                                   setReviewDialog(true)
-                                                  setselectedPAData({PA:singlePA, tariff})
+                                                  setselectedPAData({Claim:singleClaim, tariff})
                                                  }}
                                                 >
                                                Review
@@ -688,19 +643,19 @@ return(
                                   {/* PA Status */}
                                   <div className=''>
                                     {
-                                    singlePA?.status ==='approved'?
+                                    singleClaim?.status ==='approved'?
                                       <Tag className='p-0 text-sm font-semibold text-emerald-600 dark:text-emerald-100 border-0'>
                                           Active
                                       </Tag> :
-                                    singlePA?.status ==='denied'?
+                                    singleClaim?.status ==='denied'?
                                       <Tag className='p-0 text-sm font-semibold text-red-600 border-0'>
                                           Denied
                                       </Tag>:
-                                    singlePA?.status ==='pending'?
+                                    singleClaim?.status ==='pending'?
                                       <Tag className='p-0 text-sm font-semibold text-amber-600 dark:text-red-100 border-0'>
                                           Pending
                                       </Tag>:
-                                    singlePA?.status ==='partially approved'?
+                                    singleClaim?.status ==='partially approved'?
                                       <Tag className='p-0 text-sm font-semibold text-orange-600 dark:text-orange-100 border-0'>
                                           Partially Approved
                                       </Tag>:
@@ -713,17 +668,17 @@ return(
                                   {/* PA Status */}
                                   {/* Approved Amount */}
                                   <p className="absolute bottom-0 left-0 w-full mb-5 font-semibold text-gray-900">
-                                  ₦{Number(singlePA?.approved_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  ₦{Number(singleClaim?.approved_amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </p>
                                   <p className="absolute bottom-0 left-0 w-full  font-light text-gray-700">Approved Amount</p>
                                   {/* Approved Amount */}
                                   </div>
 
                                   <div className='relative col-span-1'>
-                                  {singlePA?.pa_code &&<>
+                                  {singleClaim?.pa_code &&<>
                                   {/* PA Code */}
                                   <p className="font-semibold text-xs text-gray-900">
-                                    {singlePA?.pa_code}
+                                    {singleClaim?.pa_code}
                                   </p>
                                   <p className="font-light text-gray-700 mb-[45px]">PA Code</p>
                                   {/* PA Code */}
@@ -731,7 +686,7 @@ return(
 
                                   {/* Requested Amount */}
                                   <p className="absolute bottom-0 left-0 w-full mb-5  font-semibold text-gray-900">
-                                  ₦{Number(singlePA?.requested_total_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  ₦{Number(singleClaim?.requested_amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                   </p>
                                   <p className="absolute bottom-0 left-0 w-full font-light text-gray-700">Requested Amount</p>
                                   {/* Requested Amount */}
@@ -740,7 +695,7 @@ return(
                                  </Card>
 
                                <div className='grid grid-cols-2 gap-4'>
-                               {singlePA.status ==='pending' &&<>
+                               {singleClaim.status ==='pending' &&<>
                                          <Button
                                                variant='twoTone'
                                                size='sm'
@@ -748,7 +703,7 @@ return(
                                                className='col-span-1'
                                                icon={<MdCheckCircle />}
                                                onClick={() => {
-                                                onUpdatePA(singlePA?.id, 'approved');
+                                                onUpdatePA(singleClaim?.id, 'approved');
                                                }}
                                                >
                                               Approve
@@ -760,7 +715,7 @@ return(
                                                 className='col-span-1'
                                                 icon={<MdCancel />}
                                                 onClick={() => {
-                                                  onUpdatePA(singlePA?.id, 'denied');
+                                                  onUpdatePA(singleClaim?.id, 'denied');
                                                  }}
                                                 >
                                                Reject
@@ -806,7 +761,7 @@ return(
                                     onSubmit={async (values, { setSubmitting, resetForm }) => {
                                         console.log('Form values:', values);
                                         // setReviewDialog(false)
-                                        onReviewPATariff(selectedPAData.PA.id,values)
+                                        onReviewPATariff(selectedPAData.Claim.id,values)
                                     }}
                                 >
                                     {({ isSubmitting, errors, touched, values }) => (
@@ -872,69 +827,9 @@ return(
                     <p>{dialogtitle}</p>
               </ConfirmDialog>}
 
-              {
-                    commentDialog && <Dialog
-                       isOpen={commentDialog}
-                       onClose={() => setCommentDialog(false)}
-                       onRequestClose={() => setCommentDialog(false)}
-                       width={450}
-                       height={250}
-                       style={{
-                        content: {
-                            marginTop: 250,
-                        },
-                       }}
-                       shouldCloseOnOverlayClick={false}
-                       shouldCloseOnEsc={false}
-                   >
-                        <div className="flex flex-col h-full justify-between">
-                            <h5 className="mb-2">Add Comment</h5>
-                            <div className="overflow-y-auto">
-                                <Formik
-                                    initialValues={{
-                                        comment: selectedPAData.PA.provider_comment || null,
-                                    }}
-                                    onSubmit={async (values, { setSubmitting, resetForm }) => {
-                                        console.log('Form values:', values);
-                                        // setReviewDialog(false)
-                                        onAddComment(selectedPAData.PA.id,values)
-                                    }}
-                                >
-                                    {({ isSubmitting, errors, touched, values }) => (
-                                        <Form>
-                                          <FormContainer>
-                                            <Field
-                                                  type="txt"
-                                                  autoComplete="off"
-                                                  name="comment"
-                                                  placeholder="Enter Comment"
-                                                  component={Input}
-                                             />
-
-                                          </FormContainer>
-                                            <div className="mt-5 'w-full flex justify-center">
-                                                <Button
-                                                   type="submit"
-                                                   variant="solid"
-                                                   size='sm'
-                                                   loading={isSubmitting}
-                                                   >
-                                                {isSubmitting
-                                                    ? 'Saving...'
-                                                    : 'Review Tariff'}
-                                                </Button>
-                                            </div>
-                                        </Form>
-                                    )}
-                                </Formik>
-                            </div>
-                        </div>
-                    </Dialog>
-                }
-
 
   </>
 )
 }
 
-export default ViewAllPARequest
+export default ViewAllPrivateClaims

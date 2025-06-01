@@ -95,6 +95,19 @@ export async function createPrivateEnrolleeDependantsService(id: string,data:any
   })
 }
 
+export async function updatePrivateEnrolleeService(id: string,data:any) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+      total: number
+  }>({
+      url: `/privates/enrollee/edit/${id}`,
+      method: 'put',
+      data
+  })
+}
+
+
 
 
 

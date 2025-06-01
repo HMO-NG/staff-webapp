@@ -49,6 +49,7 @@ const is_surgical_opt = [
 const select_patient_type=[
   { value: 'inpatient', label: 'Inpatient' },
   { value: 'outpatient', label: 'Outpatient'},
+  { value: 'both', label: 'Both'},
 ]
 const select_formulation=[
   { value: 'tablet', label: 'Tablet' },
@@ -94,9 +95,8 @@ const select_strength = [
 const CreateTariff=()=>{
     const [provider, setProvider] = useState<Select_Type>()
     const [selected_drug_strength,setSelected_drug_strength] =useState<Select_Type>()
-    const [healthPlan, setHealthPlan] = useState<PlanCategory[]>([])
-    const {useCreateProviderServiceTariffAuth,usegetProviderServiceTariffByIdAuth,useCreateProviderDrugTariffAuth,
-    usegetProviderDrugTariffByIdAuth,useGetProviderByID,} = useProvider()
+    const [healthPlan, setHealthPlan] = useState<healthPlan[]>([])
+    const {useCreateProviderServiceTariffAuth,usegetProviderServiceTariffByIdAuth,useGetProviderByID,} = useProvider()
     const {usegetPrivateProviderAuth}=usePrivates()
     const { useGetHealthPlanAuth,useGetHealthPlanCategoryAuth } = useHealthPlan()
     const {provider_id}=useParams();
@@ -142,40 +142,7 @@ const CreateTariff=()=>{
 
 }
 
-const onCreateDrugTariff = async (values: any,
-  setSubmitting: (isSubmitting: boolean) => void,
-  resetForm: () => void
-) => {
 
-  setSubmitting(true)
-
-  const { getItem } = useLocalStorage()
-
-  values.created_by = getItem("user")
-
-  const data = await useCreateProviderDrugTariffAuth(values)
-
-  if (data) {
-      setTimeout(() => {
-        if (data.status=='success'){
-          openNotification(data.message,'success')
-          setSubmitting(false)
-          resetForm()
-        }
-        else if (data.status=='failed'){
-          openNotification(data.message,'danger')
-          setSubmitting(false)
-        }
-
-      }, 3000)
-
-
-
-
-
-  }
-
-}
 useEffect(()=>{
 
   const fetchData = async () => {
@@ -189,7 +156,7 @@ useEffect(()=>{
     }}
 
   const fetchData2 = async () => {
-    const response = await useGetHealthPlanCategoryAuth()
+    const response = await useGetHealthPlanAuth({ sort: { order: 'asc' } })
 
     if (response.status === 'success' && response.data) {
         setHealthPlan(response.data)
@@ -214,22 +181,16 @@ useEffect(()=>{
             </IconText></ActionLink>
             <h4 className="mb-5">Create Tariff for {provider?.label}</h4>
             <div>
-            <Tabs defaultValue="tab1" variant="pill">
-            <div className='flex justify-center'>
-                <TabList>
-                <TabNav value="tab1">Service Tariff</TabNav>
-                <TabNav value="tab2">Drug Tariff</TabNav>
-                </TabList>
-             </div>
+
                 <div className="p-4">
-                    <TabContent value="tab1">
+
                       <Formik
                         initialValues={{
                           item_name:"",
                           item_price:"",
                           description:"",
                           provider_id:provider_id,
-                          insurance_plan_type:"",
+                          insurance_plan_id:"",
                           hcpcs_code:"",
                           is_surgical:false,
                           patient_type:"",
@@ -378,19 +339,19 @@ useEffect(()=>{
                             </FormItem>
                             {/* category */}
 
-                           {/* insurance_plan_type */}
+                           {/* insurance_plan */}
                            <FormItem
-                               label="Plan Type"
-                               invalid={errors.insurance_plan_type && touched.insurance_plan_type}
-                               errorMessage={errors.insurance_plan_type}>
+                               label="Health Plan"
+                               invalid={errors.insurance_plan_id && touched.insurance_plan_id}
+                               errorMessage={errors.insurance_plan_id}>
                                <Field
-                                   name="insurance_plan_type">
+                                   name="insurance_plan_id">
                                    {({ field, form }: FieldProps<FormModel>) => (
                                        <Select
                                            options={healthPlan}
-                                           placeholder={"Select Health Plan Type"}
+                                           placeholder={"Select Health Plan"}
                                            value={healthPlan.filter((item) =>
-                                               item.value === values.insurance_plan_type
+                                               item.value === values.insurance_plan_id
                                            )}
                                            onChange={(data) => {
                                                form.setFieldValue(
@@ -402,7 +363,7 @@ useEffect(()=>{
                                    )}
                                 </Field>
                                 </FormItem>
-                            {/* insurance_plan_type */}
+                            {/* insurance_plan */}
 
 
                             <FormItem>
@@ -422,220 +383,7 @@ useEffect(()=>{
 
                 )}
                       </Formik>
-                    </TabContent>
-                    <TabContent value="tab2">
-                    <Formik
-                        initialValues={{
-                          item_name:"",
-                          item_price:"",
-                          description:"",
-                          provider_id:provider_id,
-                          insurance_plan_type:"",
-                          formulation:"",
-                          unit_of_measure:"",
-                          strength:"",
-                          category:""
-
-                           }}
-                  //  validationSchema={validationSchema}
-                onSubmit={(values, { setSubmitting, resetForm }) => {
-                onCreateDrugTariff(values, setSubmitting, resetForm)
-                }}
-            >
-                {({ isSubmitting,errors ,touched,values}) => (
-                    <Form>
-
-                        <FormContainer>
-                            {/* Name */}
-                            <FormItem label="Item Name"
-                            asterisk
-                            invalid={errors.item_name && touched.item_name}
-                            errorMessage={errors.item_name}>
-                                <Field
-                                    type="txt"
-                                    autoComplete="off"
-                                    name="item_name"
-                                    placeholder="Enter item name"
-                                    component={Input}
-                                />
-                            </FormItem>
-                            {/* Name */}
-
-                            {/* Price */}
-                            <FormItem label="Price"
-                            asterisk
-                            invalid={errors.item_price && touched.item_price}
-                            errorMessage={errors.item_price}>
-                                <Field
-                                    type="number"
-                                    autoComplete="off"
-                                    name="item_price"
-                                    placeholder="Enter price"
-                                    component={Input}
-                                />
-                            </FormItem>
-                            {/* Price */}
-
-                            {/* description */}
-                            <FormItem label="Description"
-                            asterisk
-                            invalid={errors.description && touched.description}
-                            errorMessage={errors.description}>
-                                <Field
-                                    type="txt"
-                                    autoComplete="off"
-                                    name="description"
-                                    placeholder="Enter Description"
-                                    component={Input}
-                                />
-                            </FormItem>
-                           {/* description */}
-
-                           {/* formulation */}
-                            <FormItem
-                             asterisk
-                             label="formulation?"
-                             invalid={errors.formulation && touched.formulation}
-                             errorMessage={errors.formulation}
-                         >
-                             <Field
-                                 name="formulation">
-                                 {({ field, form }: FieldProps<FormModel>) => (
-                                     <Select
-                                         field={field}
-                                         form={form}
-                                         options={select_formulation}
-                                         value={select_formulation?.filter(
-                                             (items) =>
-                                                 items.value === values.formulation
-                                            )}
-                                         onChange={(items) =>
-                                             form.setFieldValue(
-                                                 field.name,
-                                                 items?.value
-                                             )
-                                         } />
-                                 )}
-                             </Field>
-                            </FormItem>
-                            {/* formulation */}
-
-                            {/* Unit Of Measurement */}
-                            <FormItem label="Unit Of Measurement"
-                            asterisk
-                            invalid={errors.unit_of_measure && touched.unit_of_measure}
-                            errorMessage={errors.unit_of_measure}>
-                             <Field
-                                 name="unit_of_measure">
-                                 {({ field, form }: FieldProps<FormModel>) => (
-                                     <Select
-                                         field={field}
-                                         form={form}
-                                         options={select_unit_of_measure}
-                                         value={select_unit_of_measure?.filter(
-                                             (items) =>
-                                                 items.value === values.unit_of_measure
-                                            )}
-                                         onChange={(items) =>
-                                             form.setFieldValue(
-                                                 field.name,
-                                                 items?.value
-                                             )
-                                         } />
-                                 )}
-                             </Field>
-                            </FormItem>
-                            {/* Unit Of Measurement */}
-
-                            {/* strength */}
-                            <FormItem label="Strength"
-                            asterisk
-                            invalid={errors.strength && touched.strength}
-                            errorMessage={errors.strength}>
-                             <Field
-                                 name="strength">
-                                 {({ field, form }: FieldProps<FormModel>) => (
-                                     <Select
-                                         field={field}
-                                         form={form}
-                                         options={select_strength}
-                                        value={selected_drug_strength}
-                                         onChange={(items:SingleValue<Select_Type>) =>{
-                                             form.setFieldValue(field.name,items?.value)
-                                             setSelected_drug_strength({label:`${items?.label}`,value:`${items?.value}`})
-
-                                         }}
-                                          placeholder="Select strength..."
-                                         componentAs={CreatableSelect}/>
-                                 )}
-                             </Field>
-                            </FormItem>
-                            {/* strength */}
-
-                            {/* Category */}
-                            <FormItem label="Category"
-                            asterisk
-                            invalid={errors.category && touched.category}
-                            errorMessage={errors.category}>
-                                <Field
-                                    type="txt"
-                                    autoComplete="off"
-                                    name="category"
-                                    placeholder="Enter Category"
-                                    component={Input}
-                                />
-                            </FormItem>
-                            {/* Category */}
-
-                            {/* insurance_plan_type */}
-                                <FormItem
-                                    label="Plan Type"
-                                    invalid={errors.insurance_plan_type && touched.insurance_plan_type}
-                                    errorMessage={errors.insurance_plan_type}>
-
-                                    <Field
-
-                                        name="insurance_plan_type">
-                                        {({ field, form }: FieldProps<FormModel>) => (
-
-                                            <Select
-                                                options={healthPlan}
-                                                placeholder={"Select Health Plan Type"}
-                                                value={healthPlan.filter((item) =>
-                                                    item.value === values.insurance_plan_type
-                                                )}
-                                                onChange={(data) => {
-                                                    form.setFieldValue(
-                                                        field.name,
-                                                        data?.value
-                                                    )
-                                                }}
-                                            />
-                                        )}
-                                    </Field>
-                                </FormItem>
-                            {/* insurance_plan_type */}
-
-                            <FormItem>
-                                <Button
-                                    variant="solid"
-                                    type="submit"
-                                    loading={isSubmitting}
-                                >
-                                    {isSubmitting
-                                        ? 'Saving...'
-                                        : 'Add tariff '}
-                                </Button>
-                            </FormItem>
-                        </FormContainer>
-
-                  </Form>
-
-                )}
-                      </Formik>
-                    </TabContent>
                 </div>
-            </Tabs>
         </div>
 
 

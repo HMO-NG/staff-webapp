@@ -39,6 +39,15 @@ type HealthPlan = {
     entered_by: string
     disabled_plan: boolean
 }
+type planbenefit={
+   id: string
+        benefit_name: string
+        limit_type: string
+        limit_value: string
+        health_plan_name: string
+        benefit_item_id: string
+        health_plan_id: string
+}
 
 const ViewHealthPlan = () => {
     const {
@@ -46,6 +55,7 @@ const ViewHealthPlan = () => {
         useCreateHealthPlanAuth,
         useUpdateHealthPlanAuth,
         useUpdateHealthPlanStatusAuth,
+        useGetAttachedBenefitByHealthPlanIdAuth,
     } = useHealthPlan()
 
     const navigate = useNavigate()
@@ -131,6 +141,9 @@ const ViewHealthPlan = () => {
         plan_name: '',
     })
 
+
+    const [attachedBenefits, setAttachedBenefits] = useState([])
+
     const inputRef = useRef(null)
 
     const debounceFn = debounce(handleDebounceFn, 500)
@@ -139,11 +152,13 @@ const ViewHealthPlan = () => {
         { key: 'view', name: 'View' },
         { key: 'edit', name: 'Edit' },
         { key: 'status', name: 'deactive' },
+        { key: 'benefits', name: 'View Attahed Benefits' },
     ]
 
     const [editDialog, setEditDialog] = useState(false)
     const [viewDialog, setViewDialog] = useState(false)
     const [statusDialog, setStatusDialog] = useState(false)
+    const [benefitsDialog, setBenefitsDialog] = useState(false)
 
     const fetchData2 = async () => {
       setLoading(true)
@@ -221,6 +236,10 @@ const ViewHealthPlan = () => {
                     plan_name: cellProps.row.original.plan_name,
                 })
                 setStatusDialog(true)
+                break
+            case 'benefits':
+                await getAttachedBenefits(cellProps.row.original.id)
+                setBenefitsDialog(true)
                 break
             // ... more cases
             default:
@@ -304,6 +323,28 @@ const ViewHealthPlan = () => {
                     </div>
                 ),
             },
+        ],
+        [],
+    )
+    const columns2: ColumnDef<planbenefit>[] = useMemo(
+        () => [
+            {
+                header: 'benefit_name',
+                accessorKey: 'benefit_name',
+            },
+            {
+                header: 'limit_type',
+                accessorKey: 'limit_type',
+            },
+            {
+                header: 'limit_value',
+                accessorKey: 'limit_value',
+            },
+            {
+                header: 'health_plan_name',
+                accessorKey: 'health_plan_name',
+            },
+
         ],
         [],
     )
@@ -416,6 +457,13 @@ const ViewHealthPlan = () => {
             setTimeout(() => {
               openNotification(response.message,notif_type)
           }, 2000)
+        }
+    }
+    async function getAttachedBenefits(healthplanId: string) {
+        const response = await useGetAttachedBenefitByHealthPlanIdAuth({id:healthplanId})
+        if (response.status === 'success') {
+            setAttachedBenefits(response.data)
+            setBenefitsDialog(true)
         }
     }
 
@@ -769,6 +817,46 @@ const ViewHealthPlan = () => {
                         >
                             Okay
                         </Button>
+                    </div>
+                </Dialog>
+            )}
+            {benefitsDialog && (
+                <Dialog
+                    isOpen={benefitsDialog}
+                    onClose={() => setBenefitsDialog(false)}
+                    onRequestClose={() => setBenefitsDialog(false)}
+                    width={1000}
+                    shouldCloseOnOverlayClick={false}
+                    shouldCloseOnEsc={false}
+                >
+                    <div className="flex flex-col h-full justify-between">
+                        <h5 className="mb-4">View Plan Benefits</h5>
+                        <div className="max-h-96 overflow-y-auto">
+                            <div className="">
+                              <DataTable<planbenefit>
+                                   selectable
+                                   columns={columns2}
+                                   data={attachedBenefits}
+                                   loading={loading}
+                                   pagingData={tableData}
+                                   onPaginationChange={handlePaginationChange}
+                                   onSelectChange={handleSelectChange}
+                                   onSort={handleSort}
+                                  //  onCheckBoxChange={handleRowSelect}
+                                  //  onIndeterminateCheckBoxChange={handleAllRowSelect}
+                               />
+
+                            </div>
+                            <div className="text-right mt-6">
+                                <Button
+                                    className="ltr:mr-2 rtl:ml-2"
+                                    variant="plain"
+                                    onClick={() => setViewDialog(false)}
+                                >
+                                    Cancel
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </Dialog>
             )}
