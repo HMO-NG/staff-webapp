@@ -12,7 +12,6 @@ export type SignInResponse = {
         authority: string[]
         avatar: string
         email: string
-        client_id:string
     }
 }
 
