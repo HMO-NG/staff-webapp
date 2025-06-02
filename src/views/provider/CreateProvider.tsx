@@ -138,7 +138,7 @@ const CreateProvider = () => {
 
                     for (let i = 0; i < jsonData.length; i += BATCH_SIZE) {
                         const batch = jsonData.slice(i, i + BATCH_SIZE);
-                        response = await Promise.all(batch.map((item: any) => useCreateNHIAProviderAuth(item)));
+                        response = await Promise.all(batch.map((item: any) => useCreateProvider(item)));
                         console.log(response)
                         openNotification(`uploading batch ${i / BATCH_SIZE + 1}`, 'info')
                     }
@@ -184,7 +184,7 @@ const CreateProvider = () => {
                     onChange={handleFileUpload}
                 >
                     <Button variant="solid" icon={<HiCloudUpload />}>
-                        Bulk Upload for NHIA Providers
+                        Bulk Upload Providers
                     </Button>
                 </Upload>
             </div>
