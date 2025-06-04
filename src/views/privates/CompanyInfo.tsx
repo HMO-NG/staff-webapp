@@ -92,11 +92,8 @@ const CompanyInfo = () => {
     const [is_upload_disabled, setis_upload_disabled] = useState<boolean>(true)
     const [registered_company_data, setregistered_company_data] = useState<PrivateCompany | undefined>(undefined)
     const [open_add_doc, setopen_add_doc] = useState<boolean>(false)
-    const [selectedPlans, setSelectedPlans] = useState([]);
-     const [formData, setFormData] = useState({
-    health_plan_id: [],
-  });
-  const [healthPlan, setHealthPlan] = useState<healthPlan[]>([])
+    const [selectedPlans, setSelectedPlans] = useState<string[]>([]);
+     const [healthPlan, setHealthPlan] = useState<healthPlan[]>([])
     function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
     toast.push(
         <Notification
@@ -148,7 +145,6 @@ const CompanyInfo = () => {
               const { getItem } = useLocalStorage()
 
               values.user_id = getItem("user")
-              values.health_plan_id=formData.health_plan_id
 
               const data = await useCreateCompanyAuth(values)
 
@@ -172,12 +168,7 @@ const CompanyInfo = () => {
               }
 
           }
-  //     const handleChange = (selected:any) => {
-  //         setSelectedPlans(selected);
-  //         // Extract just the values (UUIDs) from the selected options
-  //         const planIds = selected.map(option => option.value);
-  //         onChange(planIds);
-  // };
+
           useEffect(()=>{
            const getclient=()=>{
             let client_data1:any =sessionStorage.getItem('client')
@@ -400,7 +391,6 @@ const CompanyInfo = () => {
                                   }: FieldProps<FormModel>) => (
                                       <Select
                                           options={select_payment_type}
-                                          // value={selectedProvider}
                                           onChange={(option: SingleValue<Select_Type>,) => {
                                               // Update both Formik and any external state if needed
                                               form.setFieldValue(field.name,option?.value,)
@@ -424,18 +414,11 @@ const CompanyInfo = () => {
                                       <Select
                                           options={healthPlan}
                                           isMulti
-                                          // onChange={(option: SingleValue<Select_Type>,) => {
-                                          //     // Update both Formik and any external state if needed
-                                          //     form.setFieldValue(field.name,option?.value,)
-
-                                          // }}
                                           isSearchable={true}
                                            onChange={(selectedOptions) => {
                                             const selectedIds = selectedOptions.map(option => option.value); // Extract UUIDs
-                                                setFormData(prev => ({
-                                                  ...prev,
-                                                  health_plan_id: selectedIds
-                                                }));
+                                            setSelectedPlans(selectedIds);
+                                             form.setFieldValue(field.name, selectedIds);
                                               }}
                                           placeholder="Select Health Plans..."
                                       />
@@ -478,7 +461,6 @@ const CompanyInfo = () => {
                                   const fileArray = Array.from(file);
                                   setFiles(fileArray);
                                   console.log(fileArray);
-                                  // upload_to_cloudinary()
                                 }}>
                                     <div className="my-16 text-center">
                                         <div className="text-6xl mb-4 flex justify-center">
