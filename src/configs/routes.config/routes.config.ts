@@ -218,6 +218,12 @@ export const protectedRoutes = [
     authority: [],
    },
    {
+    key: 'private.claim.create',
+    path: 'privates/claim/create/:pa_id',
+    component: lazy(() => import('@/views/privates/CreatePrivateClaims')),
+    authority: [],
+   },
+   {
     key: 'private.claim.viewall',
     path: 'privates/claim/view',
     component: lazy(() => import('@/views/privates/ViewAllPrivateClaims')),
