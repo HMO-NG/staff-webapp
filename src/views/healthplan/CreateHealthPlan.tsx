@@ -335,7 +335,7 @@ const CreatePlan = () => {
                                         {isSubmitting ?
                                             "Saving"
                                             :
-                                            "Add Health Plan Category"
+                                            "Add Health Plan"
                                         }
 
                                     </Button>
