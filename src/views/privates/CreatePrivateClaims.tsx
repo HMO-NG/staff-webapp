@@ -14,7 +14,7 @@ import { useState, useEffect, useMemo, useRef, ChangeEvent } from 'react'
 import useDouments from '@/utils/customAuth/useDocumentAuth'
 import Upload from '@/components/ui/Upload'
 import { FcImageFile } from 'react-icons/fc'
-import { HiOutlineCloudUpload } from 'react-icons/hi'
+import { HiOutlineCloudUpload,HiCheckCircle,HiOutlineUser, } from 'react-icons/hi'
 import useHealthPlan from '@/utils/customAuth/useHealthPlanAuth'
 import { healthPlan } from '@/utils/customAuth/useHealthPlanAuth'
 import Notification from '@/components/ui/Notification'
@@ -26,8 +26,10 @@ import usePrivateClaims from '@/utils/customAuth/usePrivateClaimAuth'
 import DatePicker from '@/components/ui/DatePicker'
 import Checkbox from '@/components/ui/Checkbox'
 import Avatar from '@/components/ui/Avatar'
-import { HiOutlineUser } from 'react-icons/hi'
 import Tag from '@/components/ui/Tag'
+import { useNavigate,useParams } from 'react-router-dom'
+import useTimeOutMessage from '@/utils/hooks/useTimeOutMessage'
+import Alert from '@/components/ui/Alert'
 
 type FormModel = {
     input: string
@@ -46,10 +48,16 @@ type Select_Type = {
     label: string
     value: string
 }
-type Select_Type2 = {
+type Select_Tariff_Type = {
     label: string
     value: string
     item_price: string
+    linked_plans:{
+    id: string,
+    plan_name: string
+    }[],
+    service_type:'primary'|'secondary'|'tertiary',
+    available_to_all_plans:boolean
 }
 type pa_tariffs={
   id?:string
@@ -80,7 +88,6 @@ const defaultTariff: pa_tariffs = {
   approved_total:0
 };
 
-const paCodeRegex = /^PA4LG\/\d{2}\/\d{2}\/\d{2}\/[A-Z]{2}\/[0-9a-fA-F-]{36}$/;
 
 const validationSchema = Yup.object().shape({
     diagnosis: Yup.string().required('Please enter Diagnosis'),
@@ -99,12 +106,15 @@ const CreatePrivateClaims = () => {
     const {
         usegetProviderServiceTariffByIdAuth,
         usegetPreAuthorizationByPACodeAuth,
+        usegetSinglePreAuthorizationByIdAuth,
+        useUpdatePreAuthorizationByPA_codeAuth,
     } = useProvider()
     const {
        usecreatePrivateClaimAuth,
     } = usePrivateClaims()
     const {useGetPrivateEnrolleeAuth}=usePrivates()
     const { getItem,setItem,removeItem } = useLocalStorage()
+    const {pa_id}=useParams();
 
     const [providerlist, setProviderList] = useState<Select_Type[]>([])
     const [Enroleelist, setEnroleelist] = useState<Select_Type[]>([])
@@ -113,12 +123,13 @@ const CreatePrivateClaims = () => {
     const [files, setFiles] = useState<File[]>([])
     const [uploadedUrls, setUploadedUrls] = useState<related_doc_type[]>([]);
 
-    const [SelectserviceTariffData, setSelectServiceTariffData] = useState<Select_Type2[]>([])
+    const [SelectserviceTariffData, setSelectServiceTariffData] = useState<Select_Tariff_Type[]>([])
 
     const [InputTariffServices, setInputTariffServices] = useState<pa_tariffs>({})
     const [combindedServices, setCombindedServices] = useState<pa_tariffs[]>([])
 
     const [EnableTariff, setEnableTariff] = useState<boolean>(true)
+    const [EnableTariffButton, setEnableTariffButton] = useState<boolean>(true)
     const [viewReviewDialog, setReviewDialog] = useState(false)
     const [selectedTariffData, setselectedTariffData] = useState<pa_tariffs>(defaultTariff)
     const [selectKey, setSelectKey] = useState(0);
@@ -127,6 +138,8 @@ const CreatePrivateClaims = () => {
     const [enrolleeData, setEnrolleeData] = useState<PrivateEnrollee>()
     const [inputPA_code,setInputPA_code]=useState('')
     const [inputDiagnosis,setInputDiagnosis]=useState('')
+    const [inputEncounter_date,setInputEncounter_date]=useState<Date|null>(null)
+    const [errorMessage, setErrorMessage] = useTimeOutMessage(5000)
 
     function openNotification(msg: string,notificationType: 'success' | 'warning' | 'danger' | 'info') {
         toast.push(
@@ -147,6 +160,12 @@ const CreatePrivateClaims = () => {
                         label: data.item_name,
                         value: data.id,
                         item_price: data.item_price,
+                        linked_plans: data.linked_plans.map((plan: any) => ({
+                            id: plan.id,
+                            plan_name: plan.plan_name,
+                        })),
+                        service_type: data.service_type,
+                        available_to_all_plans:data.available_to_all_plans
                     }
                 }),
             )
@@ -198,9 +217,12 @@ const CreatePrivateClaims = () => {
         values.selected_tariffs=JSON.stringify(combindedServices, null, 2)
         values.related_documents=JSON.stringify(r, null, 2)
         values.requested_amount=totalServiceAmount
-        // values.pa_code=va
+        values.encounter_date=inputEncounter_date
 
         const response = await usecreatePrivateClaimAuth(values)
+
+        const setToClaimed=await useUpdatePreAuthorizationByPA_codeAuth(values.pa_code,{is_claimed:true})
+
 
         if (response) {
           setTimeout(() => {
@@ -218,6 +240,9 @@ const CreatePrivateClaims = () => {
               openNotification(response.message,"danger")
               setSubmitting(false)
              }
+              if (setToClaimed.status === 'failed') {
+                openNotification(setToClaimed.message,"danger")
+              }
           }, 3000)
 
 
@@ -233,7 +258,6 @@ const CreatePrivateClaims = () => {
         // for nhia service price quantity
         if (items.item_price) {
             const servicePrice = parseFloat(items.item_price) || 0;
-            // total_price = servicePrice * serviceQuantity;
             total_price = (servicePrice * serviceQuantity).toFixed(2);
 
           }
@@ -312,20 +336,25 @@ const CreatePrivateClaims = () => {
           const pattern = /^PA4LG\/\d{2}\/\d{2}\/\d{2}\/[A-Z]{2}\/[0-9a-fA-F-]{36}$/;
             return pattern.test(pa_code);
            };
-      // const isValid = await validatePaCode(pa_code);
+
       const isValid = isValidPaCode(pa_code)
       if(isValid){
       const pa_data= await usegetPreAuthorizationByPACodeAuth(pa_code)
       if(pa_data){
         if (pa_data.status === 'success') {
                       setTimeout(() => {
-                      setInputDiagnosis(pa_data.data?.diagnosis || '')  
+                      //set diagnosis data
+                      setInputDiagnosis(pa_data.data?.diagnosis || '')
+                      // call get enrollee data function with enrollee id gotten from PA
                       getEnrollee(pa_data.data?.enrollee.id || '')
+                      // set selected provider and get tariffs under that provider
                       setselectedProvider({label:pa_data.data?.provider.name || '',
                                             value:pa_data.data?.provider.id || ''} )
-                      onselect_provider(pa_data.data?.provider.id)                      
-                      setEnableTariff(false)                      
-                      setCombindedServices(pa_data.data?.selected_tariffs || [])  
+                      onselect_provider(pa_data.data?.provider.id)
+                      setEnableTariff(false)
+
+                      // set all selected tariffs
+                      setCombindedServices(pa_data.data?.selected_tariffs || [])
                       openNotification(pa_data.message,'success')
                        }, 3000)
                     }
@@ -339,6 +368,26 @@ const CreatePrivateClaims = () => {
       }
     }
     }
+   const validatePlan= (linkedPlans: { id: string; plan_name: string }[],
+                           availableToAllPlans: boolean):'has access'|'no access' => {
+    const all_plan = linkedPlans.map(t => t.plan_name);
+    if (availableToAllPlans === true){
+      setEnableTariffButton(false)
+      return 'has access';
+    }else{
+      const isIncluded2 = linkedPlans.some(plan => plan.plan_name === enrolleeData?.plan_name);
+
+      if (isIncluded2) {
+          setEnableTariffButton(false)
+          return 'has access';
+      } else {
+          openNotification('This enrollee\'s plan does not cover this service', 'danger')
+          setEnableTariffButton(true)
+          return 'no access';
+      }
+
+    }
+   }
 
     useEffect(() => {
         const fetchData = async () => {
@@ -366,8 +415,35 @@ const CreatePrivateClaims = () => {
           }
 
         }
+        const fetchPADataFromIDParameter = async () => {
+          if (pa_id) {
+            const response = await usegetSinglePreAuthorizationByIdAuth(pa_id)
+            if (response.data) {
+                       //set diagnosis data
+                      setInputDiagnosis(response.data?.diagnosis || '')
+                      // call get enrollee data function with enrollee id gotten from PA
+                      getEnrollee(response.data?.enrollee.id || '')
+                      // set selected provider and get tariffs under that provider
+                      setselectedProvider({label:response.data?.provider.name || '',
+                                            value:response.data?.provider.id || ''} )
+                      onselect_provider(response.data?.provider.id)
+                      setEnableTariff(false)
+
+                      // set PA code
+                      setInputPA_code(response.data?.pa_code || '')
+                      const encounter= new Date(response.data?.created_at)
+                      setInputEncounter_date(encounter)
+                      // set all selected tariffs
+                      setCombindedServices(response.data?.selected_tariffs || [])
+
+
+
+            }
+          }
+        }
 
         fetchData()
+        fetchPADataFromIDParameter()
     }, [])
     return (
         <>
@@ -429,6 +505,7 @@ const CreatePrivateClaims = () => {
                                                                 setselectedProvider(option)
                                                                 onselect_provider(option?.value,)
                                                                 setEnableTariff(false)
+                                                                setEnableTariffButton(false)
                                                             }}
                                                             isSearchable={true}
                                                             placeholder="Select provider..."
@@ -501,11 +578,11 @@ const CreatePrivateClaims = () => {
                                             <FormItem
                                             label="Encounter Date"
                                             asterisk
-                                            // invalid={
-                                            //     errors.diagnosis &&
-                                            //     touched.diagnosis
-                                            // }
-                                            // errorMessage={errors.diagnosis}
+                                            invalid={
+                                                errors.encounter_date &&
+                                                touched.encounter_date
+                                            }
+                                            errorMessage={errors.encounter_date}
                                         >
                                            <Field name="encounter_date">
                                           {({
@@ -515,7 +592,9 @@ const CreatePrivateClaims = () => {
                                                        onChange={(value)=>{
                                                         console.log('val',value)
                                                         form.setFieldValue(field.name,value)
+                                                        setInputEncounter_date(value)
                                                       }}
+                                                      value={inputEncounter_date}
                                            />
                                             )}
                                             </Field>
@@ -632,14 +711,13 @@ const CreatePrivateClaims = () => {
                                                                key={selectKey}
                                                                 isDisabled={EnableTariff}
                                                                 options={SelectserviceTariffData }
-                                                                //  value={selectedProvider}
                                                                 isClearable={true}
-                                                                onChange={(option: SingleValue<Select_Type2>) => {
+                                                                onChange={(option: SingleValue<Select_Tariff_Type>) => {
                                                                     setInputTariffServices({...defaultTariff,
                                                                       id:`${option?.value}`,
                                                                       item_price:`${option?.item_price}`,
                                                                       item_name:`${option?.label}`})
-                                                                      console.log(option)
+                                                                    validatePlan(option?.linked_plans || [],option?.available_to_all_plans || false)
                                                                 }}
                                                                 isSearchable={true}
                                                                 placeholder="Select provider..."
@@ -678,7 +756,6 @@ const CreatePrivateClaims = () => {
                                                         placeholder="Enter quantity"
                                                         component={Input}
                                                         value={
-                                                            //SelectedTariffservice?.item_price
                                                             InputTariffServices?.item_price
                                                         }
                                                     />
@@ -686,7 +763,7 @@ const CreatePrivateClaims = () => {
                                             </div>
 
                                             <Button
-                                               disabled={EnableTariff}
+                                               disabled={EnableTariffButton}
                                                 variant="twoTone"
                                                 type="button"
                                                 onClick={()=>{
@@ -813,7 +890,6 @@ const CreatePrivateClaims = () => {
                                         <div className="overflow-y-auto">
                                             <Formik
                                                 initialValues={{
-                                                    // item_price: selectedTariffData.approved_price || '',
                                                     quantity: selectedTariffData.quantity || 0,
                                                     total_price:''
                                                 }}
@@ -821,18 +897,15 @@ const CreatePrivateClaims = () => {
                                                     console.log('Form values:', values);
                                                     let total_price = '';
                                                     const serviceQuantity = values.quantity
-                                                    // const servicePrice = parseFloat(selectedTariffData.item_price) || 0;
                                                     const servicePrice = Number(selectedTariffData.item_price) || 0;
                                                     total_price = (servicePrice * serviceQuantity).toFixed(2);
                                                     values.total_price=total_price
-                                                    // setReviewDialog(false)
                                                     editTariff(selectedTariffData.id || '',values)
                                                 }}
                                             >
                                                 {({ isSubmitting, errors, touched, values }) => (
                                                     <Form>
                                                       <FormContainer>
-                                                        {/* <div className='grid grid-cols-2 gap-4 mb-5'> */}
                                                          <Field
                                                               type="number"
                                                               autoComplete="off"
@@ -840,7 +913,6 @@ const CreatePrivateClaims = () => {
                                                               placeholder="Enter Quantity"
                                                               component={Input}
                                                          />
-                                                         {/* </div> */}
 
                                                       </FormContainer>
                                                         <div className="mt-5 'w-full flex justify-center">
