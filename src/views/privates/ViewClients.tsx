@@ -20,26 +20,21 @@ import { FormItem, FormContainer } from '@/components/ui/Form'
 import Input from '@/components/ui/Input'
 import Avatar from '@/components/ui/Avatar'
 import { HiOutlineUser } from 'react-icons/hi'
-import type {PrivateEnrollee} from '@/utils/customAuth/usePrivatesAuth'
+import type {PrivateEnrollee,PrivateCompany} from '@/utils/customAuth/usePrivatesAuth'
 
-type PrivateCompany={
-  id: string
-  company_name: string
-  business_type: string
-  company_heaadquaters: string
-  primary_contact_position: string
-  primary_contact_email: string
-  primary_contact_phonenumber:string
-  is_active:boolean
-  user_id:string
-  enrolled_by:string
-}
+
 
 const ViewClients = () => {
-      const {useGetCompanyAuth,updateClientStatusAuth,updateClientAuth,usegetPrivateEnrolleeByCompanyIdAuth}=usePrivates()
+      const {useGetCompanyAuth,
+             updateClientStatusAuth,
+             updateClientAuth,
+             usegetPrivateEnrolleeByCompanyIdAuth,
+             useGetCompanyByIdAuth,
+            }=usePrivates()
       const navigate = useNavigate()
       const [data, setData] = useState<PrivateCompany[]>([])
       const [data2, setData2] = useState<PrivateEnrollee[]>([])
+      const [singleClientData, setSingleClientData] = useState<PrivateCompany>()
       const [loading, setLoading] = useState(false)
       const [selectedRows, setSelectedRows] = useState<string[]>([])
       const [message, setMessage] = useState('')
@@ -90,7 +85,7 @@ const ViewClients = () => {
             id: string
             company_name: string
             business_type: string
-            company_heaadquaters: string
+            company_headquarters: string
             primary_contact_position: string
             primary_contact_email: string
             primary_contact_phonenumber:string
@@ -100,7 +95,7 @@ const ViewClients = () => {
             id: "",
             company_name: "",
             business_type: "",
-            company_heaadquaters: "",
+            company_headquarters: "",
             primary_contact_position: "",
             primary_contact_email: "",
             primary_contact_phonenumber: "",
@@ -123,10 +118,12 @@ const ViewClients = () => {
 
         const dropdownItems = [
             { key: 'view', name: 'View' },
+            { key: 'view_enrollees', name: 'View Enrollees' },
             { key: 'edit', name: 'Edit' },
             { key: 'status', name: 'Set Status' },
         ]
         const [editDialog, setEditDialog] = useState(false)
+        const [viewEnrolleesDialog, setViewEnrolleesDialog] = useState(false)
         const [viewDialog, setViewDialog] = useState(false)
         const [statusDialog, setStatusDialog] = useState(false)
      const onDropdownItemClick = (eventKey: string, e: SyntheticEvent) => {
@@ -146,11 +143,22 @@ const ViewClients = () => {
     const handleAction = async (cellProps: CellContext<PrivateCompany, unknown>,key: any) => {
 
         switch (key) {
-            case 'view':
+            case 'view_enrollees':
               const response = await usegetPrivateEnrolleeByCompanyIdAuth(cellProps.row.original.id)
                 setClientEnrolleeCount(response.count)
                 if (response.data){
                   setData2(response.data)
+                }
+
+
+                setViewEnrolleesDialog(true)
+                break;
+            case 'view':
+              const clientData = await useGetCompanyByIdAuth(cellProps.row.original.id)
+                if (clientData.status === 'success'){
+                  setSingleClientData(clientData.data)
+                }else if (clientData.status === 'failed'){
+                  openNotification(clientData.message,'danger')
                 }
 
 
@@ -163,7 +171,7 @@ const ViewClients = () => {
                         id: cellProps.row.original.id,
                         company_name: cellProps.row.original.company_name,
                         business_type: cellProps.row.original.business_type,
-                        company_heaadquaters: cellProps.row.original.company_heaadquaters,
+                        company_headquarters: cellProps.row.original.company_headquarters,
                         primary_contact_position: cellProps.row.original.primary_contact_position,
                         primary_contact_email: cellProps.row.original.primary_contact_email,
                         primary_contact_phonenumber: cellProps.row.original.primary_contact_phonenumber,
@@ -278,8 +286,8 @@ const ViewClients = () => {
                     accessorKey: 'business_type',
                 },
                 {
-                    header: 'Company Heaadquaters',
-                    accessorKey: 'company_heaadquaters',
+                    header: 'Company Address',
+                    accessorKey: 'company_headquarters',
                 },
 
                 {
@@ -488,10 +496,10 @@ const ViewClients = () => {
             />
 
             {
-                viewDialog && <Dialog
-                    isOpen={viewDialog}
-                    onClose={() => setViewDialog(false)}
-                    onRequestClose={() => setViewDialog(false)}
+                viewEnrolleesDialog && <Dialog
+                    isOpen={viewEnrolleesDialog}
+                    onClose={() => setViewEnrolleesDialog(false)}
+                    onRequestClose={() => setViewEnrolleesDialog(false)}
                     width={1000}
                     shouldCloseOnOverlayClick={false}
                     shouldCloseOnEsc={false}
@@ -528,6 +536,67 @@ const ViewClients = () => {
                 </Dialog>
             }
             {
+                viewDialog && <Dialog
+                    isOpen={viewDialog}
+                    onClose={() => setViewDialog(false)}
+                    onRequestClose={() => setViewDialog(false)}
+                    width={1000}
+                    shouldCloseOnOverlayClick={false}
+                    shouldCloseOnEsc={false}
+                >
+                    <div className="flex flex-col h-full justify-between">
+
+
+                        <h5 className="mb-4">View Client Data </h5>
+                        <div className="max-h-96 overflow-y-auto">
+                          <div className="prose dark:prose-invert mx-auto">
+                          <table>
+                              <thead>
+                                <tr>
+                                  <th>Field</th>
+                                  <th>Details</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {[
+                                  { label: "Company Name", value: singleClientData?.company_name },
+                                  { label: "Business Type", value: singleClientData?.business_type },
+                                  { label: "Company Headquarters", value: singleClientData?.company_headquarters },
+                                  { label: "Primary Contact Position", value: singleClientData?.primary_contact_position },
+                                  { label: "Primary Contact Email", value: singleClientData?.primary_contact_email },
+                                  { label: "Primary Contact Phonenumber", value: singleClientData?.primary_contact_phonenumber },
+                                  { label: "Number of Allowed Enrollees", value: singleClientData?.number_of_enrollees },
+                                  { label: "Enrolled By", value: singleClientData?.enrolled_by },
+                                  { label: "Status", value: singleClientData?.is_active ? "Active" : "Inactive" },
+                                  { label: "Number of Registered Enrolless", value: singleClientData?.count },
+                                  { label: "Linked Plans", value: singleClientData?.linked_plans ? singleClientData.linked_plans.map((plan) => plan.plan_name).join(', ') : '-' },
+                                ].map((item) => (
+                                  <tr key={item.label}>
+                                    <td className="font-light text-gray-700 min-w-[150px]">{item.label}</td>
+                                    <td className="font-semibold text-gray-900 flex-1 truncate">
+                                      <b>{item.value || "-"}</b>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                          </table>
+
+
+                            <div className="text-right mt-6">
+                                <Button
+                                    className="ltr:mr-2 rtl:ml-2"
+                                    variant="plain"
+                                    onClick={() => setViewDialog(false)}
+                                >
+                                    Cancel
+                                </Button>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                </Dialog>
+            }
+            {
                 editDialog && <Dialog
                     isOpen={editDialog}
                     onClose={() => setEditDialog(false)}
@@ -549,7 +618,7 @@ const ViewClients = () => {
                                         id: editCompany.id,
                                         company_name: editCompany.company_name,
                                         business_type: editCompany.business_type,
-                                        company_heaadquaters: editCompany.company_heaadquaters,
+                                        company_headquarters: editCompany.company_headquarters,
                                         primary_contact_position: editCompany.primary_contact_position,
                                         primary_contact_email: editCompany.primary_contact_email,
                                         primary_contact_phonenumber: editCompany.primary_contact_phonenumber,
