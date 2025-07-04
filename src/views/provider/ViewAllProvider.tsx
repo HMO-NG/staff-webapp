@@ -359,12 +359,31 @@ const ViewAllProvider = () => {
               accessorKey: 'category',
           },
           {
-            header: 'Insurance Plan',
-            accessorKey: 'insurance_plan_id',
-        },
-          {
-              header: 'Created by',
-              cell: (props) => props.cell.row.original.created_by,
+            header: 'Linked Plans',
+            cell: (props) => {
+                const linkedPlans = props.cell.row.original.linked_plans;
+                return (
+                    <div>
+                        {linkedPlans && linkedPlans.length > 0 ? (
+                            linkedPlans.map((plan: { plan_name: string }, index: number) => (
+                                <Tag key={index} className='mr-1 mb-1'>
+                                    <p className="whitespace-nowrap ">{plan.plan_name}</p>
+                                </Tag>
+                            ))
+                        ) :props.cell.row.original.available_to_all_plans===true? (
+                            <p className="whitespace-nowrap underline">available to all plans</p>
+                        ):(
+                            <span>No Plans Linked</span>
+                        )
+                        }
+                    </div>
+                );
+            }
+          },
+
+         {
+              header: 'Service Type',
+              accessorKey: 'service_type',
           },
 
       ]
