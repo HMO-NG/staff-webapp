@@ -19,6 +19,14 @@ export async function getCompanyService() {
       method: 'get',
   })
 }
+
+export async function getCompanyByIdService(id: string) {
+  return ApiService.fetchData<Response>({
+      url: `/privates/company/get/${id}`,
+      method: 'get',
+  })
+}
+
 export async function OnboardCompanyEnrolleesService(data: any) {
   return ApiService.fetchData<{
       message: string,
