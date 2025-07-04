@@ -21,6 +21,9 @@ import ActionLink from '@/components/shared/ActionLink'
 import Tabs from '@/components/ui/Tabs'
 import useHealthPlan from '@/utils/customAuth/useHealthPlanAuth'
 import { healthPlan,PlanCategory } from '@/utils/customAuth/useHealthPlanAuth'
+import Radio from '@/components/ui/Radio'
+import Checkbox from '@/components/ui/Checkbox'
+import type { ChangeEvent } from 'react'
 
 const { TabNav, TabList, TabContent } = Tabs
 
@@ -50,6 +53,11 @@ const select_patient_type=[
   { value: 'inpatient', label: 'Inpatient' },
   { value: 'outpatient', label: 'Outpatient'},
   { value: 'both', label: 'Both'},
+]
+const select_service_type=[
+  { value: 'primary', label: 'Primary' },
+  { value: 'secondary', label: 'Secondary'},
+  { value: 'tertiary', label: 'Tertiary'},
 ]
 const select_formulation=[
   { value: 'tablet', label: 'Tablet' },
@@ -94,15 +102,14 @@ const select_strength = [
 
 const CreateTariff=()=>{
     const [provider, setProvider] = useState<Select_Type>()
-    const [selected_drug_strength,setSelected_drug_strength] =useState<Select_Type>()
     const [healthPlan, setHealthPlan] = useState<healthPlan[]>([])
+    const [selectedPlans, setSelectedPlans] = useState<string[]>([]);
+    const [checked,setChecked]=useState<boolean>(false)
     const {useCreateProviderServiceTariffAuth,usegetProviderServiceTariffByIdAuth,useGetProviderByID,} = useProvider()
-    const {usegetPrivateProviderAuth}=usePrivates()
     const { useGetHealthPlanAuth,useGetHealthPlanCategoryAuth } = useHealthPlan()
     const {provider_id}=useParams();
-    const navigate = useNavigate()
 
-      function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
+    function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
       toast.push(
           <Notification
               title={notificationType.toString()}
@@ -111,64 +118,65 @@ const CreateTariff=()=>{
               {msg}
           </Notification>, {
           placement: 'top-center'
-      })}
+    })}
 
-  const onCreateServiceTariff = async (values: any,
-    setSubmitting: (isSubmitting: boolean) => void,
-    resetForm: () => void
-) => {
+    const onCreateServiceTariff = async (values: any,
+         setSubmitting: (isSubmitting: boolean) => void,
+         resetForm: () => void
+         ) =>  {
 
-    setSubmitting(true)
+         setSubmitting(true)
 
-    const { getItem } = useLocalStorage()
+         const { getItem } = useLocalStorage()
 
-    values.created_by = getItem("user")
+         values.created_by = getItem("user")
+         checked? (values.available_to_all_plans = true,values.insurance_plan_id=null) : values.available_to_all_plans = false
 
-    const data = await useCreateProviderServiceTariffAuth(values)
+         const data = await useCreateProviderServiceTariffAuth(values)
 
-    if (data) {
-        setTimeout(() => {
-          if (data.status=='success'){
-            openNotification(data.message,'success')
-            setSubmitting(false)
-            resetForm()
-          }
-          else if (data.status=='failed'){
-            openNotification(data.message,'danger')
-            setSubmitting(false)
-          }
-        }, 3000)
+         if (data) {
+             setTimeout(() => {
+                if (data.status=='success'){
+                     openNotification(data.message,'success')
+                     setSubmitting(false)
+                     resetForm()
+                }
+                else if (data.status=='failed'){
+                    openNotification(data.message,'danger')
+                    setSubmitting(false)
+                }
+             }, 3000)
+         }
+
     }
 
-}
 
+    useEffect(()=>{
 
-useEffect(()=>{
+     const fetchData = async () => {
+           const response = await useGetProviderByID({id:provider_id})
+           if (response.data) {
+                const formattedProviders = {
+                  label: response.data[0].name,
+                  value: response.data[0].id,
+                }
+                setProvider(formattedProviders)
+       }}
 
-  const fetchData = async () => {
-    const response = await useGetProviderByID({id:provider_id})
-    if (response.data) {
-    const formattedProviders = {
-      label: response.data[0].name,
-      value: response.data[0].id,
-    }
-      setProvider(formattedProviders)
-    }}
+     const fetchData2 = async () => {
+           const response = await useGetHealthPlanAuth({ sort: { order: 'asc' } })
 
-  const fetchData2 = async () => {
-    const response = await useGetHealthPlanAuth({ sort: { order: 'asc' } })
+           if (response.status === 'success' && response.data) {
+               setHealthPlan(response.data)
+           }
 
-    if (response.status === 'success' && response.data) {
-        setHealthPlan(response.data)
-    }
+           if (response.status === 'failed') {
+               openNotification(response.message, 'danger')
+           }
+     }
 
-    if (response.status === 'failed') {
-        openNotification(response.message, 'danger')
-    }
-}
-
-  fetchData2()
-  fetchData()
+     fetchData2()
+     fetchData()
 },[])
   return(
     <>
@@ -194,7 +202,8 @@ useEffect(()=>{
                           hcpcs_code:"",
                           is_surgical:false,
                           patient_type:"",
-                          category:""
+                          category:"",
+                          service_type:""
 
                            }}
                   //  validationSchema={validationSchema}
@@ -339,32 +348,67 @@ useEffect(()=>{
                             </FormItem>
                             {/* category */}
 
-                           {/* insurance_plan */}
-                           <FormItem
-                               label="Health Plan"
-                               invalid={errors.insurance_plan_id && touched.insurance_plan_id}
-                               errorMessage={errors.insurance_plan_id}>
-                               <Field
-                                   name="insurance_plan_id">
-                                   {({ field, form }: FieldProps<FormModel>) => (
-                                       <Select
-                                           options={healthPlan}
-                                           placeholder={"Select Health Plan"}
-                                           value={healthPlan.filter((item) =>
-                                               item.value === values.insurance_plan_id
-                                           )}
-                                           onChange={(data) => {
-                                               form.setFieldValue(
-                                                   field.name,
-                                                   data?.value
-                                               )
-                                           }}
-                                       />
-                                   )}
-                                </Field>
-                                </FormItem>
+                            {/* service_type */}
+                            <FormItem
+                             asterisk
+                             label="Select service type"
+                             invalid={errors.service_type && touched.service_type}
+                             errorMessage={errors.service_type}
+                              >
+                             <Field
+                                 name="service_type">
+                                 {({ field, form }: FieldProps<FormModel>) => (
+                                     <Select
+                                         field={field}
+                                         form={form}
+                                         options={select_service_type}
+                                         value={select_service_type?.filter(
+                                             (items) =>
+                                                 items.value === values.service_type
+                                            )}
+                                         onChange={(items) =>
+                                             form.setFieldValue(
+                                                 field.name,
+                                                 items?.value
+                                             )
+                                         } />
+                                 )}
+                             </Field>
+                            </FormItem>
+                            {/* service_type */}
+
                             {/* insurance_plan */}
 
+                            <Checkbox onChange={(value)=>setChecked(value)} className='mb-5'>
+                                Enable all Health Plans
+                            </Checkbox>
+
+
+                           { checked==false && (
+                             <FormItem label="Health Plan"
+                                     invalid={errors.insurance_plan_id && touched.insurance_plan_id}
+                                     errorMessage={errors.insurance_plan_id}>
+
+                                     <Field name="insurance_plan_id">
+                                          {({
+                                              field,
+                                              form,
+                                          }: FieldProps<FormModel>) => (
+                                              <Select
+                                                  options={healthPlan}
+                                                  isMulti
+                                                  isSearchable={true}
+                                                   onChange={(selectedOptions) => {
+                                                    const selectedIds = selectedOptions.map(option => option.value); // Extract UUIDs
+                                                     setSelectedPlans(selectedIds);
+                                                     form.setFieldValue(field.name, selectedIds);
+                                                      }}
+                                                  placeholder="Select Health Plans..."
+                                              />
+                                          )}
+                                      </Field>
+                            </FormItem>)}
+                            {/* insurance_plan */}
 
                             <FormItem>
                                 <Button
