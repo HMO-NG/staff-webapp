@@ -183,3 +183,15 @@ export async function getPreAuthorizationByPACodeService(PA_code:string) {
       method: 'get',
   })
 }
+
+export async function updatePreAuthorizationByPACodeService(PA_code:string,data: any) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+  }>({
+      url: `/preauthorization/update/code/${PA_code}`,
+      method: 'put',
+      data
+  })
+}
+
