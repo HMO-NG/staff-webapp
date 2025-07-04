@@ -15,6 +15,7 @@ import {
     getSinglePreAuthorizationByIdService,
     UpdatePreAuthorizationService,
     getPreAuthorizationByPACodeService,
+    updatePreAuthorizationByPACodeService,
 } from "@/services/ProviderService";
 import { string } from "yup";
 
@@ -34,12 +35,17 @@ export type ProviderServiceTariffType={
   item_name:string,
   item_price:string,
   provider_id:string,
-  insurance_plan_id:string,
+  linked_plans:{
+    id: string,
+    plan_name: string
+  }[],
+  available_to_all_plans:boolean,
   tariff_type:string,
   hcpcs_code:string,
   is_surgical:string,
   patient_type:string,
   category:string,
+  service_type:'primary'|'secondary'|'tertiary',
   created_by:string
 }
 export type ProviderDrugTariffType={
@@ -55,34 +61,21 @@ export type ProviderDrugTariffType={
   created_by:string
 }
 export type PAType={
-    id: string,
-    pa_code:string,
-    requested_total_price:string,
-    approved_price:string,
-    diagnosis: string,
-    enrollee_id: string,
-    enrolee_plan: string,
-    enrolee_plan_name: string,
-    enrollee_name: string,
-    selected_tariffs: [{}],
-    status: "pending"|'approved'| 'denied'|'partially approved',
-    created_at: string,
-    provider_name: string,
-    provider_code: string,
-    provider_comment:string,
-    created_by: string
-}
-export type SelectedPAType={
         id: string,
         diagnosis: string,
         selected_tariffs: [{}]
         approved_price: string,
         requested_total_price: string,
+        provider_comment: string,
+        pa_code: string,
+        status: "pending"|'approved'| 'denied'|'partially approved',
+        is_claimed:boolean,
         created_at: string,
         created_by: string,
         enrollee: {
             id: string,
-            name: string
+            name: string,
+            plan_name: string
         },
         provider: {
             id:string,
@@ -91,18 +84,23 @@ export type SelectedPAType={
         }
 }
 
-export const defaultSelectedPAType: SelectedPAType = {
+export const defaultPAType: PAType = {
              id: '',
              diagnosis: '',
              selected_tariffs: [{}],
              approved_price: '',
              requested_total_price: '',
+             provider_comment: '',
+             pa_code: '',
+             status: 'pending',
+             is_claimed: false,
              created_at: '',
              created_by: '',
 
              enrollee: {
                id: '',
                name: '',
+               plan_name: '',
              },
 
              provider: {
@@ -279,22 +277,7 @@ function useProvider() {
               const response = await getProviderTariffByIdfService(id);
               return {
                   message: response.data.message,
-                  data: response.data.data.map((data: any) => {
-                      return {
-                        id:data.id,
-                        item_name:data.item_name,
-                        item_price:data.item_price,
-                        provider_id:data.provider_id,
-                        insurance_plan_id:data.insurance_plan_id,
-                        tariff_type:data.tariff_type,
-                        hcpcs_code:data.hcpcs_code,
-                        is_surgical:data.is_surgical,
-                        patient_type:data.patient_type,
-                        category:data.category,
-                        created_by:data.created_by
-
-                      }
-                  }),
+                  data:response.data.data,
                   count:response.data.count,
                   status: 'success'
 
@@ -321,22 +304,7 @@ function useProvider() {
             const response = await getAllProviderTariffService();
             return {
                 message: response.data.message,
-                data: response.data.data.map((data: any) => {
-                    return {
-                      id:data.id,
-                      item_name:data.item_name,
-                      item_price:data.item_price,
-                      provider_id:data.provider_id,
-                      insurance_plan_id:data.insurance_plan_id,
-                      tariff_type:data.tariff_type,
-                      hcpcs_code:data.hcpcs_code,
-                      is_surgical:data.is_surgical,
-                      patient_type:data.patient_type,
-                      category:data.category,
-                      created_by:data.created_by
-
-                    }
-                }),
+                data:response.data.data,
                 status: 'success'
 
             }
@@ -362,22 +330,7 @@ function useProvider() {
           const response = await getSingleProviderTariffByIdService(id);
           return {
               message: response.data.message,
-              data: response.data.data.map((data: any) => {
-                  return {
-                    id:data.id,
-                    item_name:data.item_name,
-                    item_price:data.item_price,
-                    provider_id:data.provider_id,
-                    insurance_plan_id:data.insurance_plan_id,
-                    tariff_type:data.tariff_type,
-                    hcpcs_code:data.hcpcs_code,
-                    is_surgical:data.is_surgical,
-                    patient_type:data.patient_type,
-                    category:data.category,
-                    created_by:data.created_by
-
-                  }
-              }),
+              data:response.data.data,
               status: 'success'
 
           }
@@ -430,26 +383,7 @@ const usegetAllpreauthorizationRequestAuth = async (): Promise<{
       const response = await getAllpreauthorizationRequestService();
       return {
           message: response.data.message,
-          data: response.data.data.map((data: any) => {
-              return {
-                id: data.id,
-                pa_code:data.pa_code,
-                approved_price:data.approved_price,
-                requested_total_price:data.requested_total_price,
-                diagnosis: data.diagnosis,
-                enrollee_id: data.enrollee_id,
-                enrolee_plan: data.enrolee_plan,
-                enrolee_plan_name: data.enrolee_plan_name,
-                enrollee_name: data.enrollee_name,
-                selected_tariffs:data.selected_tariffs,
-                status: data.status,
-                created_at: data.created_at,
-                provider_name: data.provider_name,
-                provider_code: data.provider_code,
-                created_by: data.created_by
-
-              }
-          }),
+          data:response.data.data,
           status: 'success'
 
       }
@@ -515,7 +449,7 @@ const useUpdatePreAuthorizationAuth = async (id:string,data: any): Promise<{
 
 const usegetPreAuthorizationByPACodeAuth = async (PA_code:string): Promise<{
   message: string,
-  data?: SelectedPAType,
+  data?: PAType,
   status: Status
 }> => {
 
@@ -540,6 +474,30 @@ const usegetPreAuthorizationByPACodeAuth = async (PA_code:string): Promise<{
 
 }
 
+const useUpdatePreAuthorizationByPA_codeAuth = async (PA_code:string,data: any): Promise<{
+  data?: any,
+  message: string,
+  status: Status
+}> => {
+  try {
+      const encoded_PA_code = encodeURIComponent(PA_code);
+      const response = await updatePreAuthorizationByPACodeService(encoded_PA_code,data)
+
+    return {
+        message: response.data.message,
+        data: response.data.data,
+        status: "success"
+    }
+
+  } catch (error: any) {
+
+    return {
+      status: 'failed',
+      message: error?.response?.data?.message || error.toString(),
+  }
+
+  }
+}
 
 
     return {
@@ -559,6 +517,7 @@ const usegetPreAuthorizationByPACodeAuth = async (PA_code:string): Promise<{
         usegetSinglePreAuthorizationByIdAuth,
         useUpdatePreAuthorizationAuth,
         usegetPreAuthorizationByPACodeAuth,
+        useUpdatePreAuthorizationByPA_codeAuth,
     }
 }
 export default useProvider
