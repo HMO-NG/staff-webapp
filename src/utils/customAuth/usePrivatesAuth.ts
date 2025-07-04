@@ -7,17 +7,18 @@ import {createCompanyService,
   getSinglePrivateEnrolleeService,
   createPrivateEnrolleeDependantsService,
   updatePrivateEnrolleeService,
+  getCompanyByIdService,
 
 }from "@/services/PrivatesService";
 
 
 type Status = 'success' | 'failed'
 
-type PrivateCompany={
+export type PrivateCompany={
   id: string
   company_name: string
   business_type: string
-  company_heaadquaters: string
+  company_headquarters: string
   primary_contact_position: string
   primary_contact_email: string
   primary_contact_phonenumber:string
@@ -25,6 +26,18 @@ type PrivateCompany={
   is_active:boolean
   user_id:string
   enrolled_by:string
+  profile_id:string
+  documents?:{
+            id: string,
+            name: string,
+            url: string,
+            doc_type: string,
+            created_at: string,
+            created_by: string
+  }[]
+  linked_plans:{
+    id: string,
+    plan_name: string,}[]
   count:number
 }
 type EnrolleeMedicalData={
@@ -158,7 +171,7 @@ function usePrivates() {
                         id: items.id,
                         company_name: items.company_name,
                         business_type: items.business_type,
-                        company_heaadquaters: items.company_heaadquaters,
+                        company_headquarters: items.company_headquarters,
                         primary_contact_position: items.primary_contact_position,
                         primary_contact_email: items.primary_contact_email,
                         primary_contact_phonenumber:items.primary_contact_phonenumber,
@@ -168,6 +181,31 @@ function usePrivates() {
                         enrolled_by:items.enrolled_by
                       }
                   }),
+                  status: 'success'
+
+              }
+          }
+          catch (error: any) {
+
+              return {
+                  status: 'failed',
+                  message: error?.response?.data?.message || error.toString(),
+              }
+          }
+
+      }
+      const useGetCompanyByIdAuth = async (id: string): Promise<{
+          message: string,
+          data?: PrivateCompany,
+          status: Status
+      }> => {
+
+          try {
+
+              const response = await getCompanyByIdService(id);
+              return {
+                  message: response.data.message,
+                  data: response.data.data,
                   status: 'success'
 
               }
@@ -510,6 +548,7 @@ const updatePrivateEnrolleeAuth = async (id: string,data:any): Promise<{
         usegetSinglePrivateEnrolleeAuth,
         createPrivateEnrolleeDependantsAuth,
         updatePrivateEnrolleeAuth,
+        useGetCompanyByIdAuth,
       }
 }
 
