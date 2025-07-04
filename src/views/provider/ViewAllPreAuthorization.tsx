@@ -12,9 +12,9 @@ import { AiOutlineEye } from 'react-icons/ai';
 import Dialog from '@/components/ui/Dialog'
 import Card from '@/components/ui/Card'
 import { MdCheckCircle, MdCancel } from 'react-icons/md';
-import { FaRegCommentDots } from 'react-icons/fa';
+import { FaRegCommentDots,FaMoneyCheckAlt,FaNotesMedical ,FaFileMedical} from 'react-icons/fa';
 
-
+import { useNavigate,useParams } from 'react-router-dom'
 import { HiOutlinePencilAlt } from 'react-icons/hi'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
 import Drawer from '@/components/ui/Drawer'
@@ -49,40 +49,41 @@ const defaultTariff: pa_tariffs = {
   approved_total:0
 };
 const defaultPA: PAType = {
-  id: '',
-  pa_code:'',
-  requested_total_price:'',
-  approved_price:'',
-  diagnosis: '',
-  enrollee_id: '',
-  enrolee_plan: '',
-  enrolee_plan_name: '',
-  enrollee_name: '',
-  selected_tariffs: [{}],
-  status: "pending",
-  created_at: '',
-  provider_name: '',
-  provider_code: '',
-  provider_comment:'',
-  created_by: ''
+             id: '',
+             diagnosis: '',
+             selected_tariffs: [{}],
+             approved_price: '',
+             requested_total_price: '',
+             provider_comment: '',
+             pa_code: '',
+             status: 'pending',
+             is_claimed: false,
+             created_at: '',
+             created_by: '',
+
+             enrollee: {
+               id: '',
+               name: '',
+               plan_name: '',
+             },
+
+             provider: {
+               id: '',
+               name: '',
+               code: '',
+             },
 };
 type DialogTypeKey = 'info' | 'success' | 'warning' | 'danger'
 type dialogContentType='reject_tariff'|'approve_tariff'|'approve_PA'|undefined
 
-type DialogType = Record<DialogTypeKey, {
-    type: 'info' | 'success' | 'warning' | 'danger'
-    title: string
-    children: string
-    cancelText: string
-    confirmText: string
-    confirmButtonColor: string
-}>
 const ViewAllPARequest =()=>{
     const {
     usegetAllpreauthorizationRequestAuth,
     usegetSinglePreAuthorizationByIdAuth,
     useUpdatePreAuthorizationAuth,
      } = useProvider()
+    const navigate = useNavigate()
+    const {pa_id}=useParams();
     const [data, setData] = useState<PAType[]>([])
     const [loading, setLoading] = useState(false)
     const [tableData, setTableData] = useState<{
@@ -131,7 +132,6 @@ const ViewAllPARequest =()=>{
       const response = await usegetSinglePreAuthorizationByIdAuth(id)
       if (response.data) {
           setSinglePA(response.data)
-          // setViewDialog(true)
       } else {
         openNotification('Error fetching data', 'danger')
 
@@ -167,7 +167,6 @@ const ViewAllPARequest =()=>{
 
         switch(dialogContentType){
           case 'approve_tariff':
-            // onUpdatePATariff(selectedPAData.id, 'approved', selectedPAData.tariff);
             onUpdatePATariff(selectedPAData.PA.id, 'approved', selectedPAData.tariff);
 
             break;
@@ -176,7 +175,6 @@ const ViewAllPARequest =()=>{
 
             break;
           case 'approve_PA':
-            // onUpdatePA(selectedPAData.PA.id, 'approved');
             setselectedPAData({PA:singlePA , tariff:defaultTariff})
 
 
@@ -187,7 +185,6 @@ const ViewAllPARequest =()=>{
         }
         setOpenPopupDialog(false)
 
-        // setUpdatePA(true)
       }catch (error) {
         console.error('Error in handleConfirm:', error);
       }
@@ -232,15 +229,15 @@ const ViewAllPARequest =()=>{
         [
             {
               header: 'Provider',
-              accessorKey: 'provider_name',
+              accessorKey: 'provider.name',
             },
             {
                 header: 'Enrollee',
-                accessorKey: 'enrollee_name',
+                accessorKey: 'enrollee.name',
             },
             {
                 header: 'Plan',
-                accessorKey: 'enrolee_plan_name',
+                accessorKey: 'enrollee.plan_name',
             },
             {
               header: 'PA Code',
@@ -279,6 +276,30 @@ const ViewAllPARequest =()=>{
                         }
                     </div>
                 )
+            },
+             {
+                header: '',
+                id: 'action',
+                cell: (props) => (
+                    <div>{
+                      props.cell.row.original.is_claimed === true ?(
+                      <Button
+                      variant="plain"
+                      icon={<FaFileMedical/>}
+                      >
+                        Claimed</Button>):props.cell.row.original.is_claimed ===false ?(
+                          <Button
+                             variant="plain"
+                             icon={<FaFileMedical/>}
+                             onClick={() => navigate(`/privates/claim/create/${props.cell.row.original.id}`) }
+                             >
+                        Convert to claim</Button>):(<p>none</p>)
+
+                        }
+
+
+                    </div>
+                ),
             },
             {
                 header: '',
@@ -520,7 +541,7 @@ const ViewAllPARequest =()=>{
 
     }}
         const onAddComment=async(PA_ID:any,data:any)=>{
-      // let tariff=selectedPAData.tariff
+      
 
       const response = await  useUpdatePreAuthorizationAuth(PA_ID,data)
       if (response) {
@@ -570,14 +591,14 @@ return(
 
                                <div className="grid grid-cols-2 gap-6 p-4 rounded-xl">
                                  <div className="space-y-2">
-                                   <p className="font-light text-gray-700">Enrollee: <span className="font-semibold text-gray-900">{singlePA?.enrollee_name}</span></p>
+                                   <p className="font-light text-gray-700">Enrollee: <span className="font-semibold text-gray-900">{singlePA?.enrollee.name}</span></p>
                                    <p className="font-light text-gray-700">Date Created: <span className="font-semibold text-gray-900">{singlePA?.created_at}</span></p>
-                                   <p className="font-light text-gray-700">Plan: <span className="font-semibold text-gray-900">{singlePA?.enrolee_plan_name}</span></p>
+                                   <p className="font-light text-gray-700">Plan: <span className="font-semibold text-gray-900">{singlePA?.enrollee.plan_name}</span></p>
                                    <p className="font-light text-gray-700">Diagnosis: <span className="font-semibold text-gray-900">{singlePA?.diagnosis}</span></p>
                                  </div>
                                  <div className="space-y-2">
-                                   <p className="font-light text-gray-700">Provider: <span className="font-semibold text-gray-900">{singlePA?.provider_name}</span></p>
-                                   <p className="font-light text-gray-700">Provider Code: <span className="font-semibold text-gray-900">{singlePA?.provider_code}</span></p>
+                                   <p className="font-light text-gray-700">Provider: <span className="font-semibold text-gray-900">{singlePA?.provider.name}</span></p>
+                                   <p className="font-light text-gray-700">Provider Code: <span className="font-semibold text-gray-900">{singlePA?.provider.code}</span></p>
                                  </div>
                                </div>
                                {Array.isArray(singlePA?.selected_tariffs) &&
