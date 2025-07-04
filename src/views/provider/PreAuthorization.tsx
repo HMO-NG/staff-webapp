@@ -13,7 +13,7 @@ import { useState, useEffect, useMemo, useRef, ChangeEvent } from 'react'
 import useDouments from '@/utils/customAuth/useDocumentAuth'
 import Upload from '@/components/ui/Upload'
 import { FcImageFile } from 'react-icons/fc'
-import { HiOutlineCloudUpload } from 'react-icons/hi'
+import { HiOutlineCloudUpload,HiCheckCircle, } from 'react-icons/hi'
 import useHealthPlan from '@/utils/customAuth/useHealthPlanAuth'
 import { healthPlan } from '@/utils/customAuth/useHealthPlanAuth'
 import Notification from '@/components/ui/Notification'
@@ -24,6 +24,9 @@ import Dialog from '@/components/ui/Dialog'
 import Avatar from '@/components/ui/Avatar'
 import { HiOutlineUser } from 'react-icons/hi'
 import Tag from '@/components/ui/Tag'
+import {ProviderServiceTariffType} from '@/utils/customAuth/useProviderAuth'
+import useTimeOutMessage from '@/utils/hooks/useTimeOutMessage'
+import Alert from '@/components/ui/Alert'
 
 type FormModel = {
     input: string
@@ -42,10 +45,16 @@ type Select_Type = {
     label: string
     value: string
 }
-type Select_Type2 = {
+type Select_Tariff_Type = {
     label: string
     value: string
     item_price: string
+    linked_plans:{
+    id: string,
+    plan_name: string
+    }[],
+    service_type:'primary'|'secondary'|'tertiary',
+    available_to_all_plans:boolean
 }
 type pa_tariffs={
   id?:string
@@ -102,17 +111,19 @@ const PreAuthorization = () => {
     const [files, setFiles] = useState<File[]>([])
     const [uploadedUrls, setUploadedUrls] = useState<related_doc_type[]>([]);
 
-    const [SelectserviceTariffData, setSelectServiceTariffData] = useState<Select_Type2[]>([])
+    const [SelectserviceTariffData, setSelectServiceTariffData] = useState<Select_Tariff_Type[]>([])
 
     const [InputTariffServices, setInputTariffServices] = useState<pa_tariffs>({})
     const [combindedServices, setCombindedServices] = useState<pa_tariffs[]>([])
 
     const [EnableTariff, setEnableTariff] = useState<boolean>(true)
+    const [EnableTariffButton, setEnableTariffButton] = useState<boolean>(true)
     const [viewReviewDialog, setReviewDialog] = useState(false)
     const [selectedTariffData, setselectedTariffData] = useState<pa_tariffs>(defaultTariff)
     const [selectKey, setSelectKey] = useState(0);
     const [selectKey2, setSelectKey2] = useState(0);
     const [enrolleeData, setEnrolleeData] = useState<PrivateEnrollee>()
+    const [errorMessage, setErrorMessage] = useTimeOutMessage(5000)
 
     function openNotification(msg: string,notificationType: 'success' | 'warning' | 'danger' | 'info') {
         toast.push(
@@ -133,6 +144,12 @@ const PreAuthorization = () => {
                         label: data.item_name,
                         value: data.id,
                         item_price: data.item_price,
+                        linked_plans: data.linked_plans.map((plan: any) => ({
+                            id: plan.id,
+                            plan_name: plan.plan_name,
+                        })),
+                        service_type: data.service_type,
+                        available_to_all_plans:data.available_to_all_plans
                     }
                 }),
             )
@@ -218,7 +235,6 @@ const PreAuthorization = () => {
         // for nhia service price quantity
         if (items.item_price) {
             const servicePrice = parseFloat(items.item_price) || 0;
-            // total_price = servicePrice * serviceQuantity;
             total_price = (servicePrice * serviceQuantity).toFixed(2);
 
           }
@@ -288,6 +304,26 @@ const PreAuthorization = () => {
               </>
 
      )
+   const validatePlan= (linkedPlans: { id: string; plan_name: string }[],
+                           availableToAllPlans: boolean):'has access'|'no access' => {
+    const all_plan = linkedPlans.map(t => t.plan_name);
+    if (availableToAllPlans === true){
+      setEnableTariffButton(false)
+      return 'has access';
+    }else{
+      const isIncluded = linkedPlans.some(plan => plan.plan_name === enrolleeData?.plan_name);
+
+      if (isIncluded) {
+          setEnableTariffButton(false)
+          return 'has access';
+      } else {
+          openNotification('This enrollee\'s plan does not cover this service', 'danger')
+          setEnableTariffButton(true)
+          return 'no access';
+      }
+
+    }
+   }
     useEffect(() => {
         const fetchData = async () => {
             const response = await usegetPrivateProviderAuth()
@@ -368,6 +404,7 @@ const PreAuthorization = () => {
                                                                 setselectedProvider(option)
                                                                 onselect_provider(option?.value,)
                                                                 setEnableTariff(false)
+                                                                setEnableTariffButton(false)
                                                             }}
                                                             isSearchable={true}
                                                             placeholder="Select provider..."
@@ -424,21 +461,16 @@ const PreAuthorization = () => {
                                                 name="diagnosis"
                                                 placeholder="Enter Diagnosis"
                                                 component={Input}
-                                                //  onChange={handle_doc_name_change}
                                             />
                                         </FormItem>
                                         <div>
                                             <Upload
                                                 className="w-full flex justify-center"
                                                 onChange={(file: File[],fileList: File[]) => {
-                                                    console.log('ttt', file)
-                                                    console.log('ooo', fileList)
                                                     let fileArray
 
                                                     file? fileArray = Array.from(file):fileArray = Array.from(fileList)
                                                     setFiles(fileArray)
-
-                                                    console.log('rrrr',fileArray)
                                                 }}
                                             >
                                                 <Button
@@ -472,14 +504,13 @@ const PreAuthorization = () => {
                                                                key={selectKey}
                                                                 isDisabled={EnableTariff}
                                                                 options={SelectserviceTariffData }
-                                                                //  value={selectedProvider}
                                                                 isClearable={true}
-                                                                onChange={(option: SingleValue<Select_Type2>) => {
+                                                                onChange={(option: SingleValue<Select_Tariff_Type>) => {
                                                                     setInputTariffServices({...defaultTariff,
                                                                       id:`${option?.value}`,
                                                                       item_price:`${option?.item_price}`,
                                                                       item_name:`${option?.label}`})
-                                                                      console.log(option)
+                                                                    validatePlan(option?.linked_plans || [],option?.available_to_all_plans || false)
                                                                 }}
                                                                 isSearchable={true}
                                                                 placeholder="Select provider..."
@@ -524,7 +555,6 @@ const PreAuthorization = () => {
                                                         placeholder="Enter quantity"
                                                         component={Input}
                                                         value={
-                                                            //SelectedTariffservice?.item_price
                                                             InputTariffServices?.item_price
                                                         }
                                                     />
@@ -532,7 +562,7 @@ const PreAuthorization = () => {
                                             </div>
 
                                             <Button
-                                               disabled={EnableTariff}
+                                               disabled={EnableTariffButton}
                                                 variant="twoTone"
                                                 type="button"
                                                 onClick={()=>{
