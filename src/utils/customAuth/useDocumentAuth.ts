@@ -1,6 +1,8 @@
 import {
-  addDocumentService,uploadRawFilesTocloudinaryService,
+  addDocumentService,
+  uploadRawFilesTocloudinaryService,
   uploadImagesTocloudinaryService,
+  uploadDocumentsAndSaveInDBService,
 
 }from "@/services/DoumentService";
 
@@ -78,6 +80,29 @@ function useDouments(){
 
     }
   }
+  const uploadDocumentsAndSaveInDBAuth = async (data:any): Promise<{
+    message: string,
+    data?: any,
+    status: Status
+  }> => {
+    try {
+        const response = await uploadDocumentsAndSaveInDBService(data)
+
+        return {
+            message: response.data.message,
+            data: response.data.data,
+            status: "success"
+        }
+
+    } catch (error: any) {
+
+        return {
+            status: 'failed',
+            message: error?.response?.data?.message || error.toString(),
+        }
+
+    }
+  }
 
 
 
@@ -86,6 +111,7 @@ function useDouments(){
     addDocumentAuth,
     uploadRawFilesTocloudinaryAuth,
     uploadImagesTocloudinaryAuth,
+    uploadDocumentsAndSaveInDBAuth,
   }
 }
 export default useDouments
