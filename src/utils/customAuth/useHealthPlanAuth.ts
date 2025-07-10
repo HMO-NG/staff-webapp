@@ -13,7 +13,8 @@ import {
     UpdateAttachedBenefitService,
     DeleteAttachedBenefitService,
     UpdateHealthPlanService,
-    UpdateHealthPlanStatusService
+    UpdateHealthPlanStatusService,
+    UpdateHealthPlanCategoryService,
 
 } from "@/services/HealthPlanService"
 
@@ -527,6 +528,27 @@ function useHealthPlan() {
     }
 
 }
+    const useUpdateHealthPlanCategoryAuth = async (id:any,data: any): Promise<{
+        message: string,
+        data?: any,
+        status: Status
+    }> => {
+        try {
+            const response = await UpdateHealthPlanCategoryService(id,data)
+
+            return {
+                message: response.data.message,
+                data: response.data.data,
+                status: 'success'
+
+            }
+          } catch (error: any) {
+            return {
+                status: 'failed',
+                message: error?.response?.data?.message || error.toString(),
+            }
+          }
+        }
 
 
     return {
@@ -546,7 +568,8 @@ function useHealthPlan() {
         useUpdateAttachedBenefitAuth,
         useDeleteAttachedBenefitAuth,
         useUpdateHealthPlanAuth,
-        useUpdateHealthPlanStatusAuth
+        useUpdateHealthPlanStatusAuth,
+        useUpdateHealthPlanCategoryAuth,
     }
 }
 
