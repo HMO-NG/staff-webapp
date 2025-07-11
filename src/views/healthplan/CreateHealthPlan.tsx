@@ -69,6 +69,7 @@ const CreatePlan = () => {
     const [successMessage, setSuccessMessage] = useTimeOutMessage()
 
     const [planCategoryData, setPlanCategoryData] = useState<PlanCategory[]>()
+    const [isDependantAllowed,setIsDependantAllowed]=useState<boolean>(false)
 
     const { useCreateHealthPlanAuth, useGetHealthPlanCategoryAuth } = useHealthPlan()
 
@@ -83,6 +84,7 @@ const CreatePlan = () => {
         setSubmitting(true)
 
         values.user_id = getItem("user")
+        values.allow_dependent = isDependantAllowed
 
         const response = await useCreateHealthPlanAuth(values)
 
@@ -230,46 +232,21 @@ const CreatePlan = () => {
                                                         items.value === values.plan_type
                                                 )}
 
-                                                onChange={(items) =>
+                                                onChange={(items) =>{
                                                     form.setFieldValue(
                                                         field.name,
                                                         items?.value
                                                     )
+                                                    let DependantValue= items?.value === "family" ? true : false
+                                                    setIsDependantAllowed(DependantValue)}
                                                 } />
                                         )}
                                     </Field>
                                 </FormItem>
 
-                                {/* allow dependent*/}
-                                <FormItem
-                                    asterisk
-                                    label="Allow Dependant?"
-                                    invalid={errors.allow_dependent && touched.allow_dependent}
-                                    errorMessage={errors.allow_dependent}
-                                >
-                                    <Field
-                                        name="allow_dependent">
-                                        {({ field, form }: FieldProps<FormModel>) => (
-                                            <Select
-                                                field={field}
-                                                form={form}
-                                                options={allowDependent}
-                                                value={allowDependent?.filter(
-                                                    (items) =>
-                                                        items.value === values.allow_dependent
-                                                )}
-
-                                                onChange={(items) =>
-                                                    form.setFieldValue(
-                                                        field.name,
-                                                        items?.value
-                                                    )
-                                                } />
-                                        )}
-                                    </Field>
-                                </FormItem>
 
                                 {/* max dependent*/}
+                                {isDependantAllowed &&(
                                 <FormItem
                                     asterisk
                                     label="Maximum Dependant"
@@ -296,7 +273,7 @@ const CreatePlan = () => {
                                                 } />
                                         )}
                                     </Field>
-                                </FormItem>
+                                </FormItem>)}
 
                                 {/* plan age limit*/}
                                 <FormItem
