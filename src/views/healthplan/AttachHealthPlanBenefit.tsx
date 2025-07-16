@@ -28,7 +28,15 @@ const limit_type = [
     { value: "max_cost_per_year", label: "Max Cost Per Year", color: '#0052CC' },
     { value: "max_enrollee_age", label: "Max Entrollee Age", color: '#0052CC' },
     { value: "min_enrollee_age", label: "Min Entrollee Age", color: '#0052CC' },
+    { value: "gender", label: "Gender", color: '#0052CC' },
 ]
+
+const sex = [
+  { value: "M", label: "Male", color: '#5243AA' },
+  { value: "F", label: "Female", color: '#0052CC' },
+  { value: "both", label: "Both", color: '#0052CC' },
+]
+
 const AttachHealthPlanBenefit = () => {
 
     const [healthPlan, setHealthPlan] = useState<healthPlan[]>([])
@@ -37,6 +45,7 @@ const AttachHealthPlanBenefit = () => {
     const [selectedHealthPlan, setSelectedHealthPlan] = useState<healthPlan>()
 
     const [isLoading, setIsLoading] = useState(true)
+    const [selectedLimitType, setSelectedLimitType] = useState('')
 
     const { useGetHealthPlanAuth, useGetAllBenefitListAuth, useCreateAttachedBenefitAuth } = useHealthPlan()
 
@@ -47,7 +56,25 @@ const AttachHealthPlanBenefit = () => {
             Yup.object().shape({
                 benefit_name: Yup.string().required('Benefit Required'),
                 limit_type: Yup.string().required('Limit Type Required'),
-                limit_value: Yup.number().required("Limit Required")
+                // limit_value: Yup.number().required("Limit Required")
+                limit_value: Yup.mixed()
+                  .required("Limit is required")
+                  .test(
+                    "is-valid-limit",
+                    "Must be a number or gender (m/f)",
+                    function (value) {
+                      if (value === undefined || value === null) return false;
+
+                      const strVal = String(value).toLowerCase();
+
+                      return (
+                        typeof value === "number" ||
+                        strVal === "m" ||
+                        strVal === "f" ||
+                        strVal === "both"
+                      );
+                    }
+                  ),
             })
         )
     })
@@ -288,6 +315,41 @@ const AttachHealthPlanBenefit = () => {
                                                                                                                 items.value === _.limit_type
                                                                                                         )}
 
+                                                                                                        onChange={(items) =>{
+                                                                                                            form.setFieldValue(
+                                                                                                                field.name,
+                                                                                                                items?.value
+                                                                                                            )
+                                                                                                             setSelectedLimitType(items?.value || '');}
+                                                                                                        }
+                                                                                                    />
+                                                                                                )}
+                                                                                            </Field>
+                                                                                        </FormItem>
+
+                                                                                        {/* expected limit value */}
+                                                                                        {selectedLimitType=='gender' ?(
+                                                                                           <FormItem
+                                                                                            label="Limit Value"
+                                                                                            invalid={
+                                                                                                limitValueFeedBack.invalid
+                                                                                            }
+                                                                                            errorMessage={
+                                                                                                limitValueFeedBack.errorMessage
+                                                                                            }
+                                                                                        >
+                                                                                            <Field
+                                                                                                name={`benefit_limit[${index}].limit_value`}>
+                                                                                                {({ field, form }: FieldProps<FormModel>) => (
+                                                                                                    <Select
+                                                                                                        field={field}
+                                                                                                        form={form}
+                                                                                                        options={sex}
+                                                                                                        value={sex?.filter(
+                                                                                                            (items) =>
+                                                                                                                items.value === _.limit_value
+                                                                                                        )}
+
                                                                                                         onChange={(items) =>
                                                                                                             form.setFieldValue(
                                                                                                                 field.name,
@@ -297,11 +359,9 @@ const AttachHealthPlanBenefit = () => {
                                                                                                     />
                                                                                                 )}
                                                                                             </Field>
-                                                                                        </FormItem>
-
-                                                                                        {/* expected limit value */}
+                                                                                        </FormItem>):(
                                                                                         <FormItem
-                                                                                            label="limit Value"
+                                                                                            label="Limit Value"
                                                                                             invalid={
                                                                                                 limitValueFeedBack.invalid
                                                                                             }
@@ -321,7 +381,7 @@ const AttachHealthPlanBenefit = () => {
                                                                                                     Input
                                                                                                 }
                                                                                             />
-                                                                                        </FormItem>
+                                                                                        </FormItem>)}
                                                                                         <Button
                                                                                             shape="circle"
                                                                                             size="sm"
