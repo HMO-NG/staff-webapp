@@ -24,13 +24,15 @@ import {
     HiOutlineDocumentDownload,
 } from 'react-icons/hi'
 import Tag from '@/components/ui/Tag'
+import Select from '@/components/ui/Select'
+import type { FieldProps } from 'formik'
 
 type HealthPlan = {
     id: string
     plan_name: string
     health_plan_category_name: string
     plan_type: string
-    allow_dependent: string
+    allow_dependent: boolean
     max_dependant: string
     plan_age_limit: string
     plan_cost: string
@@ -48,6 +50,25 @@ type planbenefit={
         benefit_item_id: string
         health_plan_id: string
 }
+
+type FormModel = {
+  input: string
+  select: string
+  multipleSelect: string[]
+  date: Date | null
+  time: Date | null
+  singleCheckbox: boolean
+  multipleCheckbox: Array<string | number>
+  radio: string
+  switcher: boolean
+  segment: string[]
+  upload: File[]
+}
+
+const allowDependent = [
+    { value: true, label: "Yes", color: '#5243AA' },
+    { value: false, label: "No", color: '#0052CC' },
+]
 
 const ViewHealthPlan = () => {
     const {
@@ -88,7 +109,7 @@ const ViewHealthPlan = () => {
         plan_name: string
         health_plan_category_name: string
         plan_type: string
-        allow_dependent: string
+        allow_dependent: boolean
         max_dependant: string
         plan_age_limit: string
         plan_cost: string
@@ -99,7 +120,7 @@ const ViewHealthPlan = () => {
         plan_name: '',
         health_plan_category_name: '',
         plan_type: '',
-        allow_dependent: '',
+        allow_dependent: false,
         max_dependant: '',
         plan_age_limit: '',
         plan_cost: '',
@@ -113,7 +134,7 @@ const ViewHealthPlan = () => {
         plan_name: string
         health_plan_category_name: string
         plan_type: string
-        allow_dependent: string
+        allow_dependent: boolean
         max_dependant: string
         plan_age_limit: string
         plan_cost: string
@@ -124,7 +145,7 @@ const ViewHealthPlan = () => {
         plan_name: '',
         health_plan_category_name: '',
         plan_type: '',
-        allow_dependent: '',
+        allow_dependent: false,
         max_dependant: '',
         plan_age_limit: '',
         plan_cost: '',
@@ -151,7 +172,7 @@ const ViewHealthPlan = () => {
     const dropdownItems = [
         { key: 'view', name: 'View' },
         { key: 'edit', name: 'Edit' },
-        { key: 'status', name: 'deactive' },
+        { key: 'status', name: 'Set Status' },
         { key: 'benefits', name: 'View Attahed Benefits' },
     ]
 
@@ -298,15 +319,27 @@ const ViewHealthPlan = () => {
                 accessorKey: 'entered_by',
             },
             {
-              header: 'is active',
-              accessorKey: 'disabled_plan',
+              header: 'Status',
+              cell: (props) => (
+                  <div>
+                      {props.cell.row.original.disabled_plan ? (
+                          <Tag className="text-red-600 bg-red-100 dark:text-red-100 dark:bg-red-500/20 border-0">
+                              Deactivated
+                          </Tag>
+                      ) : (
+                          <Tag className="bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-100 border-0">
+                              Active
+                          </Tag>
+                      )}
+                  </div>
+              ),
           },
             {
                 header: '',
                 id: 'action',
                 cell: (props) => (
                     <div>
-                        <Dropdown placement="bottom-start">
+                        <Dropdown placement="bottom-end">
                             {dropdownItems.map((item) => (
                                 <Dropdown.Item
                                     key={item.key}
@@ -689,7 +722,7 @@ const ViewHealthPlan = () => {
                                         updateHealthPlan(values)
                                     }}
                                 >
-                                    {({ touched, errors, resetForm }) => (
+                                    {({ values,touched, errors, resetForm, }) => (
                                         <Form>
                                             <FormContainer>
                                                 {/* Name */}
@@ -719,15 +752,31 @@ const ViewHealthPlan = () => {
                                                         component={Input}
                                                     />
                                                 </FormItem>
-                                                {/* phone number */}
-                                                <FormItem label="allow_dependent">
-                                                    <Field
-                                                        type="text"
-                                                        autoComplete="off"
-                                                        name="allow_dependent"
-                                                        component={Input}
-                                                    />
-                                                </FormItem>
+
+                                                {/* allow dependent*/}
+                                                 <FormItem label="Allow Dependant?"
+                                                 >
+                                                     <Field
+                                                         name="allow_dependent">
+                                                         {({ field, form }: FieldProps<FormModel>) => (
+                                                             <Select
+                                                                 field={field}
+                                                                 form={form}
+                                                                 options={allowDependent}
+                                                                 value={allowDependent?.filter(
+                                                                     (items) =>
+                                                                         items.value === values.allow_dependent
+                                                                 )}
+
+                                                                 onChange={(items) =>
+                                                                     form.setFieldValue(
+                                                                         field.name,
+                                                                         items?.value
+                                                                     )
+                                                                 } />
+                                                         )}
+                                                     </Field>
+                                                 </FormItem>
                                                 {/* Medical Director's Name */}
                                                 <FormItem label="max_dependant">
                                                     <Field
@@ -791,11 +840,11 @@ const ViewHealthPlan = () => {
                     shouldCloseOnOverlayClick={false}
                     shouldCloseOnEsc={false}
                 >
-                    <h5 className="mb-4">Deactivate Health Plan</h5>
+                    <h5 className="mb-4">Update Health Plan Status</h5>
                     <p>
                         {healthplanStatus.disabled_plan
-                            ? `Deactivate ${healthplanStatus.plan_name}`
-                            : `Activate ${healthplanStatus.plan_name}`}
+                            ? `Activate ${healthplanStatus.plan_name}`
+                            : `Deactivate ${healthplanStatus.plan_name}`}
                     </p>
                     <div className="text-right mt-6">
                         <Button
