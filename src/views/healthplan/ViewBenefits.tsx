@@ -186,10 +186,6 @@ const ViewBenefit = () => {
                 accessorKey: 'benefit_name',
             },
             {
-                header: 'Sub Category',
-                accessorKey: 'sub_category',
-            },
-            {
                 header: 'Category',
                 accessorKey: 'category',
             },
@@ -203,7 +199,7 @@ const ViewBenefit = () => {
                 cell: (props) => (
                     <div>
                         <Dropdown
-                            placement='bottom-start'>
+                            placement='bottom-end'>
                             {dropdownItems.map((item) => (
                                 <Dropdown.Item
                                     key={item.key}
@@ -396,7 +392,7 @@ const ViewBenefit = () => {
                     <div className="flex flex-col h-full justify-between">
 
 
-                        <h5 className="mb-4">View Provider</h5>
+                        <h5 className="mb-4">View Benefit</h5>
                         <div className="max-h-96 overflow-y-auto">
 
 
@@ -456,7 +452,7 @@ const ViewBenefit = () => {
                     <div className="flex flex-col h-full justify-between">
 
 
-                        <h5 className="mb-4">Edit Provider</h5>
+                        <h5 className="mb-4">Edit Benefit</h5>
                         <div className="max-h-96 overflow-y-auto">
 
                             <div className="prose dark:prose-invert mx-auto">
