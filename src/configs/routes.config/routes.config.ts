@@ -196,19 +196,19 @@ export const protectedRoutes = [
    {
     key: 'private.enrollee.enroleeview',
     path: 'privates/enrollee/view',
-    component: lazy(() => import('@/views/privates/ViewPrivateEnrollees')),
+    component: lazy(() => import('@/views/enrollee/ViewPrivateEnrollees')),
     authority: [],
    },
    {
    key: 'private.enrollee.create',
    path: 'privates/enrollee/add',
-   component: lazy(() => import('@/views/privates/EnrolleeEntryForm')),
+   component: lazy(() => import('@/views/enrollee/EnrolleeEntryForm')),
    authority: [],
   },
   {
     key: 'private.enrollee.profile',
     path: 'privates/enrollee/:enrollee_id',
-    component: lazy(() => import('@/views/privates/EnrolleeProfile')),
+    component: lazy(() => import('@/views/enrollee/EnrolleeProfile')),
     authority: [],
    },
    {
