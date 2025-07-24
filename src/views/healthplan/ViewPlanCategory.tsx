@@ -190,7 +190,7 @@ const ViewPlanCategory = () => {
             },
             {
                 header: 'Band',
-                accessorKey: 'band',
+                accessorKey: 'band_name',
             },
             {
                 header: 'Entered by',
@@ -272,16 +272,15 @@ const ViewPlanCategory = () => {
         const result = await useUpdateHealthPlanCategoryAuth(data.id,data)
 
         if (result.message) {
-            setTimeout(() => {
                 if (result.status === 'success') {
                 fetchData()
-                openNotification(result.message,'success')
+                setEditDialog(false)
+                setTimeout(() => {
+                  openNotification(result.message,'success')
+                }, 1000);
                 }else{
                 openNotification(result.message,'danger')
                 }
-            },
-                3000
-            )
 
         }
 
@@ -314,9 +313,9 @@ const ViewPlanCategory = () => {
 
         if (response) {
             if (response.status === 'success'){
-               fetchData()
                openNotification('sucessfully updated Health plan category status','success')
                setStatusDialog(false)
+               fetchData()
             }else{
               openNotification(response.message,'danger')
 
