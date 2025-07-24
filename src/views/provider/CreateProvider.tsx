@@ -16,6 +16,8 @@ import Upload from '@/components/ui/Upload'
 import * as XLSX from 'xlsx'
 import Notification from '@/components/ui/Notification'
 import toast from '@/components/ui/toast'
+import useBandAuth from '@/utils/customAuth/useBandAuth'
+import { useEffect, useState } from 'react'
 
 type FormModel = {
     input: string
@@ -29,6 +31,12 @@ type FormModel = {
     switcher: boolean
     segment: string[];
     upload: File[];
+}
+
+type SelectBandType = {
+     id: string
+     label: string
+     value: string
 }
 
 const validationSchema = Yup.object().shape({
@@ -56,6 +64,9 @@ const CreateProvider = () => {
     const [successMessage, setSuccessMessage] = useTimeOutMessage()
 
     const { useCreateProvider, useCreateNHIAProviderAuth } = useProvider()
+    const {useGetBandAuth,} = useBandAuth()
+
+    const [selectBand, setSelectBand] = useState<SelectBandType[] | undefined>([])
 
     function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
         toast.push(
@@ -154,6 +165,28 @@ const CreateProvider = () => {
 
     };
 
+     useEffect(() => {
+            const fetchData = async () => {
+                console.log("useEffect for createHealthPlanCategory called!")
+            }
+            const fetchBand= async () => {
+                 const response = await useGetBandAuth()
+                 if (response?.status === 'success') {
+                      const bandOptions = response?.data?.map((band: any) => ({
+                          id: band.id,
+                          label: band.name,
+                          value: band.id
+                      }))
+                      setSelectBand(bandOptions)
+          }
+      }
+    
+            fetchData()
+            fetchBand()
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+    
+        }, [])
+
     return (
         <div>
             {errorMessage && (
@@ -209,7 +242,8 @@ const CreateProvider = () => {
                         state: '',
                         code: '',
                         user_id: '',
-                        medical_director_phone_no: ''
+                        medical_director_phone_no: '',
+                        band_id: '',
 
                     }}
                     validationSchema={validationSchema}
@@ -342,6 +376,34 @@ const CreateProvider = () => {
                                         component={Input}
                                     />
                                 </FormItem>
+
+                                <FormItem label="Band">
+                                       <Field
+                                           name="band">
+                                           {({ field, form }: FieldProps<FormModel>) => (
+                                               <Select
+                                                   field={field}
+                                                   form={form}
+                                                   options={selectBand}
+                                                   value={selectBand?.filter(
+                                                       (items) =>
+                                                           items.value === values.band_id
+                                                   )}
+                                
+                                                   onChange={(items) =>{
+                                                       form.setFieldValue(
+                                                           field.name,
+                                                           items?.value
+                                                       ),
+                                                       form.setFieldValue(
+                                                           'band_name',
+                                                           items?.label
+                                                       )
+                                                      }
+                                                   } />
+                                           )}
+                                       </Field>
+                                 </FormItem>
 
                                 <FormItem>
                                     <Button variant="solid" type="submit"
