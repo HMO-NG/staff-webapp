@@ -16,6 +16,8 @@ import { useLocalStorage } from '@/utils/localStorage'
 import Tabs from '@/components/ui/Tabs'
 import { HiUserAdd, HiOutlineDocumentAdd, HiUserGroup } from 'react-icons/hi'
 import { useEffect, useState } from 'react'
+import useBandAuth from '@/utils/customAuth/useBandAuth'
+import type {Band}from '@/utils/customAuth/useBandAuth'
 
 
 type FormModel = {
@@ -31,6 +33,11 @@ type FormModel = {
     segment: string[];
     upload: File[];
 }
+type SelectBandType = {
+     id: string
+     label: string
+     value: string
+}
 
 const planCategoryValidationSchema = Yup.object().shape({
 
@@ -44,8 +51,10 @@ const CreateHealthPlanCategory = () => {
 
     const [errorMessage, setErrorMessage] = useTimeOutMessage()
     const [successMessage, setSuccessMessage] = useTimeOutMessage()
+    const [selectBand, setSelectBand] = useState<SelectBandType[] | undefined>([])
 
     const { useCreateHealthPlanCategoryAuth } = useHealthPlan()
+    const {useGetBandAuth,} = useBandAuth()
 
     const { getItem } = useLocalStorage()
 
@@ -80,8 +89,20 @@ const CreateHealthPlanCategory = () => {
         const fetchData = async () => {
             console.log("useEffect for createHealthPlanCategory called!")
         }
+        const fetchBand= async () => {
+             const response = await useGetBandAuth()
+             if (response?.status === 'success') {
+                  const bandOptions = response?.data?.map((band: any) => ({
+                      id: band.id,
+                      label: band.name,
+                      value: band.id
+                  }))
+                  setSelectBand(bandOptions)
+      }
+  }
 
         fetchData()
+        fetchBand()
         // eslint-disable-next-line react-hooks/exhaustive-deps
 
     }, [])
@@ -122,6 +143,7 @@ const CreateHealthPlanCategory = () => {
                         name: '',
                         description: '',
                         band: '',
+                        band_name: '',
                         user_id: ''
 
                     }}
@@ -150,19 +172,32 @@ const CreateHealthPlanCategory = () => {
                                         component={Input}
                                     />
                                 </FormItem>
-                                <FormItem
-                                    asterisk
-                                    label="Band"
-                                    invalid={errors.band && touched.band}
-                                    errorMessage={errors.band}
-                                >
+
+                                <FormItem label="Band">
                                     <Field
-                                        type="text"
-                                        autoComplete="off"
-                                        name="band"
-                                        placeholder="Health Plan Band"
-                                        component={Input}
-                                    />
+                                        name="band">
+                                        {({ field, form }: FieldProps<FormModel>) => (
+                                            <Select
+                                                field={field}
+                                                form={form}
+                                                options={selectBand}
+                                                value={selectBand?.filter(
+                                                    (items) =>
+                                                        items.value === values.band
+                                                )}
+
+                                                onChange={(items) =>{
+                                                    form.setFieldValue(
+                                                        field.name,
+                                                        items?.value
+                                                    ),
+                                                    form.setFieldValue(
+                                                        'band_name',
+                                                        items?.label
+                                                    )}
+                                                } />
+                                        )}
+                                    </Field>
                                 </FormItem>
 
                                 <FormItem
