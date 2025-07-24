@@ -11,7 +11,7 @@ interface HealthPlanCategoryData {
     is_active: boolean;
     health_plan_code: string;
     description: string;
-    band: string;
+    band_name: string;
     user_id: string;
     user_email: string;
     user_phone_number: string;
@@ -79,7 +79,7 @@ const SingleViewHealthPlanCategory = () => {
                         </Tr>
                         <Tr>
                             <Td>Health Plan Category Band</Td>
-                            <Td>{healthPlanCategoryData[0].band}</Td>
+                            <Td>{healthPlanCategoryData[0].band_name}</Td>
                         </Tr>
                         <Tr>
                             <Td>Health Plan Category Code</Td>
