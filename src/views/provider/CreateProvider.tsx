@@ -93,25 +93,19 @@ const CreateProvider = () => {
 
         const data = await useCreateProvider(values)
 
-        if (data?.data) {
+        if (data) {
             setTimeout(() => {
+                 setSubmitting(false)
+               }, 3000)
               if (data?.status ==='success'){
-                setSuccessMessage(data.message)
+                    setSuccessMessage(data.message)
+                    resetForm()
               }
-                setSubmitting(false)
-                resetForm()
-            }, 3000)
+              else if (data?.status ==='failed'){
+                   setErrorMessage(data.message)
+               }
 
-        }
-
-        else if (data?.status ==='failed'){
-          setTimeout(() => {
-              setErrorMessage(data.message)
-              setSubmitting(false)
-              resetForm()
-          }, 3000)
-          setErrorMessage(data.message)
-        }
+      }
 
     }
 
@@ -180,11 +174,11 @@ const CreateProvider = () => {
                       setSelectBand(bandOptions)
           }
       }
-    
+
             fetchData()
             fetchBand()
             // eslint-disable-next-line react-hooks/exhaustive-deps
-    
+
         }, [])
 
     return (
@@ -379,26 +373,18 @@ const CreateProvider = () => {
 
                                 <FormItem label="Band">
                                        <Field
-                                           name="band">
+                                           name="band_id">
                                            {({ field, form }: FieldProps<FormModel>) => (
                                                <Select
-                                                   field={field}
-                                                   form={form}
                                                    options={selectBand}
-                                                   value={selectBand?.filter(
-                                                       (items) =>
-                                                           items.value === values.band_id
-                                                   )}
-                                
+                                                   isMulti
+                                                   isSearchable={true}
+                                                   placeholder="Select Bands"
+
                                                    onChange={(items) =>{
+                                                    const selectedIds = items.map(option => option.value);
                                                        form.setFieldValue(
-                                                           field.name,
-                                                           items?.value
-                                                       ),
-                                                       form.setFieldValue(
-                                                           'band_name',
-                                                           items?.label
-                                                       )
+                                                           field.name,selectedIds );
                                                       }
                                                    } />
                                            )}
