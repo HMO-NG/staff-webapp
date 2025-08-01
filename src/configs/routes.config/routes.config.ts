@@ -241,6 +241,12 @@ export const protectedRoutes = [
     component: lazy(() => import('@/views/band/ViewBands')),
     authority: [],
    },
+   {
+    key: 'band.single.view',
+    path: 'band/view/:id',
+    component: lazy(() => import('@/views/band/singleViewBand')),
+    authority: [],
+   },
 
     // create nhia claims
     {
