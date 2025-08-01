@@ -20,12 +20,12 @@ import Card from '@/components/ui/Card'
 import { SingleValue } from "react-select";
 import Avatar from '@/components/ui/Avatar'
 import { FcImageFile } from 'react-icons/fc'
-import axios from 'axios';
 import useHealthPlan from '@/utils/customAuth/useHealthPlanAuth'
 import { healthPlan } from '@/utils/customAuth/useHealthPlanAuth'
 import type {PrivateEnrollee} from '@/utils/customAuth/usePrivatesAuth'
 import Alert from '@/components/ui/Alert'
 import Loading from '@/components/shared/Loading'
+import { useQuery } from '@tanstack/react-query'
 
 
 type FormModel = {
@@ -45,12 +45,30 @@ type Select_Type={
   label: string
    value: string
 }
+
+type linked_plan_Type={
+    label: string
+    value: string
+    band_id:string,
+    band_name:string,
+}
+
 type company_Select_Type={
   label: string
   value: string
   count:number
   number_of_enrollees:number
+  linked_plans?:linked_plan_Type[]
 }
+
+type company_Select_Type2={
+  id: string
+  company_name: string
+  count:number
+  number_of_enrollees:number
+  linked_plans:linked_plan_Type[]
+}
+
 const validationSchema = Yup.object().shape({
     first_name: Yup.string().required('Please enter enrollee first name'),
     last_name: Yup.string().required('Please enter enrollee last name'),
@@ -108,13 +126,7 @@ const sex = [
   { value: "M", label: "Male", color: '#5243AA' },
   { value: "F", label: "Female", color: '#0052CC' },
 ]
-const no_of_dependants = [
-  { value: "1", label: "1"},
-  { value: "2", label: "2" },
-  { value: "3", label: "3" },
-  { value: "4", label: "4" },
-  { value: "5", label: "5" },
-]
+
 const beneficiary_type_select = [
   { value: "individual", label: "Individual" },
   { value: "family", label: "Family"},
@@ -129,27 +141,28 @@ const EnrolleeEntryForm = () => {
          uploadDocumentsAndSaveInDBAuth}=useDouments()
   const { useGetHealthPlanAuth} = useHealthPlan()
   const navigate = useNavigate()
-  const location = useLocation();
-  const { getItem,setItem,removeItem } = useLocalStorage()
-  const [companieslist, setCompaniesList] = useState<company_Select_Type[]>([])
-  const [selectedCompany, setselectedCompany] = useState<company_Select_Type | null>(companieslist[0])
 
-  const [providerlist, setProviderList] = useState<Select_Type[]>([])
-  const [inputValue, setInputValue] = useState("");
+  const { getItem,setItem,removeItem } = useLocalStorage()
+
   const [beneficiary_types, setBeneficiary_types] = useState<Select_Type | null>(beneficiary_type_select[0])
-  const [selected_no_of_dependants, setselected_no_of_dependants] = useState<Select_Type | null>(no_of_dependants[0])
-  const [selectedProvider, setselectedProvider] = useState<Select_Type | null>(providerlist[0])
+
+  const [selectedProvider, setselectedProvider] = useState<Select_Type | null>()
   const [RegisteredEnrollee, setRegisteredEnrollee] = useState<PrivateEnrollee | undefined>()
-  const [plan_type, setPlan_type] = useState()
+
   const [open_add_dependants, setopen_add_dependants] = useState<boolean>(false)
   const [open_Enrollee_Profile, setopen_Enrollee_Profile] = useState<boolean>(false)
   const [files, setFiles] = useState<File[]>([]);
-  const [doc_name, setdoc_name] = useState("")
   const [is_upload_disabled, setis_upload_disabled] = useState<boolean>(true)
-  const [healthPlan, setHealthPlan] = useState<healthPlan[]>([])
-  const [limitEnrolleeMessage, setLimitEnrolleeMessage] = useState('')
-  const [showMaxEnrMessage, setShowMaxEnrMessage] = useState<boolean>(false)
+
   const [isLoading, setIsLoading] = useState(false)
+
+  const [shouldFetch, setShouldFetch] = useState(false);
+  const [fetchClient, setFetchClient] = useState(false);
+  const [fetchPlan, setFetchPlan] = useState(false);
+
+  const [disablePlanSelect,setDisablePlanSelect]=useState(true);
+
+  const [availablePlans, setAvailablePlans] = useState<linked_plan_Type[]>([])
 
 
   function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
@@ -249,41 +262,7 @@ const EnrolleeEntryForm = () => {
             }
 
         }
-          const getCompanies = async () => {
-            try {
-                const response = await useGetCompanyAuth() // Fetch API data
 
-                if (
-                    response?.status === 'success' &&
-                    Array.isArray(response.data)
-                ) {
-                    // Extract only 'id' and 'company_name'
-                    const formattedCompanies = response.data.map((company) => ({
-                        value: company.id,
-                        label: company.company_name,
-                        count: company.count,
-                        number_of_enrollees: company.number_of_enrollees,
-                    }))
-
-                    setCompaniesList(formattedCompanies) // Update state with filtered data
-                } else {
-                    console.error('Invalid response format')
-                }
-            } catch (error) {
-                console.error('Failed to fetch companies', error)
-            }
-        }
-        const handle_change =(e:React.ChangeEvent<HTMLInputElement>)=>{
-          console.log('nameee',e.target.value)
-          setInputValue(e.target.value);
-        }
-        const handle_doc_name_change =(e:React.ChangeEvent<HTMLInputElement>)=>{
-          console.log('nameee',e.target.value)
-          setdoc_name(e.target.value);
-          if(doc_name.length >= 1){
-            setis_upload_disabled(false)
-          }
-        }
 
         const upload_to_cloudinary= async()=>{
           let enr_data =getItem('enrollee')
@@ -314,48 +293,55 @@ const EnrolleeEntryForm = () => {
             const remaining = maxAllowed - currentCount;
 
             if (remaining <= 0) {
-              setShowMaxEnrMessage(true);
-              setLimitEnrolleeMessage('You have reached the maximum number of enrollees.');
+              openNotification('You have reached the maximum number of enrollees.','warning')
             } else if (remaining === 1) {
-              setShowMaxEnrMessage(true);
-              setLimitEnrolleeMessage('Only 1 enrollee slot left.');
+              openNotification('Only 1 enrollee slot left.','warning')
             }else if (remaining === 2) {
-              setShowMaxEnrMessage(true);
-              setLimitEnrolleeMessage('Only 2 enrollee slot left.');
-            }  else {
-              setShowMaxEnrMessage(false);
+              openNotification('Only 2 enrollee slot left.','warning')
             }
 
         }
 
+      const {data:providerlist,isLoading:providerLoading}= useQuery({
+          queryKey:['provider'],
+          queryFn: ()=>usegetPrivateProviderAuth(),
+          enabled: shouldFetch,
+          select:(data) => data?.data || []
+        })
+      const {data:companieslist,isLoading:companyLoading}= useQuery({
+          queryKey:['client'],
+          queryFn: ()=>useGetCompanyAuth(),
+          enabled: fetchClient,
+          select: (data) => data?.data?.map((company:any)=>({
+                  value: company.id,
+                  label: company.company_name,
+                  count: company.count,
+                  number_of_enrollees: company.number_of_enrollees,
+                   linked_plans:company.linked_plans.map((plan:any)=>({
+                             value:plan.id,
+                             label:plan.plan_name,
+                             band_id:plan.band_id,
+                             band_name:plan.band_name,
+                   })),
+          })) || [],
+
+        })
+      const {data:healthPlan,isLoading:healthPlanLoading}= useQuery({
+          queryKey:['healthPlan'],
+          queryFn: ()=>useGetHealthPlanAuth({ sort: { order: 'asc' } }),
+          enabled: fetchPlan,
+          select:(data) => data?.data || []
+        })
+
           useEffect(() =>{
-            getCompanies()
-           const fetchData = async () => {
-            const response = await usegetPrivateProviderAuth()
-            if (response.data) {
-            const formattedProviders = response.data.map((provider:any) => ({
-              label: provider.name,
-              value: provider.id,
-            }))
-              setProviderList(formattedProviders)
 
-              const response2 = await useGetHealthPlanAuth({ sort: { order: 'asc' } })
-
-              if (response2.status === 'success' && response2.data) {
-                  setHealthPlan(response2.data)
-              }
-
-              if (response2.status === 'failed') {
-                  openNotification(response2.message, 'danger')
-              }
-            }}
             const ern_id = JSON.parse(sessionStorage.getItem('enrollee')|| '""')
             if(ern_id){
              fetchEnrollee(ern_id.enrollee_id)
               setBeneficiary_types({label:ern_id.beneficiary_type,value:ern_id.beneficiary_type})
             }
 
-        fetchData()
+        // fetchData()
 
 
           },[])
@@ -420,15 +406,7 @@ const EnrolleeEntryForm = () => {
 
     return (
       <>
-      {showMaxEnrMessage && (
-      <Alert
-         closable
-         showIcon
-         className="mb-5"
-      >
-               {limitEnrolleeMessage}
-       </Alert>
-        )}
+
 
         <div className="flex justify-end pb-5">
           <Button
@@ -769,31 +747,105 @@ const EnrolleeEntryForm = () => {
                           header="Plan Info"
                           footerBorder={false}
                           headerBorder={false} bordered>
-                          <div className='grid lg:grid-cols-4 md:grid-cols-4 gap-4'>
-                          <FormItem label="Beneficiary Type"
-                        asterisk
-                        invalid={errors.beneficiary_type && touched.beneficiary_type}
-                        errorMessage={errors.beneficiary_type}>
-                           <Field name="beneficiary_type">
-                                 {({ field, form }: FieldProps<FormModel>) => (
-
-                                   <Select
-                                     options={ beneficiary_type_select}
-                                     value={ beneficiary_types}
-                                     onChange={(option:SingleValue<Select_Type>) => {
+                    <div className='grid lg:grid-cols-4 md:grid-cols-4 gap-4'>
+                      {/* Beneficiary Type */}
+                        <FormItem label="Beneficiary Type"
+                                     asterisk
+                                     invalid={errors.beneficiary_type && touched.beneficiary_type}
+                                     errorMessage={errors.beneficiary_type}>
+                              <Field name="beneficiary_type">
+                                    {({ field, form }: FieldProps<FormModel>) => (
+                                      <Select
+                                        options={ beneficiary_type_select}
+                                        value={ beneficiary_types}
+                                        onChange={(option:SingleValue<Select_Type>) => {
                                        form.setFieldValue('beneficiary_type', option?.value);
                                        setBeneficiary_types(option)
                                        console.log('hddh',beneficiary_types)
 
-                                     }}
-                                     isSearchable={true}
-                                     placeholder="Select Beneficiary Type..."
-                                   />
-                                 )}
-                         </Field>
+                                        }}
+                                        isSearchable={true}
+                                        placeholder="Select Beneficiary Type..."
+                                      />
+                                    )}
+                              </Field>
+                        </FormItem>
+                      {/* Beneficiary Type */}
+
+                        <FormItem
+                               asterisk
+                               label="Select Client"
+                               invalid={
+                                   errors.company_id && touched.company_id
+                               }
+                               errorMessage={errors.company_id}>
+                              <Field name="company_id">
+                                  {({
+                                      field,
+                                      form,
+                                  }: FieldProps<FormModel>) => (
+                                      <Select
+                                          options={companieslist}
+                                          value={companieslist?.filter((item) =>
+                                            item.value === values.company_id
+                                          )}
+                                          onFocus={() => setFetchClient(true)}
+
+                                          onChange={(option:SingleValue<company_Select_Type>) =>{
+                                                    form.setFieldValue(field.name,option?.value);
+                                                checkEnrolleeMaxLimit({
+                                                        label:option?.label || '',
+                                                        value:option?.value || '',
+                                                        count:option?.count || 0,
+                                                        number_of_enrollees:option?.number_of_enrollees || 0
+                                                        })
+                                                        console.table(option)
+                                                        setAvailablePlans(option?.linked_plans || [])
+                                                        setDisablePlanSelect(false)
+                                          }}
+                                          isSearchable={true}
+                                          placeholder="Select Client..."
+
+                                      />
+                                  )}
+                              </Field>
                         </FormItem>
 
-                          <FormItem label="Provider"
+
+
+
+                      {/* Health Plan */}
+                        <FormItem
+                            label="Health Plan"
+                            invalid={errors.health_plan_id && touched.health_plan_id}
+                            errorMessage={errors.health_plan_id}>
+
+                            <Field
+                                name="health_plan_id">
+                                {({ field, form }: FieldProps<FormModel>) => (
+                                    <Select
+                                        // options={healthPlan}
+                                        options={availablePlans}
+                                        placeholder={"Select Health Plan"}
+                                        isDisabled={disablePlanSelect}
+                                        onFocus={() => setFetchPlan(true)}
+                                        // value={healthPlan?.filter((item) =>
+                                        //     item.value === values.health_plan_id
+                                        // )}
+                                        value={availablePlans?.filter((item) =>
+                                            item.value === values.health_plan_id
+                                        )}
+                                        onChange={(data) => {
+                                            form.setFieldValue(field.name,data?.value)
+                                        }}
+                                    />
+                                )}
+                            </Field>
+                        </FormItem>
+                      {/* Health Plan */}
+
+                      {/* Provider */}
+                        <FormItem label="Provider"
                           asterisk
                           invalid={
                             errors.provider_id &&
@@ -806,9 +858,11 @@ const EnrolleeEntryForm = () => {
                                    <Select
                                      options={providerlist}
                                      value={selectedProvider}
+                                    //  isDisabled={true}
+                                     onFocus={() => setShouldFetch(true)}
                                      onChange={(option:SingleValue<Select_Type>) => {
                                        // Update both Formik and any external state if needed
-                                       form.setFieldValue('provider_id', option?.value);
+                                       form.setFieldValue(field.name, option?.value);
                                        setselectedProvider(option)
                                      }}
 
@@ -818,75 +872,9 @@ const EnrolleeEntryForm = () => {
                                  )}
                          </Field>
                         </FormItem>
-                        <FormItem
-                                    asterisk
-                                    label="Select Client"
-                                    invalid={
-                                        errors.company_id &&
-                                        touched.company_id
-                                    }
-                                    errorMessage={errors.company_id}
-                                >
-                                    <Field name="company_id">
-                                        {({
-                                            field,
-                                            form,
-                                        }: FieldProps<FormModel>) => (
-                                            <Select
-                                                options={companieslist}
-                                                value={selectedCompany}
+                      {/* Provider */}
 
-                                                onChange={(option:SingleValue<company_Select_Type>) =>{
-                                                    form.setFieldValue(
-                                                        'company_id',
-                                                        option?.value);
-                                                        setselectedCompany({
-                                                        label:option?.label || '',
-                                                        value:option?.value || '',
-                                                        count:option?.count || 0,
-                                                        number_of_enrollees:option?.number_of_enrollees || 0
-                                                })
-                                                checkEnrolleeMaxLimit({
-                                                        label:option?.label || '',
-                                                        value:option?.value || '',
-                                                        count:option?.count || 0,
-                                                        number_of_enrollees:option?.number_of_enrollees || 0
-                                                })
-                                                }}
-                                                isSearchable={true}
-                                                placeholder="Select Client..."
-
-                                            />
-                                        )}
-                                    </Field>
-                        </FormItem>
-                        <FormItem
-                            label="Health Plan"
-                            invalid={errors.health_plan_id && touched.health_plan_id}
-                            errorMessage={errors.health_plan_id}>
-
-                            <Field
-
-                                name="health_plan_id">
-                                {({ field, form }: FieldProps<FormModel>) => (
-
-                                    <Select
-                                        options={healthPlan}
-                                        placeholder={"Select Health Plan Name"}
-                                        value={healthPlan.filter((item) =>
-                                            item.value === values.health_plan_id
-                                        )}
-                                        onChange={(data) => {
-                                            form.setFieldValue(
-                                                field.name,
-                                                data?.value
-                                            )
-                                        }}
-                                    />
-                                )}
-                            </Field>
-                            </FormItem>
-                        </div>
+                    </div>
                          </Card>
                         {/* Plan Info */}
 
@@ -1221,6 +1209,7 @@ const EnrolleeEntryForm = () => {
                                            <Select
                                              options={providerlist}
                                              value={selectedProvider}
+                                             onFocus={() => setShouldFetch(true)}
                                              onChange={(option:SingleValue<Select_Type>) => {
 
                                                form.setFieldValue(`provider_id`, option?.value);
@@ -1246,7 +1235,8 @@ const EnrolleeEntryForm = () => {
                                     <Select
                                         options={healthPlan}
                                         placeholder={"Select Health Plan Name"}
-                                        value={healthPlan.filter((item) =>
+                                        onFocus={() => setFetchPlan(true)}
+                                        value={healthPlan?.filter((item) =>
                                             item.value === values.health_plan_id
                                         )}
                                         onChange={(data) => {
