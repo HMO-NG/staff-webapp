@@ -52,7 +52,7 @@ const navigationConfig: NavigationTree[] = [
         key: 'band-title',
         path: '',
         title: 'Band Menu',
-        translateKey: 'nav.provider.create',
+        translateKey: 'nav.band.create',
         icon: 'singleMenu',
         type: NAV_ITEM_TYPE_COLLAPSE,
         authority: [],
@@ -60,7 +60,7 @@ const navigationConfig: NavigationTree[] = [
             {
                 key: 'band.create',
                 path: '/band/create',
-                title: 'Add Provider',
+                title: 'Add Band',
                 translateKey: 'nav.band.create',
                 icon: 'singleMenu',
                 type: NAV_ITEM_TYPE_ITEM,
