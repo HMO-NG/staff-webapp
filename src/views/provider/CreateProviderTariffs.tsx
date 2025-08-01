@@ -247,7 +247,6 @@ const CreateTariff=()=>{
 
                             {/* description */}
                             <FormItem label="Description"
-                            asterisk
                             invalid={errors.description && touched.description}
                             errorMessage={errors.description}>
                                 <Field
@@ -262,7 +261,6 @@ const CreateTariff=()=>{
 
                            {/* hcpcs_code */}
                             <FormItem label="HCPCS Code"
-                            asterisk
                             invalid={errors.hcpcs_code && touched.hcpcs_code}
                             errorMessage={errors.hcpcs_code}>
                                 <Field
@@ -277,7 +275,6 @@ const CreateTariff=()=>{
 
                             {/* is_surgical */}
                             <FormItem
-                             asterisk
                              label="is_surgical?"
                              invalid={errors.is_surgical && touched.is_surgical}
                              errorMessage={errors.is_surgical}
@@ -306,7 +303,6 @@ const CreateTariff=()=>{
 
                             {/* patient_type */}
                             <FormItem
-                             asterisk
                              label="Select Patient Type"
                              invalid={errors.patient_type && touched.patient_type}
                              errorMessage={errors.patient_type}
@@ -335,7 +331,6 @@ const CreateTariff=()=>{
 
                             {/* category */}
                             <FormItem label="Category"
-                            asterisk
                             invalid={errors.category && touched.category}
                             errorMessage={errors.category}>
                                 <Field
@@ -350,7 +345,6 @@ const CreateTariff=()=>{
 
                             {/* service_type */}
                             <FormItem
-                             asterisk
                              label="Select service type"
                              invalid={errors.service_type && touched.service_type}
                              errorMessage={errors.service_type}
