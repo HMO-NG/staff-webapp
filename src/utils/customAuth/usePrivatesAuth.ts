@@ -37,7 +37,10 @@ export type PrivateCompany={
   }[]
   linked_plans:{
     id: string,
-    plan_name: string,}[]
+    plan_name: string,
+    band_id:string,
+    band_name:string,
+  }[]
   count:number
 }
 type EnrolleeMedicalData={
@@ -126,6 +129,11 @@ export const defaultPrivateEnrollee: PrivateEnrollee = {
   enrolled_by: '',
   created_at: '',
 };
+export type ProviderSelectType = {
+  value: string;
+  label: string;
+  linked_bands: { id: string; band_name: string }[];
+}
 
 
 function usePrivates() {
@@ -178,7 +186,8 @@ function usePrivates() {
                         number_of_enrollees:items.number_of_enrollees,
                         is_active:items.is_active,
                         count:items.count,
-                        enrolled_by:items.enrolled_by
+                        enrolled_by:items.enrolled_by,
+                        linked_plans:items.linked_plans,
                       }
                   }),
                   status: 'success'
@@ -426,7 +435,7 @@ function usePrivates() {
   }
   const usegetPrivateProviderAuth = async (): Promise<{
     message: string,
-    data?:[],
+    data?:ProviderSelectType[],
     status: Status
 }> => {
 
@@ -435,14 +444,7 @@ function usePrivates() {
         const response = await getPrivateProviderService();
         return {
             message: response.data.message,
-            data: response.data.data.map((items: any) => {
-                return {
-                  id:items.id,
-                  name:items.name,
-
-
-                }
-            }),
+            data: response.data.data,
             status: 'success'
 
         }
@@ -466,7 +468,6 @@ const usegetSinglePrivateEnrolleeAuth = async (id:string): Promise<{
   try {
 
       const response = await getSinglePrivateEnrolleeService(id);
-      // const { provider_name, company_name, ...enrolleeData } = response.data.data;
       return {
           message: response.data.message,
           data: response.data.data,
