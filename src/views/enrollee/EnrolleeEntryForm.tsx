@@ -61,13 +61,12 @@ type company_Select_Type={
   linked_plans?:linked_plan_Type[]
 }
 
-type company_Select_Type2={
-  id: string
-  company_name: string
-  count:number
-  number_of_enrollees:number
-  linked_plans:linked_plan_Type[]
+type provider_Select_Type={
+  value: string
+  label: string
+  linked_bands: { id: string; band_name: string }[]
 }
+
 
 const validationSchema = Yup.object().shape({
     first_name: Yup.string().required('Please enter enrollee first name'),
@@ -152,17 +151,20 @@ const EnrolleeEntryForm = () => {
   const [open_add_dependants, setopen_add_dependants] = useState<boolean>(false)
   const [open_Enrollee_Profile, setopen_Enrollee_Profile] = useState<boolean>(false)
   const [files, setFiles] = useState<File[]>([]);
-  const [is_upload_disabled, setis_upload_disabled] = useState<boolean>(true)
+  const [passport, setPassport] = useState<File[]>([]);
 
   const [isLoading, setIsLoading] = useState(false)
 
-  const [shouldFetch, setShouldFetch] = useState(false);
-  const [fetchClient, setFetchClient] = useState(false);
-  const [fetchPlan, setFetchPlan] = useState(false);
+  const [shouldFetch, setShouldFetch] = useState<boolean>(false);
+  const [fetchClient, setFetchClient] = useState<boolean>(false);
+  const [fetchPlan, setFetchPlan] = useState<boolean>(false);
 
   const [disablePlanSelect,setDisablePlanSelect]=useState(true);
+  const [selectedPlan,setSelectedPlan]=useState('');
 
   const [availablePlans, setAvailablePlans] = useState<linked_plan_Type[]>([])
+  const [availableProviders, setAvailableProviders] = useState<provider_Select_Type[]>([])
+  const maxUpload = 1
 
 
   function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
@@ -204,6 +206,7 @@ const EnrolleeEntryForm = () => {
 
               const response = await OnboardIndividualPrivateEnrolleesAuth(data)
               console.log(data)
+              upload_to_cloudinary(passport,response?.data.linked_to_user)
 
               setItem('enrollee',response?.data)
               sessionStorage.setItem("enrollee", JSON.stringify(response?.data));
@@ -249,6 +252,7 @@ const EnrolleeEntryForm = () => {
 
             const response = await createPrivateEnrolleeDependantsAuth(ern_id.enrollee_id,data)
             console.log(data)
+            upload_to_cloudinary(passport,response?.data.linked_to_user)
 
             if (response) {
                 setTimeout(() => {
@@ -264,13 +268,14 @@ const EnrolleeEntryForm = () => {
         }
 
 
-        const upload_to_cloudinary= async()=>{
+        const upload_to_cloudinary= async(fileData:File[],userId:string)=>{
           let enr_data =getItem('enrollee')
           let user_data = getItem('user')
                 const formData = new FormData();
-                      formData.append('file', files[0]);
+                      formData.append('file', fileData[0]);
                       formData.append('user_type', 'enrollee');
-                      formData.append('user_id', enr_data.linked_to_user || '');
+                      //the user id of the enrollee from 'user' table
+                      formData.append('user_id', userId|| '');
                       formData.append('created_by', user_data)
 
           const upload_response= await uploadDocumentsAndSaveInDBAuth(formData)
@@ -278,9 +283,11 @@ const EnrolleeEntryForm = () => {
                   openNotification(upload_response.message,'success')
                   setIsLoading(false)
                   setFiles([])
+                  return true
                 }else if (upload_response.status === 'failed'){
                   openNotification(upload_response.message,'danger')
                   setIsLoading(false)
+                  return false
                 }
 
         }
@@ -302,11 +309,48 @@ const EnrolleeEntryForm = () => {
 
         }
 
+        const sortProviders=(band_id:string)=>{
+            const matchingProviders = providerlist?.filter((provider: any) =>
+               provider.linked_bands?.some((band: any) => band.id === band_id)
+             );
+
+            console.log(matchingProviders);
+            setAvailableProviders(matchingProviders || [])
+
+        }
+
+        const beforeUpload = (files: FileList | null, fileList: File[]) => {
+        let valid: string | boolean = true
+
+        const allowedFileType = ['image/jpeg', 'image/png']
+        const maxFileSize = 500000
+
+        if (fileList.length >= maxUpload) {
+            return `You can only upload ${maxUpload} file(s)`
+        }
+
+        if (files) {
+            for (const f of files) {
+                if (!allowedFileType.includes(f.type)) {
+                    valid = 'Please upload a .jpeg or .png file!'
+                }
+
+                if (f.size >= maxFileSize) {
+                    valid = 'Upload image cannot more then 500kb!'
+                }
+            }
+        }
+
+        return valid
+    }
+
+
       const {data:providerlist,isLoading:providerLoading}= useQuery({
           queryKey:['provider'],
           queryFn: ()=>usegetPrivateProviderAuth(),
           enabled: shouldFetch,
-          select:(data) => data?.data || []
+          select:(data) => data?.data || [],
+
         })
       const {data:companieslist,isLoading:companyLoading}= useQuery({
           queryKey:['client'],
@@ -345,6 +389,13 @@ const EnrolleeEntryForm = () => {
 
 
           },[])
+      useEffect(() =>{
+          if (providerlist && selectedPlan) {
+            sortProviders(selectedPlan);
+            setselectedProvider(null);
+          }
+
+          },[providerlist,selectedPlan])
 
 
 
@@ -524,7 +575,8 @@ const EnrolleeEntryForm = () => {
                                                    variant="twoTone"
                                                    type="button"
                                                    size="sm" onClick={()=>{
-                                                    upload_to_cloudinary()
+                                                    let enr_data =getItem('enrollee')
+                                                    upload_to_cloudinary(files,enr_data.linked_to_user || '')
                                                    }}>Upload</Button>
 
 
@@ -617,18 +669,26 @@ const EnrolleeEntryForm = () => {
                          </div>
 
                          <div className='grid lg:grid-cols-5 md:grid-cols-3 gap-4'>
-                        {/* <FormItem label="Passport Photograph"
+                        <FormItem label="Passport Photograph"
                         asterisk
                         invalid={errors.passport_url && touched.passport_url}
                         errorMessage={errors.passport_url}>
-                            <Field
-                                type="file"
-                                autoComplete="off"
-                                name="passport_url"
-                                placeholder="Enter passport url"
-                                component={Input}
-                            />
-                        </FormItem> */}
+                         <Upload
+                            beforeUpload={beforeUpload}
+                            uploadLimit={maxUpload}
+                            onChange={(file: File[], fileList: File[])=>{
+                                       let fileArray
+                                       file? fileArray = Array.from(file):fileArray = Array.from(fileList)
+                                       setPassport(fileArray);
+                                       console.log(fileArray);
+                                       console.log('tyyye',fileArray[0].type);
+                                     }}
+                        >
+                        <Button  icon={<HiCloudUpload />}>
+                             Upload Passport
+                        </Button>
+                        </Upload>
+                        </FormItem>
 
                         <FormItem
                                     asterisk
@@ -761,7 +821,6 @@ const EnrolleeEntryForm = () => {
                                         onChange={(option:SingleValue<Select_Type>) => {
                                        form.setFieldValue('beneficiary_type', option?.value);
                                        setBeneficiary_types(option)
-                                       console.log('hddh',beneficiary_types)
 
                                         }}
                                         isSearchable={true}
@@ -772,6 +831,7 @@ const EnrolleeEntryForm = () => {
                         </FormItem>
                       {/* Beneficiary Type */}
 
+                      {/* Client */}
                         <FormItem
                                asterisk
                                label="Select Client"
@@ -799,7 +859,6 @@ const EnrolleeEntryForm = () => {
                                                         count:option?.count || 0,
                                                         number_of_enrollees:option?.number_of_enrollees || 0
                                                         })
-                                                        console.table(option)
                                                         setAvailablePlans(option?.linked_plans || [])
                                                         setDisablePlanSelect(false)
                                           }}
@@ -810,9 +869,7 @@ const EnrolleeEntryForm = () => {
                                   )}
                               </Field>
                         </FormItem>
-
-
-
+                      {/* Client */}
 
                       {/* Health Plan */}
                         <FormItem
@@ -824,19 +881,16 @@ const EnrolleeEntryForm = () => {
                                 name="health_plan_id">
                                 {({ field, form }: FieldProps<FormModel>) => (
                                     <Select
-                                        // options={healthPlan}
                                         options={availablePlans}
                                         placeholder={"Select Health Plan"}
                                         isDisabled={disablePlanSelect}
-                                        onFocus={() => setFetchPlan(true)}
-                                        // value={healthPlan?.filter((item) =>
-                                        //     item.value === values.health_plan_id
-                                        // )}
+                                        onFocus={() => {setFetchPlan(true),setShouldFetch(true)} }
                                         value={availablePlans?.filter((item) =>
                                             item.value === values.health_plan_id
                                         )}
                                         onChange={(data) => {
                                             form.setFieldValue(field.name,data?.value)
+                                            setSelectedPlan(data?.band_id || '');
                                         }}
                                     />
                                 )}
@@ -856,14 +910,15 @@ const EnrolleeEntryForm = () => {
                                  {({ field, form }: FieldProps<FormModel>) => (
 
                                    <Select
-                                     options={providerlist}
+                                     options={availableProviders}
                                      value={selectedProvider}
-                                    //  isDisabled={true}
-                                     onFocus={() => setShouldFetch(true)}
+                                     isClearable={true}
+                                    //  onFocus={() => setShouldFetch(true)}
                                      onChange={(option:SingleValue<Select_Type>) => {
                                        // Update both Formik and any external state if needed
                                        form.setFieldValue(field.name, option?.value);
                                        setselectedProvider(option)
+
                                      }}
 
                                      isSearchable={true}
@@ -1098,15 +1153,22 @@ const EnrolleeEntryForm = () => {
 
                                  <div className='grid lg:grid-cols-5 md:grid-cols-3 gap-4'>
                                 <FormItem label="Passport Photograph"
-                                asterisk
->
-                                    <Field
-                                        type="file"
-                                        autoComplete="off"
-                                        name="passport_url"
-                                        placeholder="Enter passport url"
-                                        component={Input}
-                                    />
+                                      asterisk
+                                      invalid={errors.passport_url && touched.passport_url}
+                                      errorMessage={errors.passport_url}>
+                                       <Upload
+                                          beforeUpload={beforeUpload}
+                                          uploadLimit={maxUpload}
+                                          onChange={(file: File[], fileList: File[])=>{
+                                                     let fileArray
+                                                     file? fileArray = Array.from(file):fileArray = Array.from(fileList)
+                                                     setPassport(fileArray);
+                                                   }}
+                                      >
+                                      <Button  icon={<HiCloudUpload />}>
+                                           Upload Passport
+                                      </Button>
+                                     </Upload>
                                 </FormItem>
 
                                 <FormItem
