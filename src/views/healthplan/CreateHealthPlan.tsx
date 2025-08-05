@@ -12,6 +12,8 @@ import type { FieldProps } from 'formik'
 import useHealthPlan, { PlanCategory } from '@/utils/customAuth/useHealthPlanAuth'
 import { useLocalStorage } from '@/utils/localStorage'
 import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import useBandAuth from '@/utils/customAuth/useBandAuth'
 
 
 
@@ -56,8 +58,6 @@ const planValidationSchema = Yup.object().shape({
     plan_name: Yup.string().required('plan name required'),
     plan_category: Yup.string().required('plan category required'),
     plan_type: Yup.string().required('plan type required'),
-    allow_dependent: Yup.boolean().required('required'),
-    max_dependant: Yup.number().required('maximum dependants required'),
     plan_age_limit: Yup.number().required('age limit required'),
     plan_cost: Yup.number().required('plan cost required'),
 })
@@ -68,10 +68,12 @@ const CreatePlan = () => {
     const [errorMessage, setErrorMessage] = useTimeOutMessage()
     const [successMessage, setSuccessMessage] = useTimeOutMessage()
 
-    const [planCategoryData, setPlanCategoryData] = useState<PlanCategory[]>()
     const [isDependantAllowed,setIsDependantAllowed]=useState<boolean>(false)
+    const [fetchBand, setFetchBand] = useState<boolean>(false);
+    const [fetchCategory, setFetchCategory] = useState<boolean>(false);
 
     const { useCreateHealthPlanAuth, useGetHealthPlanCategoryAuth } = useHealthPlan()
+    const {useGetBandAuth,} = useBandAuth()
 
     const { getItem } = useLocalStorage()
 
@@ -88,7 +90,6 @@ const CreatePlan = () => {
 
         const response = await useCreateHealthPlanAuth(values)
 
-        // alert(JSON.stringify(response, null, 2))
 
         if (response.status === 'success') {
             setSuccessMessage(response.message)
@@ -103,16 +104,24 @@ const CreatePlan = () => {
 
     }
 
+    const {data:selectBand,isLoading:bandLoading}= useQuery({
+              queryKey:['band'],
+              queryFn: ()=>useGetBandAuth(),
+              enabled: fetchBand,
+              select: (data) => data?.data?.map((band: any) => ({
+                      label: band.name,
+                      value: band.id
+                  })) || [],
+    })
+    const {data:planCategoryData,isLoading:planCategoryLoading}= useQuery({
+              queryKey:['category'],
+              queryFn: ()=> useGetHealthPlanCategoryAuth(),
+              enabled: fetchCategory,
+              select: (data) => data?.data || [],
+    })
+
 
     useEffect(() => {
-        const fetchData = async () => {
-            const response = await useGetHealthPlanCategoryAuth()
-            if (response.status === 'success') {
-                setPlanCategoryData(response.data)
-            }
-        }
-
-        fetchData()
         // eslint-disable-next-line react-hooks/exhaustive-deps
 
     }, [])
@@ -157,6 +166,7 @@ const CreatePlan = () => {
                         max_dependant: '',
                         plan_age_limit: '',
                         plan_cost: '',
+                        band_id:'',
                     }}
                     validationSchema={planValidationSchema}
 
@@ -196,6 +206,7 @@ const CreatePlan = () => {
                                             <Select
                                                 field={field}
                                                 form={form}
+                                                onFocus={() => setFetchCategory(true)}
                                                 options={planCategoryData}
                                                 value={planCategoryData?.filter(
                                                     (items) =>
@@ -306,6 +317,26 @@ const CreatePlan = () => {
                                         component={Input}
                                     />
                                 </FormItem>
+
+                                {/* Band */}
+                                <FormItem label="Band">
+                                    <Field
+                                        name="band_id">
+                                        {({ field, form }: FieldProps<FormModel>) => (
+                                            <Select
+                                                field={field}
+                                                form={form}
+                                                options={selectBand}
+                                                onFocus={() => setFetchBand(true)}
+                                                value={selectBand?.filter(
+                                                    (items) =>
+                                                        items.value === values.band_id
+                                                )}
+
+                                                onChange={(items) =>form.setFieldValue(field.name,items?.value)} />
+                                        )}
+                                    </Field>
+                               </FormItem>
                                 <FormItem>
                                     <Button variant="solid" type="submit"
                                         loading={isSubmitting}>
