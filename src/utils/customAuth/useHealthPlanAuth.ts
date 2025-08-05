@@ -41,6 +41,8 @@ export type healthPlan = {
     health_plan_category_code: string,
     health_plan_category_band: string,
     user_id: string,
+    band_id: string,
+    band_name: string,
     entered_by: string,
     disabled_plan:boolean
 }
@@ -155,6 +157,8 @@ function useHealthPlan() {
                         health_plan_category_name: i.health_plan_category_name,
                         health_plan_category_code: i.health_plan_category_code,
                         health_plan_category_band: i.health_plan_category_band,
+                        band_id: i.band_id,
+                        band_name: i.band_name,
                         user_id: i.user_id,
                         entered_by: i.entered_by
                     }
