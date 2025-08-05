@@ -185,14 +185,6 @@ const ViewPlanCategory = () => {
                 )
             },
             {
-                header: 'Code',
-                accessorKey: 'health_plan_code',
-            },
-            {
-                header: 'Band',
-                accessorKey: 'band_name',
-            },
-            {
                 header: 'Entered by',
                 accessorKey: 'entered_by',
             },
