@@ -38,6 +38,8 @@ type HealthPlan = {
     plan_cost: string
     created_at: string
     user_id: string
+    band_id: string
+    band_name: string
     entered_by: string
     disabled_plan: boolean
 }
@@ -73,7 +75,6 @@ const allowDependent = [
 const ViewHealthPlan = () => {
     const {
         useViewHealthPlanAuth,
-        useCreateHealthPlanAuth,
         useUpdateHealthPlanAuth,
         useUpdateHealthPlanStatusAuth,
         useGetAttachedBenefitByHealthPlanIdAuth,
@@ -113,6 +114,8 @@ const ViewHealthPlan = () => {
         max_dependant: string
         plan_age_limit: string
         plan_cost: string
+        band_id: string
+        band_name: string
         created_at: string
         entered_by: string
     }>({
@@ -124,6 +127,8 @@ const ViewHealthPlan = () => {
         max_dependant: '',
         plan_age_limit: '',
         plan_cost: '',
+        band_id: '',
+        band_name: '',
         created_at: '',
         entered_by: '',
     })
@@ -229,6 +234,8 @@ const ViewHealthPlan = () => {
                     max_dependant: cellProps.row.original.max_dependant,
                     plan_age_limit: cellProps.row.original.plan_age_limit,
                     plan_cost: cellProps.row.original.plan_cost,
+                    band_id: cellProps.row.original.band_id,
+                    band_name: cellProps.row.original.band_name,
                     created_at: cellProps.row.original.created_at,
                     entered_by: cellProps.row.original.entered_by,
                 })
@@ -313,6 +320,10 @@ const ViewHealthPlan = () => {
             {
                 header: 'Max. Dependent',
                 accessorKey: 'max_dependant',
+            },
+            {
+                header: 'Band',
+                accessorKey: 'band_name',
             },
             {
                 header: 'Entered by',
@@ -618,7 +629,7 @@ const ViewHealthPlan = () => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>plan_category</td>
+                                            <td>Plan Category</td>
                                             <td>
                                                 <b>
                                                     {
@@ -628,13 +639,13 @@ const ViewHealthPlan = () => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>plan_type</td>
+                                            <td>Plan Type</td>
                                             <td>
                                                 <b>{healthplan.plan_type}</b>
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>allow_dependent</td>
+                                            <td>Allow Dependent</td>
                                             <td>
                                                 <b>
                                                     {healthplan.allow_dependent
@@ -644,7 +655,7 @@ const ViewHealthPlan = () => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>max_dependant</td>
+                                            <td>Max Dependant</td>
                                             <td>
                                                 <b>
                                                     {healthplan.max_dependant}
@@ -652,7 +663,7 @@ const ViewHealthPlan = () => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>plan_age_limit</td>
+                                            <td>Plan Age Limit</td>
                                             <td>
                                                 <b>
                                                     {healthplan.plan_age_limit}
@@ -660,13 +671,19 @@ const ViewHealthPlan = () => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>plan_cos</td>
+                                            <td>Plan Cost</td>
                                             <td>
                                                 <b>{healthplan.plan_cost}</b>
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>entered_by</td>
+                                            <td>Band</td>
+                                            <td>
+                                                <b>{healthplan.band_name}</b>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Entered By</td>
                                             <td>
                                                 <b>{healthplan.entered_by}</b>
                                             </td>
