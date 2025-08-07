@@ -129,6 +129,7 @@ const sex = [
 const beneficiary_type_select = [
   { value: "individual", label: "Individual" },
   { value: "family", label: "Family"},
+  { value: "both", label: "Both"},
 ]
 
 const EnrolleeEntryForm = () => {
