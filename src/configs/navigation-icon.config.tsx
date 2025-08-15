@@ -8,7 +8,8 @@ import {
 
 } from 'react-icons/hi'
 import { RiGitRepositoryPrivateFill,RiGitRepositoryPrivateLine } from "react-icons/ri";
-import { MdOutlineHealthAndSafety } from "react-icons/md";
+import { MdOutlineHealthAndSafety,MdBusiness } from "react-icons/md";
+import { FaBuilding ,FaUsers} from 'react-icons/fa';
 export type NavigationIcons = Record<string, JSX.Element>
 
 const navigationIcon: NavigationIcons = {
@@ -19,7 +20,10 @@ const navigationIcon: NavigationIcons = {
     groupCollapseMenu: <HiOutlineColorSwatch />,
     hiIdentification:<HiIdentification/>,
     RiGitRepositoryPrivateLine:<RiGitRepositoryPrivateLine />,
-    MdOutlineHealthAndSafety:<MdOutlineHealthAndSafety />
+    MdOutlineHealthAndSafety:<MdOutlineHealthAndSafety />,
+    FaBuilding:<FaBuilding />,
+    FaUsers:<FaUsers />,
+    MdBusiness:<MdBusiness />,
 }
 
 export default navigationIcon
