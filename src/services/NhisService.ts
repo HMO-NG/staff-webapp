@@ -54,3 +54,34 @@ export async function createNhiaClaimService(data: any) {
         data
     })
 }
+
+export async function getAllNhiaClaimService() {
+    return ApiService.fetchData<{
+        message: string,
+        data: any,
+        total: number,
+    }>({
+        url: '/nhis/claim/getall',
+        method: 'get',
+    })
+}
+
+export async function getNhiaClaimByIDService(id:string) {
+    return ApiService.fetchData<{
+        message: string,
+        data: any,
+    }>({
+        url: `/nhis/claim/${id}`,
+        method: 'get',
+    })
+}
+
+export async function updateNhiaClaimByIDService(id: string,data: any) {
+    return ApiService.fetchData<{
+        message: string,
+    }>({
+        url: `/nhis/claim/${id}`,
+        method: 'post',
+        data
+    })
+}
