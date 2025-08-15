@@ -27,6 +27,7 @@ import Tag from '@/components/ui/Tag'
 import {ProviderServiceTariffType} from '@/utils/customAuth/useProviderAuth'
 import useTimeOutMessage from '@/utils/hooks/useTimeOutMessage'
 import Alert from '@/components/ui/Alert'
+import { useQuery } from '@tanstack/react-query'
 
 type FormModel = {
     input: string
@@ -104,9 +105,7 @@ const PreAuthorization = () => {
     const {useGetPrivateEnrolleeAuth}=usePrivates()
     const { getItem,setItem,removeItem } = useLocalStorage()
 
-    const [providerlist, setProviderList] = useState<Select_Type[]>([])
-    const [Enroleelist, setEnroleelist] = useState<Select_Type[]>([])
-    const [selectedProvider, setselectedProvider] =useState<Select_Type | null>(providerlist[0])
+    const [selectedProvider, setselectedProvider] =useState<Select_Type | null>()
 
     const [files, setFiles] = useState<File[]>([])
     const [uploadedUrls, setUploadedUrls] = useState<related_doc_type[]>([]);
@@ -232,7 +231,6 @@ const PreAuthorization = () => {
 
         const serviceQuantity = Number(items.quantity) || 0;
 
-        // for nhia service price quantity
         if (items.item_price) {
             const servicePrice = parseFloat(items.item_price) || 0;
             total_price = (servicePrice * serviceQuantity).toFixed(2);
@@ -324,35 +322,23 @@ const PreAuthorization = () => {
 
     }
    }
-    useEffect(() => {
-        const fetchData = async () => {
-            const response = await usegetPrivateProviderAuth()
-            if (response.data) {
-                const formattedProviders = response.data.map(
-                    (provider: any) => ({
-                        label: provider.name,
-                        value: provider.id,
-                    }),
-                )
-                setProviderList(formattedProviders)
 
-            }
-            const response2 = await useGetPrivateEnrolleeAuth()
-            if (response2.data) {
-              const formattedEnrolees = response2.data.map(
+   const {data:providerlist,isLoading}= useQuery({
+       queryKey: ['provider'],
+       queryFn: ()=>usegetPrivateProviderAuth(),
+       select: (data) => data?.data || null
+    });
+   const {data:Enroleelist,isLoading:isLoadingEnrollee}= useQuery({
+       queryKey: ['enrollee'],
+       queryFn: ()=>useGetPrivateEnrolleeAuth(),
+       select: (data) => data?.data?.map(
                   (i: any) => ({
                       label: (`${i.first_name}`+" "+`${i.last_name}`),
                       value: i.id,
                   }),
               )
-              setEnroleelist(formattedEnrolees)
+    });
 
-          }
-
-        }
-
-        fetchData()
-    }, [])
     return (
         <>
             <div className="grid grid-cols-3 gap-4">
@@ -396,7 +382,7 @@ const PreAuthorization = () => {
                                                         form,
                                                     }: FieldProps<FormModel>) => (
                                                         <Select
-                                                            options={providerlist}
+                                                            options={providerlist as Select_Type[]}
                                                             value={selectedProvider}
                                                             onChange={(option: SingleValue<Select_Type>,) => {
                                                                 // Update both Formik and any external state if needed
@@ -506,7 +492,7 @@ const PreAuthorization = () => {
                                                                 options={SelectserviceTariffData }
                                                                 isClearable={true}
                                                                 onChange={(option: SingleValue<Select_Tariff_Type>) => {
-                                                                    setInputTariffServices({...defaultTariff,
+                                                                    setInputTariffServices({...defaultTariff,...InputTariffServices,
                                                                       id:`${option?.value}`,
                                                                       item_price:`${option?.item_price}`,
                                                                       item_name:`${option?.label}`})
