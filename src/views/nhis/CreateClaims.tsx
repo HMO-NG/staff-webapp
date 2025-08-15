@@ -18,6 +18,7 @@ import DatePicker from '@/components/ui/DatePicker'
 import useNhia from '@/utils/customAuth/useNhisAuth';
 import Notification from '@/components/ui/Notification'
 import toast from '@/components/ui/toast'
+import {tariffType,defaultService,defaultDrug} from '@/utils/customAuth/useNhisAuth';
 
 type NHIAEnrollee = {
     // value as id
@@ -76,13 +77,15 @@ type FormModel = {
     upload: File[];
 }
 
+
+
 const nhiaDrugDeduction = [
-    { value: "0", label: "0%" },
-    { value: "10", label: "10%" },
-    { value: "20", label: "20%" },
-    { value: "30", label: "30%" },
-    { value: "40", label: "40%" },
-    { value: "50", label: "50%" },
+    { value: 0, label: "0%" },
+    { value: 10, label: "10%" },
+    { value: 20, label: "20%" },
+    { value: 30, label: "30%" },
+    { value: 40, label: "40%" },
+    { value: 50, label: "50%" },
 ]
 
 const validationSchema = Yup.object().shape({
@@ -120,24 +123,12 @@ const CreateClaims = () => {
     // the nhia drugs from database
     const [nhiaDrugsFromDb, setNhiaDrugsFromDb] = useState<NHIADrugs[]>([])
     // the nhia service tarrif info
-    const [serviceInfo, setServiceInfo] = useState<{
-        service_name?: string,
-        service_price?: string,
-        service_qty?: string,
-        amt_claimed?: string,
-        comment?: string
-    }>({})
+    const [serviceInfo, setServiceInfo] = useState<tariffType>(defaultService)
     // the drug service tarrif info
-    const [drugServiceInfo, setDrugServiceInfo] = useState<{
-        drug_name?: string,
-        drug_price?: string,
-        drug_qty?: string,
-        percentage?: string,
-        comment?: string
-    }>({})
+    const [drugServiceInfo, setDrugServiceInfo] = useState<tariffType>(defaultDrug)
 
     // an array to store the info from nhia service and drug
-    const [combindedServices, setCombindedServices] = useState<{}[]>([])
+    const [combindedServices, setCombindedServices] = useState<tariffType[]>([])
 
     // network auth
     const { useGetAllNhiaEnrolleeAuth } = useEnrollee()
@@ -237,6 +228,23 @@ const CreateClaims = () => {
             setSubmitting(false)
         }
     }
+    function calculateIndividualTotals(items: tariffType) {
+           let total_price = 0;
+
+           if(items.percentage){
+                     const percentage = Number(items.percentage) || 0;
+                     const discountedPrice = items.price * (1 - percentage / 100);
+                     total_price = discountedPrice * items.quantity;
+           }else{
+                     const serviceQuantity = Number(items.quantity) || 0;
+                     total_price = (items.price * serviceQuantity);
+            }
+
+           return {
+             ...items,
+             total_price,
+           };
+}
 
     function storeTheServices() {
 
@@ -245,7 +253,7 @@ const CreateClaims = () => {
             return;
         }
 
-        if (!serviceInfo.service_qty) {
+        if (!serviceInfo.quantity) {
             openNotification('select the NHIA tarrif quantity', 'warning')
             return;
         }
@@ -255,7 +263,8 @@ const CreateClaims = () => {
             return;
         }
 
-        setCombindedServices((prevServiceAmount) => [...prevServiceAmount, serviceInfo])
+        const NewTariff=calculateIndividualTotals(serviceInfo)
+        setCombindedServices((prevServiceAmount) => [...prevServiceAmount, NewTariff])
 
         // setServiceInfo({})
     }
@@ -267,12 +276,13 @@ const CreateClaims = () => {
             return;
         }
 
-        if (!drugServiceInfo.drug_qty) {
+        if (!drugServiceInfo.quantity) {
             openNotification('select the NHIA drug quantity', 'warning')
             return;
         }
 
-        setCombindedServices((prevServiceAmount) => [...prevServiceAmount, drugServiceInfo])
+        const NewTariff=calculateIndividualTotals(drugServiceInfo)
+        setCombindedServices((prevServiceAmount) => [...prevServiceAmount, NewTariff])
 
         // setDrugServiceInfo({})
 
@@ -280,27 +290,22 @@ const CreateClaims = () => {
 
     function calculateTotals(items: any) {
         let totalServicePrice = 0;
-        let totalDrugPrice = 0;
 
         for (const item of items) {
-            const serviceQuantity = Number(item.service_qty) || 0;
-            const drugQuantity = Number(item.drug_qty) || 0;
+            const Quantity = Number(item.quantity) || 0;
 
-            // for nhia service price quantity
-            if (item.service_price) {
-                const servicePrice = Number(item.service_price) || 0;
-                totalServicePrice += servicePrice * serviceQuantity;
 
-                // for nhia service price quantity
-            } else if (item.drug_price) {
-                const drugPrice = Number(item.drug_price) || 0;
-                const percentage = Number(item.percentage) || 0;
-                const discountedPrice = drugPrice * (1 - percentage / 100);
-                totalDrugPrice += discountedPrice * drugQuantity;
-            }
+                const servicePrice = Number(item.price) || 0;
+                if(item.percentage){
+                     const percentage = Number(item.percentage) || 0;
+                     const discountedPrice = servicePrice * (1 - percentage / 100);
+                     totalServicePrice += discountedPrice * Quantity;
+                }else{
+                      totalServicePrice += servicePrice * Quantity;
+                }
         }
 
-        return (totalServicePrice + totalDrugPrice);
+        return totalServicePrice
     }
 
     useEffect(() => {
@@ -314,7 +319,7 @@ const CreateClaims = () => {
 
                 if (response?.status === 'success') {
                     setLoading(false)
-                    setData(response?.data)
+                    setData(response?.data as NHIAEnrollee[])
                 }
 
                 if (response?.status === 'failed') {
@@ -409,7 +414,7 @@ const CreateClaims = () => {
                     options={data}
                     onChange={(k) => {
                         setLoading(false)
-                        setSelectedValue(k!)
+                        setSelectedValue(k! as NHIAEnrollee)
 
                     }}
                     components={{ Option, SingleValue }}
@@ -636,7 +641,7 @@ const CreateClaims = () => {
 
                                                                             placeholder="select appropriate service"
                                                                             onChange={(items) => {
-                                                                                setServiceInfo({ ...serviceInfo, service_name: items?.label, service_price: items?.price })
+                                                                                setServiceInfo({ ...serviceInfo,...defaultService,id:String(items?.value), service_name: items?.label || '', price: Number(items?.price)})
                                                                             }
                                                                             }
                                                                         />
@@ -658,7 +663,7 @@ const CreateClaims = () => {
                                                                     {({ field, form }: FieldProps<FormModel>) => (
                                                                         <Input
                                                                             disabled={true}
-                                                                            value={serviceInfo.service_price}
+                                                                            value={serviceInfo.price}
                                                                         />
                                                                     )}
 
@@ -681,7 +686,7 @@ const CreateClaims = () => {
                                                                             type='number'
 
                                                                             onChange={(i) => {
-                                                                                setServiceInfo({ ...serviceInfo, service_qty: i.target.value })
+                                                                                setServiceInfo({ ...serviceInfo, quantity: Number(i.target.value) })
                                                                             }
                                                                             }
                                                                         />
@@ -705,7 +710,7 @@ const CreateClaims = () => {
                                                                         <Input
                                                                             type='number'
                                                                             onChange={(i) =>
-                                                                                setServiceInfo({ ...serviceInfo, amt_claimed: i.target.value })
+                                                                                setServiceInfo({ ...serviceInfo, amt_claimed: Number(i.target.value) })
                                                                             }
                                                                         />
                                                                     )}
@@ -774,7 +779,7 @@ const CreateClaims = () => {
                                                                                 placeholder="select appropriate drug"
                                                                                 onChange={(items) => {
                                                                                     if (items?.price) {
-                                                                                        setDrugServiceInfo({ ...drugServiceInfo, drug_name: items?.label, drug_price: items?.price })
+                                                                                        setDrugServiceInfo({ ...drugServiceInfo,...defaultDrug,id:String(items?.value), drug_name: items?.label, price: Number(items?.price) })
                                                                                     }
 
                                                                                 }
@@ -797,7 +802,7 @@ const CreateClaims = () => {
                                                                         {({ field, form }: FieldProps<FormModel>) => (
                                                                             <Input
                                                                                 disabled={true}
-                                                                                value={drugServiceInfo.drug_price}
+                                                                                value={drugServiceInfo.price}
                                                                             />
                                                                         )}
 
@@ -819,7 +824,7 @@ const CreateClaims = () => {
                                                                             <Input
                                                                                 type='number'
                                                                                 onChange={(i) =>
-                                                                                    setDrugServiceInfo({ ...drugServiceInfo, drug_qty: i.target.value })
+                                                                                    setDrugServiceInfo({ ...drugServiceInfo, quantity: Number(i.target.value) })
                                                                                 }
                                                                             />
                                                                         )}
@@ -844,7 +849,7 @@ const CreateClaims = () => {
                                                                                 options={nhiaDrugDeduction}
                                                                                 placeholder="select appropriate service"
                                                                                 onChange={(items) => {
-                                                                                    setDrugServiceInfo({ ...drugServiceInfo, percentage: items.value })
+                                                                                    setDrugServiceInfo({ ...drugServiceInfo, percentage: Number(items?.value) })
 
 
                                                                                 }
@@ -942,12 +947,11 @@ const CreateClaims = () => {
                                                 <>
                                                     {items.service_name && <p>Name:<b>{items.service_name}</b></p>}
                                                     {items.drug_name && <p>Name: <b>{items.drug_name}</b></p>}
-                                                    {items.service_price && <p>Service Price: <b>{items.service_price}</b></p>}
-                                                    {items.drug_price && <p>Drug Price: <b>{items.drug_price}</b></p>}
-                                                    {items.service_qty && <p>Quantity: <b>{items.service_qty}</b></p>}
-                                                    {items.drug_qty && <p>Quantity: <b>{items.drug_qty}</b></p>}
+                                                    {items.price && <p>Price: <b>{items.price}</b></p>}
+                                                    {items.quantity && <p>Quantity: <b>{items.quantity}</b></p>}
                                                     {items.percentage && <p>percentage: <b>{items.percentage}</b>%</p>}
-                                                    {items.percentage && <p>deducted amount: <b>{(items.percentage * items.drug_price) / 100}</b></p>}
+                                                    {items.percentage && <p>deducted amount: <b>{(items.percentage * items.price) / 100}</b></p>}
+                                                    {items.total_price && <p>Total Price: <b>{items.total_price}</b></p>}
                                                     <p>comment: <b>{items.comment}</b></p>
                                                     <br />
                                                     <br />
