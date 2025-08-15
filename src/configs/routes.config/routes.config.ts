@@ -255,6 +255,13 @@ export const protectedRoutes = [
         component: lazy(() => import('@/views/nhis/CreateClaims')),
         authority: [],
     },
+    // view nhia claims
+    {
+        key: 'nhia.claims.view',
+        path: 'nhia/claims/view',
+        component: lazy(() => import('@/views/nhis/ViewClaims')),
+        authority: [],
+    },
     // manage users/users permission
     {
         key: 'manage.user',
