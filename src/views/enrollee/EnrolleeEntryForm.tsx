@@ -151,7 +151,9 @@ const EnrolleeEntryForm = () => {
 
   const [open_add_dependants, setopen_add_dependants] = useState<boolean>(false)
   const [open_Enrollee_Profile, setopen_Enrollee_Profile] = useState<boolean>(false)
+  // State for file uploads
   const [files, setFiles] = useState<File[]>([]);
+  // State for passport uploads
   const [passport, setPassport] = useState<File[]>([]);
 
   const [isLoading, setIsLoading] = useState(false)
@@ -207,7 +209,10 @@ const EnrolleeEntryForm = () => {
 
               const response = await OnboardIndividualPrivateEnrolleesAuth(data)
               console.log(data)
-              upload_to_cloudinary(passport,response?.data.linked_to_user)
+              //Upload passport photograph to cloudinary
+              if(passport.length > 0){
+                 upload_to_cloudinary(passport,response?.data.linked_to_user,'passport')
+              }
 
               setItem('enrollee',response?.data)
               sessionStorage.setItem("enrollee", JSON.stringify(response?.data));
@@ -253,7 +258,10 @@ const EnrolleeEntryForm = () => {
 
             const response = await createPrivateEnrolleeDependantsAuth(ern_id.enrollee_id,data)
             console.log(data)
-            upload_to_cloudinary(passport,response?.data.linked_to_user)
+            //Upload passport photograph to cloudinary
+            if(passport.length > 0){
+               upload_to_cloudinary(passport,response?.data.linked_to_user,'passport')
+            }
 
             if (response) {
                 setTimeout(() => {
@@ -269,7 +277,7 @@ const EnrolleeEntryForm = () => {
         }
 
 
-        const upload_to_cloudinary= async(fileData:File[],userId:string)=>{
+        const upload_to_cloudinary= async(fileData:File[],userId:string,uploadType:'passport'|'others')=>{
           let enr_data =getItem('enrollee')
           let user_data = getItem('user')
                 const formData = new FormData();
@@ -283,13 +291,17 @@ const EnrolleeEntryForm = () => {
           if (upload_response.status === 'success'){
                   openNotification(upload_response.message,'success')
                   setIsLoading(false)
-                  setFiles([])
+                  if(uploadType === 'passport'){
+                    setPassport([])
+                  }else if(uploadType === 'others'){
+                    setFiles([])
+                  }
                   return true
-                }else if (upload_response.status === 'failed'){
+          }else if (upload_response.status === 'failed'){
                   openNotification(upload_response.message,'danger')
                   setIsLoading(false)
                   return false
-                }
+          }
 
         }
         const checkEnrolleeMaxLimit=(comp:any)=>{
@@ -577,7 +589,7 @@ const EnrolleeEntryForm = () => {
                                                    type="button"
                                                    size="sm" onClick={()=>{
                                                     let enr_data =getItem('enrollee')
-                                                    upload_to_cloudinary(files,enr_data.linked_to_user || '')
+                                                    upload_to_cloudinary(files,enr_data.linked_to_user || '','others')
                                                    }}>Upload</Button>
 
 
@@ -685,7 +697,9 @@ const EnrolleeEntryForm = () => {
                                        console.log('tyyye',fileArray[0].type);
                                      }}
                         >
-                        <Button  icon={<HiCloudUpload />}>
+                        <Button
+                          type="button"
+                          icon={<HiCloudUpload />}>
                              Upload Passport
                         </Button>
                         </Upload>
@@ -1166,7 +1180,9 @@ const EnrolleeEntryForm = () => {
                                                      setPassport(fileArray);
                                                    }}
                                       >
-                                      <Button  icon={<HiCloudUpload />}>
+                                      <Button
+                                        type="button"
+                                        icon={<HiCloudUpload />}>
                                            Upload Passport
                                       </Button>
                                      </Upload>
