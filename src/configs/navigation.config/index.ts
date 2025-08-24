@@ -295,18 +295,6 @@ const navigationConfig: NavigationTree[] = [
                 type: NAV_ITEM_TYPE_COLLAPSE,
                 authority: [],
                 subMenu: [
-                    // create claim
-                    // {
-                    //     key: 'private.claim.create',
-                    //     path: '/privates/claim/create',
-                    //     title: 'Create Claim',
-                    //     translateKey: 'private.claim.create',
-                    //     icon: 'groupCollapseMenu',
-                    //     type: NAV_ITEM_TYPE_ITEM,
-                    //     authority: [],
-                    //     subMenu: []
-                    // },
-
                     //view claims
                     {
                         key: 'private.claim.viewall',
