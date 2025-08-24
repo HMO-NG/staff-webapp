@@ -9,8 +9,9 @@ type Status = 'success' | 'failed'
 
 type NHIAEnrollee = {
     // value as id
-    id: string,
     // label as policy_id
+    value: string,
+    label: string
     policy_id: string,
     relationship: string,
     surname: string,
@@ -78,7 +79,7 @@ function useEnrollee() {
 
     const useGetAllNhiaEnrolleeAuth = async (data: any): Promise<{
         message: string,
-        data?: NHIAEnrollee,
+        data?: NHIAEnrollee[],
         status: Status
     } | undefined> => {
         try {
