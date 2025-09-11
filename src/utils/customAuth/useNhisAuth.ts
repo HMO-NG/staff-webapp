@@ -7,6 +7,7 @@ import {
     getAllNhiaClaimService,
     getNhiaClaimByIDService,
     updateNhiaClaimByIDService,
+    BulkUploadNHIAServiceTariffService,
 } from "@/services/NhisService"
 import { retry } from "@reduxjs/toolkit/dist/query"
 import { ErrorMessage } from "formik"
@@ -311,6 +312,31 @@ function useNhia() {
 
         }
     }
+
+
+   const BulkUploadNHIASeriviceTariffAuth = async (user_id:string,data: any): Promise<{
+         data?: any,
+         message: string,
+         status: Status
+   }> => {
+     try {
+         const response = await BulkUploadNHIAServiceTariffService(user_id,data)
+
+       return {
+           message: response.data.message,
+           data: response.data.data,
+           status: "success"
+       }
+
+     } catch (error: any) {
+
+    return {
+      status: 'failed',
+      message: error?.response?.data?.message || error.toString(),
+   }
+
+  }
+}
     return {
         useCreateNhiaServiceTarrifAuth,
         useCreateNhiaServiceBulkUpload,
@@ -321,6 +347,7 @@ function useNhia() {
         getAllNhiaClaimAuth,
         getNhiaClaimByIdAuth,
         useupdateNhiaClaimByIdAuth,
+        BulkUploadNHIASeriviceTariffAuth,
     }
 
 }

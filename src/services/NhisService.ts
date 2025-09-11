@@ -85,3 +85,15 @@ export async function updateNhiaClaimByIDService(id: string,data: any) {
         data
     })
 }
+
+export async function BulkUploadNHIAServiceTariffService(user_id:string,data: any) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+  }>({
+      url: `/nhis/service/tarrif/upload/${user_id}`,
+      method: 'post',
+      data
+  })
+}
+
