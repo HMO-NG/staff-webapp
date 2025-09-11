@@ -49,3 +49,14 @@ export async function OnboardNhiaCompanyEnrolleesService(data: any) {
   })
 }
 
+export async function BulkUploadNhiaEnrolleeService(data: any) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+      total: number
+  }>({
+      url: '/nhis/enrollee/upload',
+      method: 'post',
+      data
+  })
+}

@@ -49,7 +49,7 @@ const validationSchema = Yup.object().shape({
 
 const CreateNHIAEnrollee = () => {
 
-    const { useCreateNhiaEnrolleeAuth } = useEnrollee()
+    const { useCreateNhiaEnrolleeAuth,BulkUploadNhiaEnrolleeAuth, } = useEnrollee()
     const { useHealthCheckAuth } = useHealthCheck()
 
     function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
@@ -123,28 +123,21 @@ const CreateNHIAEnrollee = () => {
 
             if (!file[0]) return;
 
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const data = e.target?.result;
-                if (data) {
-                    const workbook = XLSX.read(data, { type: 'binary' });
-                    const sheetName = workbook.SheetNames[0];
-                    const sheet = workbook.Sheets[sheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(sheet);
+            const formData = new FormData();
+                          formData.append('file', file[0]);
 
-                    const BATCH_SIZE = 10;
-                    let response;
 
-                    for (let i = 0; i < jsonData.length; i += BATCH_SIZE) {
-                        const batch = jsonData.slice(i, i + BATCH_SIZE);
-                        response = await Promise.all(batch.map((item: any) => useCreateNhiaEnrolleeAuth(item)));
-                        console.log(response)
-                        openNotification(`uploading batch ${i / BATCH_SIZE + 1}`, 'info')
-                    }
+            const response =await BulkUploadNhiaEnrolleeAuth(formData)
+                if(response){
 
+                if(response.status === 'success') {
+                    openNotification(response.message, 'success')
                 }
-            };
-            reader.readAsBinaryString(file[0]);
+                else {
+                    openNotification(response.message, 'danger')
+                }
+            }
+
 
         } catch (error: any) {
 

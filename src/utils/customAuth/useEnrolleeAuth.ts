@@ -2,7 +2,8 @@ import {
     createNhiaEnrolleeService,
     getAllAndSearchNhiaEnrolleeService,
     getAllNhiaEnrolleeService,
-    OnboardNhiaCompanyEnrolleesService
+    OnboardNhiaCompanyEnrolleesService,
+    BulkUploadNhiaEnrolleeService,
 } from "@/services/EntrolleeService"
 
 type Status = 'success' | 'failed'
@@ -138,13 +139,37 @@ function useEnrollee() {
           }
       }
   }
+    const BulkUploadNhiaEnrolleeAuth = async (data: any): Promise<{
+      data?: any,
+      message: string,
+      status: Status
+    }> => {
+      try {
+          const response = await BulkUploadNhiaEnrolleeService(data)
+
+        return {
+            message: response.data.message,
+            data: response.data.data,
+            status: "success"
+        }
+
+      } catch (error: any) {
+
+        return {
+          status: 'failed',
+          message: error?.response?.data?.message || error.toString(),
+      }
+
+      }
+    }
 
 
     return {
         useCreateNhiaEnrolleeAuth,
         getAllAndSearchNhiaEnrolleeAuth,
         useGetAllNhiaEnrolleeAuth,
-        OnboardNhiaCompanyEnrolleesAuth
+        OnboardNhiaCompanyEnrolleesAuth,
+        BulkUploadNhiaEnrolleeAuth,
     }
 
 }
