@@ -47,6 +47,38 @@ const navigationConfig: NavigationTree[] = [
             },
         ]
     },
+
+    {
+        key: 'band-title',
+        path: '',
+        title: 'Band Menu',
+        translateKey: 'nav.band.create',
+        icon: 'singleMenu',
+        type: NAV_ITEM_TYPE_COLLAPSE,
+        authority: [],
+        subMenu: [
+            {
+                key: 'band.create',
+                path: '/band/create',
+                title: 'Add Band',
+                translateKey: 'nav.band.create',
+                icon: 'singleMenu',
+                type: NAV_ITEM_TYPE_ITEM,
+                authority: [],
+                subMenu: []
+            },
+            {
+                key: 'band.view',
+                path: '/band/view',
+                title: 'View Band',
+                translateKey: 'nav.band.view',
+                icon: 'groupCollapseMenu',
+                type: NAV_ITEM_TYPE_ITEM,
+                authority: [],
+                subMenu: []
+            },
+        ]
+    },
     // health plan
     {
         key: 'healthplan-title',
@@ -129,7 +161,7 @@ const navigationConfig: NavigationTree[] = [
             {
                 key: 'enrollee-nhia',
                 path: '',
-                title: 'Create Enrollees',
+                title: 'Enrollees',
                 translateKey: 'enrollee-nhia',
                 icon: 'hiIdentification',
                 type: NAV_ITEM_TYPE_COLLAPSE,
@@ -141,6 +173,17 @@ const navigationConfig: NavigationTree[] = [
                         path: 'nhia/enrollee/view',
                         title: 'View NHIA Enrollees',
                         translateKey: 'nhia.enrollee.create',
+                        icon: 'groupCollapseMenu',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [],
+                        subMenu: []
+                    },
+                    // create private enrollees
+                    {
+                        key: 'private.employee.view',
+                        path: 'privates/enrollee/view',
+                        title: 'view Private Employees',
+                        translateKey: 'private.employee.view',
                         icon: 'groupCollapseMenu',
                         type: NAV_ITEM_TYPE_ITEM,
                         authority: [],
@@ -162,11 +205,11 @@ const navigationConfig: NavigationTree[] = [
       authority: [],
       subMenu: [
           {
-              key: 'private',
+              key: 'clients',
               path: '',
-              title: 'Privates',
-              translateKey: 'enrollee-private',
-              icon: 'RiGitRepositoryPrivateLine',
+              title: 'Clients',
+              translateKey: 'clients',
+              icon: 'MdBusiness',
               type: NAV_ITEM_TYPE_COLLAPSE,
               authority: [],
               subMenu: [
@@ -183,32 +226,92 @@ const navigationConfig: NavigationTree[] = [
                     authority: [],
                     subMenu: []
                 },
-                 // create private enrollees
-                 {
-                   key: 'private.employee',
-                   path: 'privates/enrollee/onboard',
-                   title: 'Onboard Private Employees',
-                   translateKey: 'private.employee',
-                   icon: 'groupCollapseMenu',
-                   type: NAV_ITEM_TYPE_ITEM,
-                   authority: [],
-                   subMenu: []
-                },
-                {
-                  key: 'private.employee.view',
-                  path: 'privates/enrollee/view',
-                  title: 'view Private Employees',
-                  translateKey: 'private.employee.view',
-                  icon: 'groupCollapseMenu',
-                  type: NAV_ITEM_TYPE_ITEM,
-                  authority: [],
-                  subMenu: []
-               },
 
             ]
           },
       ],
-  },
+     },
+      // authorisation
+      {
+        key: 'authorization-title',
+        path: '',
+        title: '',
+        translateKey: '',
+        icon: '',
+        type: NAV_ITEM_TYPE_TITLE,
+        authority: [],
+        subMenu: [
+            {
+                key: 'authorization-create',
+                path: '',
+                title: 'PreAuthorization',
+                translateKey: 'PreAuthorization-create',
+                icon: 'hiIdentification',
+                type: NAV_ITEM_TYPE_COLLAPSE,
+                authority: [],
+                subMenu: [
+                    // create PA
+                    {
+                        key: 'provider.PA.create',
+                        path: '/provider/preauthorization/create',
+                        title: 'Create New PreAuthorization',
+                        translateKey: 'provider.PA.create',
+                        icon: 'groupCollapseMenu',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [],
+                        subMenu: []
+                    },
+                    // create PA
+                    {
+                      key: 'provider.PA.view',
+                      path: '/provider/preauthorization',
+                      title: 'View PA Requests',
+                      translateKey: 'provider.PA.view',
+                      icon: 'groupCollapseMenu',
+                      type: NAV_ITEM_TYPE_ITEM,
+                      authority: [],
+                      subMenu: []
+                    },
+
+              ]
+            },
+        ],
+      },
+       {
+        key: 'private-claim-title',
+        path: '',
+        title: '',
+        translateKey: '',
+        icon: '',
+        type: NAV_ITEM_TYPE_TITLE,
+        authority: [],
+        subMenu: [
+            {
+                key: 'private-claims',
+                path: '',
+                title: 'Claims',
+                translateKey: 'private-claims',
+                icon: 'hiIdentification',
+                type: NAV_ITEM_TYPE_COLLAPSE,
+                authority: [],
+                subMenu: [
+                    //view claims
+                    {
+                        key: 'private.claim.viewall',
+                        path: '/privates/claim/view',
+                        title: 'View Claims',
+                        translateKey: 'private.claim.view',
+                        icon: 'groupCollapseMenu',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [],
+                        subMenu: []
+                    },
+
+
+              ]
+            },
+        ],
+      },
 
     // nhis
     {

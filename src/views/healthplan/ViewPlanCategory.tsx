@@ -21,14 +21,16 @@ type PlanCategory = {
     name: '',
     description: '',
     band: '',
-    is_active: '',
+    is_active: boolean,
     user_id: '',
     entered_by: ''
 }
 
 const ViewPlanCategory = () => {
 
-    const { useViewHealthPlanCategoryAuth } = useHealthPlan()
+    const { useViewHealthPlanCategoryAuth,
+            useUpdateHealthPlanCategoryAuth,
+          } = useHealthPlan()
     const navigate = useNavigate()
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(false)
@@ -53,6 +55,28 @@ const ViewPlanCategory = () => {
             key: '',
         },
     })
+    const [editCategory,setEditCategory] = useState<{
+      id:string,
+      name:string,
+      description:string,
+      band:string,
+      user_id:string
+    }>({
+      id:'',
+      name:'',
+      description:'',
+      band:'',
+      user_id:''
+      })
+    const [categoryStatus, setCategoryStatus] = useState<{
+        id: string,
+        name: string,
+        is_active: boolean
+    }>({
+        id: '',
+        name: '',
+        is_active: false
+    })
 
     const inputRef = useRef(null)
 
@@ -61,11 +85,24 @@ const ViewPlanCategory = () => {
     const dropdownItems = [
         { key: 'view', name: 'View' },
         { key: 'edit', name: 'Edit' },
-        { key: 'delete', name: 'Delete' },
+        { key: 'status', name: 'Update Status' },
     ]
 
     const [editDialog, setEditDialog] = useState(false)
     const [statusDialog, setStatusDialog] = useState(false)
+
+    const fetchData = async () => {
+            setLoading(true)
+            const response = await useViewHealthPlanCategoryAuth(tableData)
+            if (response?.status === 'success') {
+                setData(response.data)
+                setLoading(false)
+                setTableData((prevData) => ({
+                    ...prevData,
+                    ...{ total: response.total[0]['count(*)'] },
+                }))
+            }
+        }
 
     const onDropdownClick = (e: SyntheticEvent) => {
         console.log('Dropdown Clicked', e)
@@ -97,9 +134,21 @@ const ViewPlanCategory = () => {
                 navigate('/healthplan/category/singleview', { state: { id } })
                 break;
             case 'edit':
+               setEditCategory({
+                              id:cellProps.row.original.id,
+                              name:cellProps.row.original.name,
+                              description:cellProps.row.original.description,
+                              band:cellProps.row.original.band,
+                              user_id:cellProps.row.original.user_id,})
                 setEditDialog(true)
                 break;
             case 'status':
+                setCategoryStatus({
+                              id:cellProps.row.original.id,
+                              name:cellProps.row.original.name,
+                              is_active:cellProps.row.original.is_active,
+                })
+
                 setStatusDialog(true)
                 break;
             // ... more cases
@@ -134,14 +183,6 @@ const ViewPlanCategory = () => {
                         }
                     </div>
                 )
-            },
-            {
-                header: 'Code',
-                accessorKey: 'health_plan_code',
-            },
-            {
-                header: 'Band',
-                accessorKey: 'band',
             },
             {
                 header: 'Entered by',
@@ -219,34 +260,38 @@ const ViewPlanCategory = () => {
         }
     }
 
-    const updateProvider = async (data: any) => {
-        const result = await useViewHealthPlanCategoryAuth(data)
-
-        setMessage(result.message)
+    const updateCategory = async (data: any) => {
+        const result = await useUpdateHealthPlanCategoryAuth(data.id,data)
 
         if (result.message) {
-            setTimeout(() => {
-                openNotification()
-            },
-                3000
-            )
+                if (result.status === 'success') {
+                fetchData()
+                setEditDialog(false)
+                setTimeout(() => {
+                  openNotification(result.message,'success')
+                }, 1000);
+                }else{
+                openNotification(result.message,'danger')
+                }
 
         }
 
 
     }
 
-    const toastNotification = (
-        <Notification title="Message">
-            {message}
-        </Notification>
-    )
+    function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
+    toast.push(
+        <Notification
+            title={notificationType.toString()}
+            type={notificationType}>
 
-    function openNotification() {
-        toast.push(toastNotification)
-    }
+            {msg}
+        </Notification>, {
+        placement: 'top-center'
+    })
+}
 
-    async function updateProviderStatus(providerId: string, data: any) {
+    async function updateCategoryStatus(id: string, data: any) {
 
         let status;
 
@@ -256,30 +301,25 @@ const ViewPlanCategory = () => {
             status = true
         }
 
-        data.is_active = status;
-
-        const response = await useUpdateProviderActivationStatus(providerId, data)
+        const response = await useUpdateHealthPlanCategoryAuth(id, {is_active:status})
 
         if (response) {
-            setStatusDialog(false)
-            window.location.reload();
+            if (response.status === 'success'){
+               openNotification('sucessfully updated Health plan category status','success')
+               setStatusDialog(false)
+               fetchData()
+            }else{
+              openNotification(response.message,'danger')
+
+            }
+
+
         }
 
     }
 
     useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true)
-            const response = await useViewHealthPlanCategoryAuth(tableData)
-            if (response?.status === 'success') {
-                setData(response.data)
-                setLoading(false)
-                setTableData((prevData) => ({
-                    ...prevData,
-                    ...{ total: response.total[0]['count(*)'] },
-                }))
-            }
-        }
+
         fetchData()
 
     }, [tableData.pageIndex, tableData.sort, tableData.pageSize, tableData.query, tableData.total])
@@ -344,26 +384,22 @@ const ViewPlanCategory = () => {
                     <div className="flex flex-col h-full justify-between">
 
 
-                        <h5 className="mb-4">Edit Provider</h5>
+                        <h5 className="mb-4">Edit Provider Category</h5>
                         <div className="max-h-96 overflow-y-auto">
 
                             <div className="prose dark:prose-invert mx-auto">
                                 <Formik
 
                                     initialValues={{
-                                        id: editProvider.id,
-                                        name: editProvider.name,
-                                        email: editProvider.email,
-                                        address: editProvider.address,
-                                        phone_number: editProvider.phone_number,
-                                        medical_director_name: editProvider.medical_director_name,
-                                        medical_director_phone_no: editProvider.medical_director_phone_no,
-                                        state: editProvider.state,
-                                        user_id: editProvider.user_id
+                                        id: editCategory?.id,
+                                        name: editCategory?.name,
+                                        description: editCategory?.description,
+                                        band: editCategory?.band,
+                                        user_id: editCategory?.user_id
 
                                     }}
                                     onSubmit={(values, { resetForm, setSubmitting }) => {
-                                        updateProvider(values)
+                                        updateCategory(values)
                                     }
                                     }
 
@@ -382,72 +418,29 @@ const ViewPlanCategory = () => {
                                                         component={Input}
                                                     />
                                                 </FormItem>
-                                                {/* Email */}
+                                                {/* Band */}
                                                 <FormItem
-                                                    label="Email"
+                                                    label="Band"
                                                 >
                                                     <Field
                                                         type="text"
                                                         autoComplete="off"
-                                                        name="email"
+                                                        name="band"
                                                         component={Input}
                                                     />
                                                 </FormItem>
-                                                {/* Address */}
+                                                {/* Description */}
                                                 <FormItem
-                                                    label="Address"
+                                                    label="Description"
                                                 >
                                                     <Field
                                                         type="text"
                                                         autoComplete="off"
-                                                        name="address"
+                                                        name="description"
                                                         component={Input}
                                                     />
                                                 </FormItem>
-                                                {/* phone number */}
-                                                <FormItem
-                                                    label="Phone Number"
-                                                >
-                                                    <Field
-                                                        type="text"
-                                                        autoComplete="off"
-                                                        name="phone_number"
-                                                        component={Input}
-                                                    />
-                                                </FormItem>
-                                                {/* Medical Director's Name */}
-                                                <FormItem
-                                                    label="Medical Director's Name"
-                                                >
-                                                    <Field
-                                                        type="text"
-                                                        autoComplete="off"
-                                                        name="medical_director_name"
-                                                        component={Input}
-                                                    />
-                                                </FormItem>
-                                                {/*medical_director_phone_no*/}
-                                                <FormItem
-                                                    label="Medical Director's Phone No."
-                                                >
-                                                    <Field
-                                                        type="text"
-                                                        autoComplete="off"
-                                                        name="medical_director_phone_no"
-                                                        component={Input}
-                                                    />
-                                                </FormItem>
-                                                {/* state */}
-                                                <FormItem
-                                                    label="State"
-                                                >
-                                                    <Field
-                                                        type="text"
-                                                        autoComplete="off"
-                                                        name="state"
-                                                        component={Input}
-                                                    />
-                                                </FormItem>
+
 
                                                 <FormItem>
                                                     <Button variant="solid" type="submit">
@@ -482,11 +475,11 @@ const ViewPlanCategory = () => {
                     shouldCloseOnEsc={false}
                 >
 
-                    <h5 className="mb-4">Set Provider Status</h5>
+                    <h5 className="mb-4">Set Category Status</h5>
                     <p>
-                        {providerStatus.is_active ?
-                            `Deactivate ${providerStatus.name}` :
-                            `Activate ${providerStatus.name}`
+                        {categoryStatus.is_active ?
+                            `Deactivate ${categoryStatus.name}` :
+                            `Activate ${categoryStatus.name}`
                         }
                     </p>
                     <div className="text-right mt-6">
@@ -497,7 +490,7 @@ const ViewPlanCategory = () => {
                         >
                             Cancel
                         </Button>
-                        <Button variant="solid" onClick={() => updateProviderStatus(providerStatus.id, providerStatus)}>
+                        <Button variant="solid" onClick={() => updateCategoryStatus(categoryStatus.id, categoryStatus)}>
                             Okay
                         </Button>
                     </div>

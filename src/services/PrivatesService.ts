@@ -19,6 +19,14 @@ export async function getCompanyService() {
       method: 'get',
   })
 }
+
+export async function getCompanyByIdService(id: string) {
+  return ApiService.fetchData<Response>({
+      url: `/privates/company/get/${id}`,
+      method: 'get',
+  })
+}
+
 export async function OnboardCompanyEnrolleesService(data: any) {
   return ApiService.fetchData<{
       message: string,
@@ -94,6 +102,19 @@ export async function createPrivateEnrolleeDependantsService(id: string,data:any
       data
   })
 }
+
+export async function updatePrivateEnrolleeService(id: string,data:any) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+      total: number
+  }>({
+      url: `/privates/enrollee/edit/${id}`,
+      method: 'put',
+      data
+  })
+}
+
 
 
 

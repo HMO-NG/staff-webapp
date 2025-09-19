@@ -91,87 +91,118 @@ export async function searchNHIAProviderByHCPIDService(data: any) {
     })
 }
 
-export async function CreateProviderServiceTariffService(data: any) {
+export async function CreateProviderTariffService(data: any) {
   return ApiService.fetchData<{
       message: string,
       data: any,
   }>({
-      url: '/provider/service/tariff/create',
+      url: '/provider/tariff/create',
       method: 'post',
       data
   })
 }
 
-export async function getProviderServiceTariffByIdfService(id: string) {
+export async function getProviderTariffByIdfService(id: string) {
   return ApiService.fetchData<{
       message: string,
       data: any,
       count:number
   }>({
-      url: `/provider/service/tariff/get/${id}`,
+      url: `/provider/tariff/get/${id}`,
       method: 'get',
   })
 }
 
-export async function getAllProviderServiceTariffService() {
+export async function getAllProviderTariffService() {
   return ApiService.fetchData<{
       message: string,
       data: any,
   }>({
-      url: '/provider/service/tariff/getall',
+      url: '/provider/tariff/getall',
       method: 'get',
   })
 }
 
-export async function getSingleProviderServiceTariffByIdService(id: string) {
+export async function getSingleProviderTariffByIdService(id: string) {
   return ApiService.fetchData<{
       message: string,
       data: any,
   }>({
-      url: `/provider/service/tariff/${id}`,
+      url: `/provider/tariff/${id}`,
       method: 'get',
   })
 }
 
-
-export async function CreateProviderDrugTariffService(data: any) {
+export async function CreatePreAuthorization(data: any) {
   return ApiService.fetchData<{
       message: string,
       data: any,
   }>({
-      url: '/provider/drug/tariff/create',
+      url: '/preauthorization/create',
       method: 'post',
       data
   })
 }
 
-export async function getProviderDrugTariffByIdfService(id: string) {
+export async function getAllpreauthorizationRequestService() {
   return ApiService.fetchData<{
       message: string,
       data: any,
-      count:number
   }>({
-      url: `/provider/drug/tariff/get/${id}`,
+      url: '/preauthorization/getall',
       method: 'get',
   })
 }
 
-export async function getAllProviderDrugTariffService() {
+export async function getSinglePreAuthorizationByIdService(id: string) {
   return ApiService.fetchData<{
       message: string,
       data: any,
   }>({
-      url: '/provider/drug/tariff/getall',
+      url: `/preauthorization/${id}`,
+      method: 'get',
+  })
+}
+export async function UpdatePreAuthorizationService(id:string,data: any) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+  }>({
+      url: `/preauthorization/update/${id}`,
+      method: 'put',
+      data
+  })
+}
+
+export async function getPreAuthorizationByPACodeService(PA_code:string) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+  }>({
+      url: `/preauthorization/get/pa/code/${PA_code}`,
       method: 'get',
   })
 }
 
-export async function getSingleProviderDrugTariffByIdService(id: string) {
+export async function updatePreAuthorizationByPACodeService(PA_code:string,data: any) {
   return ApiService.fetchData<{
       message: string,
       data: any,
   }>({
-      url: `/provider/drug/tariff/${id}`,
-      method: 'get',
+      url: `/preauthorization/update/code/${PA_code}`,
+      method: 'put',
+      data
+  })
+}
+
+
+export async function ProviderTariffBulkUpload(provider_id:string,data: any) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+  }>({
+      url: `/provider/tarriff/bulk/upload/${provider_id}`,
+      method: 'post',
+      data
   })
 }

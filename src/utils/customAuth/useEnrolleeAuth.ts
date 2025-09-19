@@ -2,15 +2,17 @@ import {
     createNhiaEnrolleeService,
     getAllAndSearchNhiaEnrolleeService,
     getAllNhiaEnrolleeService,
-    OnboardNhiaCompanyEnrolleesService
+    OnboardNhiaCompanyEnrolleesService,
+    BulkUploadNhiaEnrolleeService,
 } from "@/services/EntrolleeService"
 
 type Status = 'success' | 'failed'
 
 type NHIAEnrollee = {
     // value as id
-    id: string,
     // label as policy_id
+    value: string,
+    label: string
     policy_id: string,
     relationship: string,
     surname: string,
@@ -78,7 +80,7 @@ function useEnrollee() {
 
     const useGetAllNhiaEnrolleeAuth = async (data: any): Promise<{
         message: string,
-        data?: NHIAEnrollee,
+        data?: NHIAEnrollee[],
         status: Status
     } | undefined> => {
         try {
@@ -137,13 +139,37 @@ function useEnrollee() {
           }
       }
   }
+    const BulkUploadNhiaEnrolleeAuth = async (data: any): Promise<{
+      data?: any,
+      message: string,
+      status: Status
+    }> => {
+      try {
+          const response = await BulkUploadNhiaEnrolleeService(data)
+
+        return {
+            message: response.data.message,
+            data: response.data.data,
+            status: "success"
+        }
+
+      } catch (error: any) {
+
+        return {
+          status: 'failed',
+          message: error?.response?.data?.message || error.toString(),
+      }
+
+      }
+    }
 
 
     return {
         useCreateNhiaEnrolleeAuth,
         getAllAndSearchNhiaEnrolleeAuth,
         useGetAllNhiaEnrolleeAuth,
-        OnboardNhiaCompanyEnrolleesAuth
+        OnboardNhiaCompanyEnrolleesAuth,
+        BulkUploadNhiaEnrolleeAuth,
     }
 
 }

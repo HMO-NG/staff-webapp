@@ -3,7 +3,12 @@ import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import DataTable from '@/components/shared/DataTable'
 import { useNavigate } from 'react-router-dom'
-import type { ColumnDef, OnSortParam, CellContext, Row } from '@/components/shared/DataTable'
+import type {
+    ColumnDef,
+    OnSortParam,
+    CellContext,
+    Row,
+} from '@/components/shared/DataTable'
 import debounce from 'lodash/debounce'
 import Dropdown from '@/components/ui/Dropdown'
 import type { SyntheticEvent } from 'react'
@@ -12,24 +17,44 @@ import { FormItem, FormContainer } from '@/components/ui/Form'
 import { Field, Form, Formik } from 'formik'
 import toast from '@/components/ui/toast'
 import Notification from '@/components/ui/Notification'
-import useHealthPlan from '@/utils/customAuth/useHealthPlanAuth'
-import { HiPlus } from "react-icons/hi";
+import useBandAuth from '@/utils/customAuth/useBandAuth'
+import type {Band}from '@/utils/customAuth/useBandAuth'
+import {
+    HiPlus,
+    HiDocumentAdd,
+    HiOutlineDocumentDownload,
+} from 'react-icons/hi'
+import Tag from '@/components/ui/Tag'
+import Select from '@/components/ui/Select'
+import type { FieldProps } from 'formik'
+import { useQuery } from '@tanstack/react-query'
 
-type Benefits = {
-    id: string;
-    benefit_name: string;
-    sub_category: string,
-    category: string,
-    created_at: string,
-    user_id: string,
-    entered_by: string
+type FormModel = {
+  input: string
+  select: string
+  multipleSelect: string[]
+  date: Date | null
+  time: Date | null
+  singleCheckbox: boolean
+  multipleCheckbox: Array<string | number>
+  radio: string
+  switcher: boolean
+  segment: string[]
+  upload: File[]
 }
 
-const ViewBenefit = () => {
+const allowDependent = [
+    { value: true, label: "Yes", color: '#5243AA' },
+    { value: false, label: "No", color: '#0052CC' },
+]
 
-    const { useViewBenefitAuth } = useHealthPlan()
+const ViewBands = () => {
+    const {
+          useGetBandAuth,
+          useUpdateBandAuth
+    } = useBandAuth()
+
     const navigate = useNavigate()
-    const [data, setData] = useState([])
     const [loading, setLoading] = useState(false)
     const [selectedRows, setSelectedRows] = useState<string[]>([])
     const [message, setMessage] = useState('')
@@ -38,8 +63,8 @@ const ViewBenefit = () => {
         pageSize: number
         sort: {
             order: '' | 'asc' | 'desc'
-            key: string | number;
-        };
+            key: string | number
+        }
         query: string
         total: number
     }>({
@@ -52,46 +77,46 @@ const ViewBenefit = () => {
             key: '',
         },
     })
-    const [benefit_list, setBenefit_list] = useState<{
-      id: string;
-      benefit_name: string;
-      sub_category: string,
-      category: string,
-      entered_by: string
+    const [band, setBand] = useState<{
+
+        id: string
+        name: string
+        desciption:string
+        created_at: string
+        created_by: string
     }>({
-      id: "",
-      benefit_name: "",
-      sub_category: "",
-      category: "",
-      entered_by: ""
+        id: '',
+        name: '',
+        desciption:'',
+        created_at: '',
+        created_by: '',
+    })
 
-  })
+    const [editBand, setEditBand] = useState<{
+        id: string
+        name: string
+        desciption:string
+        created_at: string
+        created_by: string
+    }>({
+        id: '',
+        name: '',
+        desciption:'',
+        created_at: '',
+        created_by: '',
+    })
+    const [BandStatus, setBandStatus] = useState<{
+        id: string
+        is_active: boolean
+        name: string;
+    }>({
+        id: '',
+        is_active: false,
+        name: '',
+    })
 
-    const [editbenefit, setEditBenefit] = useState<
-        {
-          id: string;
-          benefit_name: string;
-          sub_category: string,
-          category: string,
-        }>({
-            id: "",
-            benefit_name: "",
-            sub_category: "",
-            category: "",
 
-        })
-    const [providerStatus, setProviderStatus] = useState<
-        {
-            id: string;
-            is_active: boolean,
-            user_id: string,
-            name: string,
-        }>({
-            id: "",
-            is_active: false,
-            user_id: "",
-            name: "",
-        })
+    const [attachedBenefits, setAttachedBenefits] = useState([])
 
     const inputRef = useRef(null)
 
@@ -128,47 +153,42 @@ const ViewBenefit = () => {
         debounceFn(e.target.value)
     }
 
-    const handleAction = async (cellProps: CellContext<Benefits, unknown>, key: any) => {
-
+    const handleAction = async (
+        cellProps: CellContext<Band, unknown>,
+        key: any,
+    ) => {
         switch (key) {
             case 'view':
-               setBenefit_list(
-                    {
-                        id: cellProps.row.original.id,
-                        benefit_name: cellProps.row.original.benefit_name,
-                        sub_category: cellProps.row.original.sub_category,
-                        category: cellProps.row.original.category,
-                        entered_by: cellProps.row.original.entered_by
-                    }
-                )
+                // setBand({
+                //     id: cellProps.row.original.id,
+                //     name: cellProps.row.original.name,
+                //     desciption:cellProps.row.original.description,
+                //     created_at: cellProps.row.original.created_at,
+                //     created_by: cellProps.row.original.created_by,
+                // })
 
-                setViewDialog(true)
-                break;
+                // setViewDialog(true)
+                navigate(`/band/view/${cellProps.row.original.id}`)
+                break
             case 'edit':
-
-            setEditBenefit(
-                    {
-                      id: cellProps.row.original.id,
-                      benefit_name: cellProps.row.original.benefit_name,
-                      sub_category: cellProps.row.original.sub_category,
-                      category: cellProps.row.original.category,
-
-                    }
-                )
+                setEditBand({
+                    id: cellProps.row.original.id,
+                    name: cellProps.row.original.name,
+                    desciption:cellProps.row.original.description,
+                    created_at: cellProps.row.original.created_at,
+                    created_by: cellProps.row.original.created_by,
+                })
                 setEditDialog(true)
-                break;
+                break
             case 'status':
-                setProviderStatus(
-                    {
-                        id: cellProps.row.original.id,
-                        is_active: cellProps.row.original.is_active,
-                        name: cellProps.row.original.name,
-                        user_id: cellProps.row.original.user_id,
-
-                    }
-                )
+                setBandStatus({
+                    id: cellProps.row.original.id,
+                    is_active: cellProps.row.original.is_active,
+                    name: cellProps.row.original.name,
+                })
                 setStatusDialog(true)
-                break;
+                break
+
             // ... more cases
             default:
             // Code to execute if expression doesn't match any case
@@ -179,33 +199,55 @@ const ViewBenefit = () => {
         console.log('selectedRows', selectedRows)
     }
 
-    const columns: ColumnDef<Benefits>[] = useMemo(() => (
-        [
+    const columns: ColumnDef<Band>[] = useMemo(
+        () => [
             {
-                header: 'Benefit Name',
-                accessorKey: 'benefit_name',
+                header: 'Name',
+                accessorKey: 'name',
             },
             {
-                header: 'Category',
-                accessorKey: 'category',
+                header: 'Description',
+                accessorKey: 'Description',
+            },
+
+            {
+                header: 'Created By',
+                accessorKey: 'created_by',
             },
             {
-                header: 'Entered by',
-                accessorKey: 'entered_by',
+                header: 'Created At',
+                accessorKey: 'created_at',
+            },
+            {
+              header: 'Status',
+              cell: (props) => (
+                  <div>
+                      {props.cell.row.original.is_active ? (
+                          <Tag className="bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-100 border-0">
+                              Active
+                          </Tag>
+                      ) : (
+                          <Tag className="text-red-600 bg-red-100 dark:text-red-100 dark:bg-red-500/20 border-0">
+                              Deactivated
+                          </Tag>
+                      )}
+                  </div>
+              ),
             },
             {
                 header: '',
                 id: 'action',
                 cell: (props) => (
                     <div>
-                        <Dropdown
-                            placement='bottom-end'>
+                        <Dropdown placement="bottom-end">
                             {dropdownItems.map((item) => (
                                 <Dropdown.Item
                                     key={item.key}
                                     eventKey={item.key}
                                     onSelect={onDropdownItemClick}
-                                    onClick={() => handleAction(props, item.key)}
+                                    onClick={() =>
+                                        handleAction(props, item.key)
+                                    }
                                 >
                                     {item.name}
                                 </Dropdown.Item>
@@ -214,8 +256,9 @@ const ViewBenefit = () => {
                     </div>
                 ),
             },
-        ]
-    ), [])
+        ],
+        [],
+    )
 
     const handlePaginationChange = (pageIndex: number) => {
         setTableData((prevData) => ({ ...prevData, ...{ pageIndex } }))
@@ -231,33 +274,33 @@ const ViewBenefit = () => {
             ...{ sort: { order, key } },
         }))
     }
-    const handleRowSelect = (checked: boolean, row: Benefits) => {
-      console.log('row', row)
-      if (checked) {
-          setSelectedRows((prevData) => {
-              if (!prevData.includes(row.id)) {
-                  return [...prevData, ...[row.id]]
-              }
-              return prevData
-          })
-      } else {
-          setSelectedRows((prevData) => {
-              if (prevData.includes(row.id)) {
-                  return prevData.filter((id) => id !== row.id)
-              }
-              return prevData
-          })
-      }
-  }
 
+    const handleRowSelect = (checked: boolean, row: Band) => {
+        console.log('row', row)
+        if (checked) {
+            setSelectedRows((prevData) => {
+                if (!prevData.includes(row.name)) {
+                    return [...prevData, ...[row.name]]
+                }
+                return prevData
+            })
+        } else {
+            setSelectedRows((prevData) => {
+                if (prevData.includes(row.name)) {
+                    return prevData.filter((id) => id !== row.name)
+                }
+                return prevData
+            })
+        }
+    }
 
-    const handleAllRowSelect = (checked: boolean, rows: Row<Benefits>[]) => {
+    const handleAllRowSelect = (checked: boolean, rows: Row<Band>[]) => {
         console.log('rows', rows)
         if (checked) {
             const originalRows = rows.map((row) => row.original)
             const selectedIds: string[] = []
             originalRows.forEach((row) => {
-                selectedIds.push(row.benefit_name)
+                selectedIds.push(row.name)
             })
             setSelectedRows(selectedIds)
         } else {
@@ -265,71 +308,77 @@ const ViewBenefit = () => {
         }
     }
 
-    const updatebenefit = async (data: any) => {
-        const result = await useEditProviderById(data)
+    const updateBand = async (data: any) => {
+        const id = editBand.id
+        const result = await useUpdateBandAuth(data,id)
 
         setMessage(result.message)
-
+        let notif_type:any
+        if (result.status === 'success'){
+           notif_type='success'
+        }
+        else if(result.status === 'failed'){
+          notif_type='warning'
+        }
+        setEditDialog(false)
+        refetch()
         if (result.message) {
             setTimeout(() => {
-                openNotification()
-            },
-                3000
-            )
-
+                openNotification(result.message,notif_type)
+            }, 2000)
         }
-
-
     }
 
-    const toastNotification = (
-        <Notification title="Message">
-            {message}
-        </Notification>
-    )
+    function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
+      toast.push(
+          <Notification
+              title={notificationType.toString()}
+              type={notificationType}>
 
-    function openNotification() {
-        toast.push(toastNotification)
-    }
+              {msg}
+          </Notification>, {
+          placement: 'top-center'
+      })
+  }
 
-    async function updateProviderStatus(providerId: string, data: any) {
-
+    async function updateBandStatus(bandId: string, disabled_plan: boolean) {
         let status;
 
-        if (data.is_active) {
+        if (disabled_plan) {
             status = false
         } else {
             status = true
         }
 
-        data.is_active = status;
+        disabled_plan = status;
 
-        const response = await useUpdateProviderActivationStatus(providerId, data)
+        const response = await useUpdateBandAuth({'is_active': disabled_plan},bandId)
 
+        if (response.status === 'success'){
+            setStatusDialog(false)
+            refetch()
+            openNotification(response.message,'success')
+        }
+        else if(response.status === 'failed'){
+               setStatusDialog(false)
+               refetch()
+               openNotification(response.message,'warning')
+        }
         if (response) {
             setStatusDialog(false)
-            window.location.reload();
-        }
 
+        }
     }
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true)
-            const response = await useViewBenefitAuth(tableData)
-            if (response?.status === 'success') {
-                setData(response.data)
-                setLoading(false)
-                setTableData((prevData) => ({
-                    ...prevData,
-                    ...{ total: response.total[0]['count(*)'] },
-                }))
-            }
-        }
-        fetchData()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+    const {data,refetch,isLoading}= useQuery({
+        queryKey: ['band'],
+        queryFn: async()=>{
+          const res =await useGetBandAuth()
+          return res.data
+        },
+        // select: (data) => data?.data || null
+      });
 
-    }, [tableData.pageIndex, tableData.sort, tableData.pageSize, tableData.query, tableData.total])
 
     return (
         <>
@@ -340,22 +389,11 @@ const ViewBenefit = () => {
                         variant="solid"
                         onClick={handleBatchAction}
                     >
-                        Batch Action
+                        View
                     </Button>
                 </div>
             )}
 
-            {/* Add benefit btn */}
-            <div>
-                <Button
-                    className="mr-2"
-                    variant="solid"
-                    onClick={() => navigate('/healthplan/benefits/create')}
-                    icon={<HiPlus />}
-                >
-                    <span>Add Benefits</span>
-                </Button>
-            </div>
             <div className="flex justify-end mb-4">
                 <Input
                     ref={inputRef}
@@ -366,7 +404,7 @@ const ViewBenefit = () => {
                 />
             </div>
 
-            <DataTable<Benefits>
+            <DataTable<Band>
                 selectable
                 columns={columns}
                 data={data}
@@ -379,9 +417,8 @@ const ViewBenefit = () => {
                 onIndeterminateCheckBoxChange={handleAllRowSelect}
             />
 
-
-            {
-                viewDialog && <Dialog
+            {viewDialog && (
+                <Dialog
                     isOpen={viewDialog}
                     onClose={() => setViewDialog(false)}
                     onRequestClose={() => setViewDialog(false)}
@@ -390,12 +427,8 @@ const ViewBenefit = () => {
                     shouldCloseOnEsc={false}
                 >
                     <div className="flex flex-col h-full justify-between">
-
-
-                        <h5 className="mb-4">View Benefit</h5>
+                        <h5 className="mb-4">View Band</h5>
                         <div className="max-h-96 overflow-y-auto">
-
-
                             <div className="prose dark:prose-invert mx-auto">
                                 <table>
                                     <thead>
@@ -406,23 +439,30 @@ const ViewBenefit = () => {
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td>Benefit Name</td>
-                                            <td><b>{benefit_list.benefit_name}</b></td>
+                                            <td>Name</td>
+                                            <td>
+                                                <b>{band.name}</b>
+                                            </td>
                                         </tr>
                                         <tr>
-                                            <td>Sub Category</td>
-                                            <td><b>{benefit_list.sub_category}</b></td>
-
+                                            <td>Description</td>
+                                            <td>
+                                                <b>{band.desciption}
+                                                </b>
+                                            </td>
                                         </tr>
                                         <tr>
-                                            <td>Category</td>
-                                            <td><b>{benefit_list.category}</b></td>
+                                            <td>Created At</td>
+                                            <td>
+                                                <b>{band.created_at}</b>
+                                            </td>
                                         </tr>
                                         <tr>
-                                            <td>Entered By</td>
-                                            <td><b>{benefit_list.entered_by}</b></td>
+                                            <td>Created_by</td>
+                                            <td>
+                                                <b>{band.created_by}</b>
+                                            </td>
                                         </tr>
-
 
                                     </tbody>
                                 </table>
@@ -439,9 +479,9 @@ const ViewBenefit = () => {
                         </div>
                     </div>
                 </Dialog>
-            }
-            {
-                editDialog && <Dialog
+            )}
+            {editDialog && (
+                <Dialog
                     isOpen={editDialog}
                     onClose={() => setEditDialog(false)}
                     onRequestClose={() => setEditDialog(false)}
@@ -450,72 +490,46 @@ const ViewBenefit = () => {
                     shouldCloseOnEsc={false}
                 >
                     <div className="flex flex-col h-full justify-between">
-
-
-                        <h5 className="mb-4">Edit Benefit</h5>
+                        <h5 className="mb-4">Edit Band</h5>
                         <div className="max-h-96 overflow-y-auto">
-
                             <div className="prose dark:prose-invert mx-auto">
                                 <Formik
-                                    /*  id: string;
-        created_at: string,
-        modified_at: string,
-        code: string;
-        user_id: string,
-        entered_by: string */
                                     initialValues={{
-                                        id: editbenefit.id,
-                                        benefit_name: editbenefit.benefit_name,
-                                        sub_category: editbenefit.sub_category,
-                                        category: editbenefit.category,
 
+                                        name: editBand.name,
+                                        desciption:editBand.desciption || null
                                     }}
-                                    onSubmit={(values, { resetForm, setSubmitting }) => {
-                                        updatebenefit(values)
-                                    }
-                                    }
-
+                                    onSubmit={(values,{ resetForm, setSubmitting },) => {
+                                        updateBand(values)
+                                    }}
                                 >
-                                    {({ touched, errors, resetForm }) => (
+                                    {({ values,touched, errors, resetForm, }) => (
                                         <Form>
                                             <FormContainer>
-                                                {/* benefit_name */}
-                                                <FormItem
-                                                    label="Benefit Name"
-                                                >
+                                                {/* Name */}
+                                                <FormItem label="Name">
                                                     <Field
                                                         type="text"
                                                         autoComplete="off"
-                                                        name="benefit_name"
+                                                        name="name"
                                                         component={Input}
                                                     />
                                                 </FormItem>
-                                                {/* sub_category */}
-                                                <FormItem
-                                                    label="Sub Category"
-                                                >
+                                                {/* Email */}
+                                                <FormItem label="Description">
                                                     <Field
                                                         type="text"
                                                         autoComplete="off"
-                                                        name="sub_category"
+                                                        name="description"
                                                         component={Input}
                                                     />
                                                 </FormItem>
-                                                {/* category */}
-                                                <FormItem
-                                                    label="category"
-                                                >
-                                                    <Field
-                                                        type="text"
-                                                        autoComplete="off"
-                                                        name="category"
-                                                        component={Input}
-                                                    />
-                                                </FormItem>
-
 
                                                 <FormItem>
-                                                    <Button variant="solid" type="submit">
+                                                    <Button
+                                                        variant="solid"
+                                                        type="submit"
+                                                    >
                                                         SAVE
                                                     </Button>
                                                 </FormItem>
@@ -535,10 +549,10 @@ const ViewBenefit = () => {
                             </div>
                         </div>
                     </div>
-                </Dialog >
-            }
-            {
-                statusDialog && <Dialog
+                </Dialog>
+            )}
+            {statusDialog && (
+                <Dialog
                     isOpen={statusDialog}
                     onClose={() => setStatusDialog(false)}
                     onRequestClose={() => setStatusDialog(false)}
@@ -546,13 +560,11 @@ const ViewBenefit = () => {
                     shouldCloseOnOverlayClick={false}
                     shouldCloseOnEsc={false}
                 >
-
-                    <h5 className="mb-4">Set Provider Status</h5>
+                    <h5 className="mb-4">Update Bnad Status</h5>
                     <p>
-                        {providerStatus.is_active ?
-                            `Deactivate ${providerStatus.name}` :
-                            `Activate ${providerStatus.name}`
-                        }
+                        {BandStatus.is_active
+                            ? `Deactivate ${BandStatus.name}`
+                            : `Activate ${BandStatus.name}`}
                     </p>
                     <div className="text-right mt-6">
                         <Button
@@ -562,16 +574,24 @@ const ViewBenefit = () => {
                         >
                             Cancel
                         </Button>
-                        <Button variant="solid" onClick={() => updateProviderStatus(providerStatus.id, providerStatus)}>
+                        <Button
+                            variant="solid"
+                            onClick={() =>
+                                updateBandStatus(
+                                    BandStatus.id,
+                                    BandStatus.is_active
+                                )
+                            }
+
+                        >
                             Okay
                         </Button>
                     </div>
-
-                </Dialog >
-            }
+                </Dialog>
+            )}
 
         </>
     )
 }
 
-export default ViewBenefit
+export default ViewBands

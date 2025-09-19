@@ -35,3 +35,14 @@ export async function uploadImagesTocloudinaryService(data:any,cloud_name:string
       data
   )
 }
+
+export async function uploadDocumentsAndSaveInDBService(data:any) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+  }>({
+      url: `/docs/upload/raw`,
+      method: 'post',
+      data
+  })
+}

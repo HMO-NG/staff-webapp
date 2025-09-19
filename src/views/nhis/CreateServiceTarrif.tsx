@@ -14,7 +14,6 @@ import { healthPlan } from '@/utils/customAuth/useHealthPlanAuth'
 import Notification from '@/components/ui/Notification'
 import toast from '@/components/ui/toast'
 import Upload from '@/components/ui/Upload'
-import * as XLSX from 'xlsx'
 
 
 type FormModel = {
@@ -42,7 +41,7 @@ const validationSchema = Yup.object().shape({
 
 const createServiceTarrif = () => {
 
-    const { useCreateNhiaServiceTarrifAuth } = useNhia()
+    const { useCreateNhiaServiceTarrifAuth,BulkUploadNHIASeriviceTariffAuth } = useNhia()
     const { useGetHealthPlanAuth } = useHealthPlan()
 
     const [healthPlan, setHealthPlan] = useState<healthPlan[]>([])
@@ -118,28 +117,22 @@ const createServiceTarrif = () => {
 
             if (!file[0]) return;
 
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const data = e.target?.result;
-                if (data) {
-                    const workbook = XLSX.read(data, { type: 'binary' });
-                    const sheetName = workbook.SheetNames[0];
-                    const sheet = workbook.Sheets[sheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(sheet);
+             const formData = new FormData();
+                      formData.append('file', file[0]);
 
-                    const BATCH_SIZE = 10;
-                    let response;
+            const { getItem } = useLocalStorage()
+            const user_id = getItem("user")
 
-                    for (let i = 0; i < jsonData.length; i += BATCH_SIZE) {
-                        const batch = jsonData.slice(i, i + BATCH_SIZE);
-                        response = await Promise.all(batch.map((item: any) => onCreateNhiaService(item)));
+            const response =await BulkUploadNHIASeriviceTariffAuth(user_id,formData)
+                if(response){
 
-                        openNotification(`uploaded batch ${i / BATCH_SIZE + 1}`, 'success')
-                    }
-
+                if(response.status === 'success') {
+                    openNotification(response.message, 'success')
                 }
-            };
-            reader.readAsBinaryString(file[0]);
+                else {
+                    openNotification(response.message, 'danger')
+                }
+            }
 
         } catch (error: any) {
 

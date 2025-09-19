@@ -1,7 +1,6 @@
 import Card from '@/components/ui/Card'
-import { HiCheckCircle } from 'react-icons/hi'
+import { HiCheckCircle, HiCloudUpload } from 'react-icons/hi'
 import { NigerianState } from '@/data/NigerianStates'
-import { Option } from '@/data/NigerianStates'
 import { FormItem, FormContainer } from '@/components/ui/Form'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
@@ -11,14 +10,12 @@ import { Field, Form, Formik } from 'formik'
 import Alert from '@/components/ui/Alert'
 import * as Yup from 'yup'
 import type { FieldProps } from 'formik'
-import useHealthPlan from '@/utils/customAuth/useHealthPlanAuth'
-import { useLocalStorage } from '@/utils/localStorage'
-import Tabs from '@/components/ui/Tabs'
-import { HiUserAdd, HiOutlineDocumentAdd, HiUserGroup } from 'react-icons/hi'
-import { useEffect, useState } from 'react'
 import useBandAuth from '@/utils/customAuth/useBandAuth'
-import type {Band}from '@/utils/customAuth/useBandAuth'
-
+import { useLocalStorage } from '@/utils/localStorage'
+import Upload from '@/components/ui/Upload'
+import * as XLSX from 'xlsx'
+import Notification from '@/components/ui/Notification'
+import toast from '@/components/ui/toast'
 
 type FormModel = {
     input: string
@@ -34,68 +31,78 @@ type FormModel = {
     upload: File[];
 }
 
-const planCategoryValidationSchema = Yup.object().shape({
-
-    name: Yup.string().required('health plan name Required'),
-    description: Yup.string().required('what is this plan about?'),
+const validationSchema = Yup.object().shape({
+    name: Yup.string().required('Band name is Required'),
 })
 
-const CreateHealthPlanCategory = () => {
-
+const CreateBand = () => {
 
     const [errorMessage, setErrorMessage] = useTimeOutMessage()
     const [successMessage, setSuccessMessage] = useTimeOutMessage()
 
-    const { useCreateHealthPlanCategoryAuth } = useHealthPlan()
-    const {useGetBandAuth,} = useBandAuth()
+    const {useCreateBandAuth } = useBandAuth()
 
-    const { getItem } = useLocalStorage()
+    function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
+        toast.push(
+            <Notification
+                title={notificationType.toString()}
+                type={notificationType}>
 
-    const onCreateHealthPlanCategory = async (
-        values: any,
+                {msg}
+            </Notification>, {
+            placement: 'top-center'
+        })
+    }
+
+    const onCreateBand = async (values: any,
         setSubmitting: (isSubmitting: boolean) => void,
         resetForm: () => void
     ) => {
 
         setSubmitting(true)
 
-        values.user_id = getItem("user")
+        const { getItem } = useLocalStorage()
 
-        const data = await useCreateHealthPlanCategoryAuth(values)
+        values.created_by = getItem("user")
 
+        const data = await useCreateBandAuth(values)
 
-        if (data.status === 'success') {
-            setSuccessMessage(data.message)
-            setSubmitting(false)
-            resetForm()
+        if (data?.data) {
+            setTimeout(() => {
+              if (data?.status ==='success'){
+                setSuccessMessage(data.message)
+              }
+                setSubmitting(false)
+                resetForm()
+            }, 3000)
+
         }
 
-        if(data.status  === 'failed'){
-            setErrorMessage(data.message)
-            setSubmitting(false)
+        else if (data?.status ==='failed'){
+          setTimeout(() => {
+              setErrorMessage(data.message)
+              setSubmitting(false)
+              resetForm()
+          }, 3000)
+          setErrorMessage(data.message)
         }
 
     }
 
 
-    useEffect(() => {
-        const fetchData = async () => {
-            console.log("useEffect for createHealthPlanCategory called!")
-        }
-
-        fetchData()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-
-    }, [])
 
     return (
         <div>
-            {
-                errorMessage && (
-                    <Alert showIcon className="mb-4" type="danger">
-                        {errorMessage}
-                    </Alert>
-                )}
+            {errorMessage && (
+                <Alert closable
+                showIcon
+                type="danger"
+                title='failed'
+                customIcon={<HiCheckCircle />}
+                duration={10000}>
+                    {errorMessage}
+                </Alert>
+            )}
             {
                 successMessage && (
                     <Alert closable
@@ -108,31 +115,30 @@ const CreateHealthPlanCategory = () => {
                     </Alert>
                 )
             }
-            <Card
-                header="Add Health  Category"
-            >
-                <p>
-                    Add Customized Health Category
-                </p>
+
+            <Card header='Band' className='mb-5'>
+              <p>Create Band</p>
             </Card>
+
+
+
 
             <div>
                 <Formik
                     enableReinitialize
                     initialValues={{
-
                         name: '',
-                        description: '',
-                        user_id: ''
+                        description: null,
                     }}
-                    validationSchema={planCategoryValidationSchema}
+                    validationSchema={validationSchema}
 
                     onSubmit={(values, { setSubmitting, resetForm }) => {
-                        onCreateHealthPlanCategory(values, setSubmitting, resetForm)
+                        onCreateBand(values, setSubmitting, resetForm)
+
+
                     }}
                 >
-                    {({ values, touched, errors, isSubmitting }) =>
-                    (
+                    {({ values, touched, errors, isSubmitting }) => (
                         <Form>
                             <FormContainer>
 
@@ -146,35 +152,32 @@ const CreateHealthPlanCategory = () => {
                                         type="text"
                                         autoComplete="off"
                                         name="name"
-                                        placeholder="Health Plan Name"
+                                        placeholder="Band Name"
                                         component={Input}
                                     />
                                 </FormItem>
-
                                 <FormItem
-
-                                    asterisk
-                                    label="description"
+                                    label="Description"
                                     invalid={errors.description && touched.description}
                                     errorMessage={errors.description}
                                 >
                                     <Field
-
                                         type="text"
                                         autoComplete="off"
                                         name="description"
-                                        placeholder="What is this plan for?"
+                                        placeholder="Band Description"
                                         component={Input}
                                     />
                                 </FormItem>
+
 
                                 <FormItem>
                                     <Button variant="solid" type="submit"
                                         loading={isSubmitting}>
                                         {isSubmitting ?
-                                            "Saving"
+                                            "Saving..."
                                             :
-                                            "Add Health Plan Category"
+                                            "create Band"
                                         }
 
                                     </Button>
@@ -185,7 +188,8 @@ const CreateHealthPlanCategory = () => {
                 </Formik>
             </div>
         </div>
+
     )
 }
 
-export default CreateHealthPlanCategory
+export default CreateBand

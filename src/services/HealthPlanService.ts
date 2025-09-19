@@ -165,3 +165,14 @@ export async function UpdateHealthPlanStatusService(id:any,data:any) {
       data,
   })
 }
+
+export async function UpdateHealthPlanCategoryService(id:any,data:any) {
+  return ApiService.fetchData<{
+      message: string,
+      data:any,
+  }>({
+      url: `/healthplan/category/update/${id}`,
+      method: 'patch',
+      data,
+  })
+}

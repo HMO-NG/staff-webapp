@@ -39,6 +39,24 @@ export const protectedRoutes = [
         authority: [],
     },
     {
+      key: 'provider.pa',
+      path: '/provider/preauthorization',
+      component: lazy(() => import('@/views/provider/ViewAllPreAuthorization')),
+      authority: [],
+    },
+    {
+      key: 'provider.pa',
+      path: '/provider/preauthorization/create',
+      component: lazy(() => import('@/views/provider/PreAuthorization')),
+      authority: [],
+    },
+    {
+      key: 'provider.tariff.create',
+      path: '/provider/tariff/:provider_id/create',
+      component: lazy(() => import('@/views/provider/CreateProviderTariffs')),
+      authority: [],
+    },
+    {
         key: 'healthplan.create',
         path: '/healthplan/create',
         component: lazy(() => import('@/views/healthplan/CreateHealthPlan')),
@@ -158,40 +176,90 @@ export const protectedRoutes = [
         authority: [],
     },
     {
-        key: 'nhia.enrollee.private',
+        key: 'private.client.view',
         path: 'privates/viewclients',
         component: lazy(() => import('@/views/privates/ViewClients')),
         authority: [],
     },
     {
-        key: 'nhia.enrollee.onboard',
+        key: 'private.enrollee.onboard',
         path: 'privates/enrollee/onboard',
         component: lazy(() => import('@/views/privates/Onboarding')),
         authority: [],
     },
     {
-      key: 'nhia.enrollee.comapanyinfo',
+      key: 'private.enrollee.comapanyinfo',
       path: 'privates/enrollee/companyinfo',
       component: lazy(() => import('@/views/privates/CompanyInfo')),
       authority: [],
   },
    {
-    key: 'nhia.enrollee.enroleeview',
+    key: 'private.enrollee.enroleeview',
     path: 'privates/enrollee/view',
-    component: lazy(() => import('@/views/privates/ViewPrivateEnrollees')),
+    component: lazy(() => import('@/views/enrollee/ViewPrivateEnrollees')),
     authority: [],
    },
    {
-   key: 'nhia.enrollee.comapanyinfo',
+   key: 'private.enrollee.create',
    path: 'privates/enrollee/add',
-   component: lazy(() => import('@/views/privates/EnrolleeEntryForm')),
+   component: lazy(() => import('@/views/enrollee/EnrolleeEntryForm')),
    authority: [],
   },
+  {
+    key: 'private.enrollee.profile',
+    path: 'privates/enrollee/:enrollee_id',
+    component: lazy(() => import('@/views/enrollee/EnrolleeProfile')),
+    authority: [],
+   },
+   {
+    key: 'private.claim.create',
+    path: 'privates/claim/create',
+    component: lazy(() => import('@/views/privates/CreatePrivateClaims')),
+    authority: [],
+   },
+   {
+    key: 'private.claim.create',
+    path: 'privates/claim/create/:pa_id',
+    component: lazy(() => import('@/views/privates/CreatePrivateClaims')),
+    authority: [],
+   },
+   {
+    key: 'private.claim.viewall',
+    path: 'privates/claim/view',
+    component: lazy(() => import('@/views/privates/ViewAllPrivateClaims')),
+    authority: [],
+   },
+   {
+    key: 'band.create',
+    path: 'band/create',
+    component: lazy(() => import('@/views/band/CreateBands')),
+    authority: [],
+   },
+   {
+    key: 'band.view',
+    path: 'band/view',
+    component: lazy(() => import('@/views/band/ViewBands')),
+    authority: [],
+   },
+   {
+    key: 'band.single.view',
+    path: 'band/view/:id',
+    component: lazy(() => import('@/views/band/singleViewBand')),
+    authority: [],
+   },
+
     // create nhia claims
     {
         key: 'nhia.claims.create',
         path: 'nhia/claims/create',
         component: lazy(() => import('@/views/nhis/CreateClaims')),
+        authority: [],
+    },
+    // view nhia claims
+    {
+        key: 'nhia.claims.view',
+        path: 'nhia/claims/view',
+        component: lazy(() => import('@/views/nhis/ViewClaims')),
         authority: [],
     },
     // manage users/users permission

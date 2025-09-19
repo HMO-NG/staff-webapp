@@ -3,13 +3,14 @@ import * as Yup from 'yup'
 import { FormItem, FormContainer, } from '@/components/ui/Form'
 import Input from '@/components/ui/Input'
 import { useLocalStorage } from '@/utils/localStorage'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Notification from '@/components/ui/Notification'
 import type {ProviderServiceTariffType,ProviderDrugTariffType} from '@/utils/customAuth/useProviderAuth'
 import useProvider from '@/utils/customAuth/useProviderAuth'
 import Button from '@/components/ui/Button'
 import toast from '@/components/ui/toast'
 import Select from '@/components/ui/Select'
+import CreatableSelect from 'react-select/creatable'
 import { SingleValue } from "react-select";
 import usePrivates from '@/utils/customAuth/usePrivatesAuth'
 import { useParams } from "react-router-dom";
@@ -18,6 +19,15 @@ import IconText from '@/components/shared/IconText'
 import { useNavigate } from 'react-router-dom'
 import ActionLink from '@/components/shared/ActionLink'
 import Tabs from '@/components/ui/Tabs'
+import useHealthPlan from '@/utils/customAuth/useHealthPlanAuth'
+import { healthPlan,PlanCategory } from '@/utils/customAuth/useHealthPlanAuth'
+import Radio from '@/components/ui/Radio'
+import Checkbox from '@/components/ui/Checkbox'
+import type { ChangeEvent } from 'react'
+import * as XLSX from 'xlsx'
+import Upload from '@/components/ui/Upload'
+import { HiCheckCircle, HiCloudUpload } from 'react-icons/hi'
+
 
 const { TabNav, TabList, TabContent } = Tabs
 
@@ -46,6 +56,12 @@ const is_surgical_opt = [
 const select_patient_type=[
   { value: 'inpatient', label: 'Inpatient' },
   { value: 'outpatient', label: 'Outpatient'},
+  { value: 'both', label: 'Both'},
+]
+const select_service_type=[
+  { value: 'primary', label: 'Primary' },
+  { value: 'secondary', label: 'Secondary'},
+  { value: 'tertiary', label: 'Tertiary'},
 ]
 const select_formulation=[
   { value: 'tablet', label: 'Tablet' },
@@ -90,13 +106,14 @@ const select_strength = [
 
 const CreateTariff=()=>{
     const [provider, setProvider] = useState<Select_Type>()
-    const {useCreateProviderServiceTariffAuth,usegetProviderServiceTariffByIdAuth,useCreateProviderDrugTariffAuth,
-    usegetProviderDrugTariffByIdAuth,useGetProviderByID,} = useProvider()
-    const {usegetPrivateProviderAuth}=usePrivates()
+    const [healthPlan, setHealthPlan] = useState<healthPlan[]>([])
+    const [selectedPlans, setSelectedPlans] = useState<string[]>([]);
+    const [checked,setChecked]=useState<boolean>(false)
+    const {useCreateProviderServiceTariffAuth,usegetProviderServiceTariffByIdAuth,useGetProviderByID,} = useProvider()
+    const { useGetHealthPlanAuth,useGetHealthPlanCategoryAuth } = useHealthPlan()
     const {provider_id}=useParams();
-    const navigate = useNavigate()
 
-      function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
+    function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
       toast.push(
           <Notification
               title={notificationType.toString()}
@@ -105,82 +122,105 @@ const CreateTariff=()=>{
               {msg}
           </Notification>, {
           placement: 'top-center'
-      })}
+    })}
 
-  const onCreateServiceTariff = async (values: any,
-    setSubmitting: (isSubmitting: boolean) => void,
-    resetForm: () => void
-) => {
+    const onCreateServiceTariff = async (values: any,
+         setSubmitting: (isSubmitting: boolean) => void,
+         resetForm: () => void
+         ) =>  {
 
-    setSubmitting(true)
+         setSubmitting(true)
 
-    const { getItem } = useLocalStorage()
+         const { getItem } = useLocalStorage()
 
-    values.created_by = getItem("user")
+         values.created_by = getItem("user")
+         checked? (values.available_to_all_plans = true,values.insurance_plan_id=null) : values.available_to_all_plans = false
 
-    const data = await useCreateProviderServiceTariffAuth(values)
+         const data = await useCreateProviderServiceTariffAuth(values)
 
-    if (data) {
-        setTimeout(() => {
-          if (data.status=='success'){
-            openNotification(data.message,'success')
-            setSubmitting(false)
-            resetForm()
-          }
-          else if (data.status=='failed'){
-            openNotification(data.message,'danger')
-          }
-        }, 3000)
+         if (data) {
+             setTimeout(() => {
+                if (data.status=='success'){
+                     openNotification(data.message,'success')
+                     setSubmitting(false)
+                     resetForm()
+                }
+                else if (data.status=='failed'){
+                    openNotification(data.message,'danger')
+                    setSubmitting(false)
+                }
+             }, 3000)
+         }
+
     }
 
-}
 
-const onCreateDrugTariff = async (values: any,
-  setSubmitting: (isSubmitting: boolean) => void,
-  resetForm: () => void
-) => {
 
-  setSubmitting(true)
+  const beforeUpload = (files: FileList | null, fileList: File[]) => {
+        let valid: string | boolean = true
 
-  const { getItem } = useLocalStorage()
+        const allowedFileType = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']
 
-  values.created_by = getItem("user")
-
-  const data = await useCreateProviderDrugTariffAuth(values)
-
-  if (data) {
-      setTimeout(() => {
-        if (data.status=='success'){
-          openNotification(data.message,'success')
-          setSubmitting(false)
-          resetForm()
+        if (files) {
+            for (const f of files) {
+                if (!allowedFileType.includes(f.type)) {
+                    valid = 'Please upload a .xlsx or .xls file!'
+                }
+            }
         }
-        else if (data.status=='failed'){
-          openNotification(data.message,'danger')
-        }
-
-      }, 3000)
-
-
-
-
-
-  }
-
-}
-useEffect(()=>{
-
-  const fetchData = async () => {
-    const response = await useGetProviderByID({id:provider_id})
-    if (response.data) {
-    const formattedProviders = {
-      label: response.data[0].name,
-      value: response.data[0].id,
+        return valid
     }
-      setProvider(formattedProviders)
-    }}
 
-fetchData()
+    const handleFileUpload = async (files: File[], fileList: File[]) => {
+            try {
+                if (!files.length) return
+
+                const response =await BulkUploadProviderTariffAuth(files)
+                if(response){
+
+                if(response.status === 'success') {
+                    openNotification(response.message, 'success')
+                }
+                else {
+                    openNotification(response.message, 'danger')
+                }
+              }
+
+
+            } catch (error) {
+                console.error('File upload error:', error)
+            }
+        }
+
+
+
+
+    useEffect(()=>{
+
+     const fetchData = async () => {
+           const response = await useGetProviderByID({id:provider_id})
+           if (response.data) {
+                const formattedProviders = {
+                  label: response.data[0].name,
+                  value: response.data[0].id,
+                }
+                setProvider(formattedProviders)
+       }}
+
+     const fetchData2 = async () => {
+           const response = await useGetHealthPlanAuth({ sort: { order: 'asc' } })
+
+           if (response.status === 'success' && response.data) {
+               setHealthPlan(response.data)
+           }
+
+           if (response.status === 'failed') {
+               openNotification(response.message, 'danger')
+           }
+     }
+
+     fetchData2()
+     fetchData()
 },[])
   return(
     <>
@@ -193,26 +233,31 @@ fetchData()
             </IconText></ActionLink>
             <h4 className="mb-5">Create Tariff for {provider?.label}</h4>
             <div>
-            <Tabs defaultValue="tab1" variant="pill">
-            <div className='flex justify-center'>
-                <TabList>
-                <TabNav value="tab1">Service Tariff</TabNav>
-                <TabNav value="tab2">Drug Tariff</TabNav>
-                </TabList>
-             </div>
+              <div className='my-5'>
+                              <Upload
+                                  beforeUpload={beforeUpload}
+                                  onChange={handleFileUpload}
+                              >
+                                  <Button variant="solid" icon={<HiCloudUpload />}>
+                                      Upload your file
+                                  </Button>
+                              </Upload>
+                          </div>
+
                 <div className="p-4">
-                    <TabContent value="tab1">
+
                       <Formik
                         initialValues={{
                           item_name:"",
                           item_price:"",
                           description:"",
                           provider_id:provider_id,
-                          // insurance_plan_type:"",
+                          insurance_plan_id:"",
                           hcpcs_code:"",
                           is_surgical:false,
                           patient_type:"",
-                          category:""
+                          category:"",
+                          service_type:""
 
                            }}
                   //  validationSchema={validationSchema}
@@ -256,7 +301,6 @@ fetchData()
 
                             {/* description */}
                             <FormItem label="Description"
-                            asterisk
                             invalid={errors.description && touched.description}
                             errorMessage={errors.description}>
                                 <Field
@@ -271,7 +315,6 @@ fetchData()
 
                            {/* hcpcs_code */}
                             <FormItem label="HCPCS Code"
-                            asterisk
                             invalid={errors.hcpcs_code && touched.hcpcs_code}
                             errorMessage={errors.hcpcs_code}>
                                 <Field
@@ -286,7 +329,6 @@ fetchData()
 
                             {/* is_surgical */}
                             <FormItem
-                             asterisk
                              label="is_surgical?"
                              invalid={errors.is_surgical && touched.is_surgical}
                              errorMessage={errors.is_surgical}
@@ -315,7 +357,6 @@ fetchData()
 
                             {/* patient_type */}
                             <FormItem
-                             asterisk
                              label="Select Patient Type"
                              invalid={errors.patient_type && touched.patient_type}
                              errorMessage={errors.patient_type}
@@ -344,7 +385,6 @@ fetchData()
 
                             {/* category */}
                             <FormItem label="Category"
-                            asterisk
                             invalid={errors.category && touched.category}
                             errorMessage={errors.category}>
                                 <Field
@@ -357,105 +397,22 @@ fetchData()
                             </FormItem>
                             {/* category */}
 
-
-                            <FormItem>
-                                <Button
-                                    variant="solid"
-                                    type="submit"
-                                    loading={isSubmitting}
-                                >
-                                    {isSubmitting
-                                        ? 'Saving...'
-                                        : 'Add tariff '}
-                                </Button>
-                            </FormItem>
-                        </FormContainer>
-
-                  </Form>
-
-                )}
-                      </Formik>
-                    </TabContent>
-                    <TabContent value="tab2">
-                    <Formik
-                        initialValues={{
-                          item_name:"",
-                          item_price:"",
-                          description:"",
-                          provider_id:provider_id,
-                          // insurance_plan_type:"",
-                          formulation:"",
-                          unit_of_measure:"",
-                          strength:"",
-                          category:""
-
-                           }}
-                  //  validationSchema={validationSchema}
-                onSubmit={(values, { setSubmitting, resetForm }) => {
-                onCreateDrugTariff(values, setSubmitting, resetForm)
-                }}
-            >
-                {({ isSubmitting,errors ,touched,values}) => (
-                    <Form>
-
-                        <FormContainer>
-                            <FormItem label="Item Name"
-                            asterisk
-                            invalid={errors.item_name && touched.item_name}
-                            errorMessage={errors.item_name}>
-                                <Field
-                                    type="txt"
-                                    autoComplete="off"
-                                    name="item_name"
-                                    placeholder="Enter item name"
-                                    component={Input}
-                                />
-                            </FormItem>
-
-                            <FormItem label="Price"
-                            asterisk
-                            invalid={errors.item_price && touched.item_price}
-                            errorMessage={errors.item_price}>
-                                <Field
-                                    type="number"
-                                    autoComplete="off"
-                                    name="item_price"
-                                    placeholder="Enter price"
-                                    component={Input}
-                                />
-                            </FormItem>
-
-                            {/* description */}
-                            <FormItem label="Description"
-                            asterisk
-                            invalid={errors.description && touched.description}
-                            errorMessage={errors.description}>
-                                <Field
-                                    type="txt"
-                                    autoComplete="off"
-                                    name="description"
-                                    placeholder="Enter Description"
-                                    component={Input}
-                                />
-                            </FormItem>
-                           {/* description */}
-
+                            {/* service_type */}
                             <FormItem
-                             asterisk
-                             label="formulation?"
-                             invalid={errors.formulation && touched.formulation}
-                             errorMessage={errors.formulation}
-                         >
+                             label="Select service type"
+                             invalid={errors.service_type && touched.service_type}
+                             errorMessage={errors.service_type}
+                              >
                              <Field
-                                 name="formulation">
+                                 name="service_type">
                                  {({ field, form }: FieldProps<FormModel>) => (
                                      <Select
                                          field={field}
                                          form={form}
-                                         options={select_formulation}
-                                         value={select_formulation?.filter(
+                                         options={select_service_type}
+                                         value={select_service_type?.filter(
                                              (items) =>
-                                                 items.value === values.formulation
+                                                 items.value === values.service_type
                                             )}
                                          onChange={(items) =>
                                              form.setFieldValue(
@@ -466,69 +423,40 @@ fetchData()
                                  )}
                              </Field>
                             </FormItem>
-                            <FormItem label="Unit Of Measurement"
-                            asterisk
-                            invalid={errors.unit_of_measure && touched.unit_of_measure}
-                            errorMessage={errors.unit_of_measure}>
-                             <Field
-                                 name="unit_of_measure">
-                                 {({ field, form }: FieldProps<FormModel>) => (
-                                     <Select
-                                         field={field}
-                                         form={form}
-                                         options={select_unit_of_measure}
-                                         value={select_unit_of_measure?.filter(
-                                             (items) =>
-                                                 items.value === values.unit_of_measure
-                                            )}
-                                         onChange={(items) =>
-                                             form.setFieldValue(
-                                                 field.name,
-                                                 items?.value
-                                             )
-                                         } />
-                                 )}
-                             </Field>
-                            </FormItem>
+                            {/* service_type */}
 
-                            <FormItem label="Strength"
-                            asterisk
-                            invalid={errors.strength && touched.strength}
-                            errorMessage={errors.strength}>
-                             <Field
-                                 name="strength">
-                                 {({ field, form }: FieldProps<FormModel>) => (
-                                     <Select
-                                         field={field}
-                                         form={form}
-                                         options={select_strength}
-                                         value={select_strength?.filter(
-                                             (items) =>
-                                                 items.value === values.strength
-                                            )}
-                                         onChange={(items) =>
-                                             form.setFieldValue(
-                                                 field.name,
-                                                 items?.value
-                                             )
-                                         } />
-                                 )}
-                             </Field>
-                            </FormItem>
+                            {/* insurance_plan */}
 
-                            <FormItem label="Category"
-                            asterisk
-                            invalid={errors.category && touched.category}
-                            errorMessage={errors.category}>
-                                <Field
-                                    type="txt"
-                                    autoComplete="off"
-                                    name="category"
-                                    placeholder="Enter Category"
-                                    component={Input}
-                                />
-                            </FormItem>
+                            <Checkbox onChange={(value)=>setChecked(value)} className='mb-5'>
+                                Enable all Health Plans
+                            </Checkbox>
 
+
+                           { checked==false && (
+                             <FormItem label="Health Plan"
+                                     invalid={errors.insurance_plan_id && touched.insurance_plan_id}
+                                     errorMessage={errors.insurance_plan_id}>
+
+                                     <Field name="insurance_plan_id">
+                                          {({
+                                              field,
+                                              form,
+                                          }: FieldProps<FormModel>) => (
+                                              <Select
+                                                  options={healthPlan}
+                                                  isMulti
+                                                  isSearchable={true}
+                                                   onChange={(selectedOptions) => {
+                                                    const selectedIds = selectedOptions.map(option => option.value); // Extract UUIDs
+                                                     setSelectedPlans(selectedIds);
+                                                     form.setFieldValue(field.name, selectedIds);
+                                                      }}
+                                                  placeholder="Select Health Plans..."
+                                              />
+                                          )}
+                                      </Field>
+                            </FormItem>)}
+                            {/* insurance_plan */}
 
                             <FormItem>
                                 <Button
@@ -547,9 +475,7 @@ fetchData()
 
                 )}
                       </Formik>
-                    </TabContent>
                 </div>
-            </Tabs>
         </div>
 
 

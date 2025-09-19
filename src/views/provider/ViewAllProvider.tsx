@@ -14,6 +14,15 @@ import { Field, Form, Formik } from 'formik'
 import toast from '@/components/ui/toast'
 import Notification from '@/components/ui/Notification'
 import Tag from '@/components/ui/Tag'
+import Tabs from '@/components/ui/Tabs'
+import type {ProviderServiceTariffType,ProviderDrugTariffType} from '@/utils/customAuth/useProviderAuth'
+import {
+  HiPlus,
+  HiDocumentAdd,
+  HiOutlineDocumentDownload,
+} from 'react-icons/hi'
+
+const { TabNav, TabList, TabContent } = Tabs
 
 type Customer = {
     id: string;
@@ -36,9 +45,10 @@ type Customer = {
 
 const ViewAllProvider = () => {
 
-    const { useGetAllProvider, useEditProviderById, useUpdateProviderActivationStatus } = useProvider()
+    const { useGetAllProvider, useEditProviderById, useUpdateProviderActivationStatus,usegetProviderServiceTariffByIdAuth} = useProvider()
     const navigate = useNavigate()
     const [data, setData] = useState([])
+    const [serviceTariffData, setServiceTariffData] = useState<ProviderServiceTariffType[]>([])
     const [loading, setLoading] = useState(false)
     const [selectedRows, setSelectedRows] = useState<string[]>([])
     const [message, setMessage] = useState('')
@@ -138,6 +148,12 @@ const ViewAllProvider = () => {
             user_id: "",
             name: "",
         })
+        const [providerId, setProviderId] = useState<
+        {
+            id: string;
+        }>({
+            id: "",
+        })
 
     const inputRef = useRef(null)
 
@@ -147,11 +163,14 @@ const ViewAllProvider = () => {
         { key: 'view', name: 'View' },
         { key: 'edit', name: 'Edit' },
         { key: 'status', name: 'Set Status' },
+        { key: 'tariff', name: 'view tarffs' },
     ]
 
     const [editDialog, setEditDialog] = useState(false)
     const [viewDialog, setViewDialog] = useState(false)
     const [statusDialog, setStatusDialog] = useState(false)
+    const [tariffDialog, setTariffDialog] = useState(false)
+    const [providerServiceCount, setProviderServiceCount] = useState<number | undefined>(undefined)
 
     const onDropdownClick = (e: SyntheticEvent) => {
         console.log('Dropdown Clicked', e)
@@ -233,6 +252,18 @@ const ViewAllProvider = () => {
                 )
                 setStatusDialog(true)
                 break;
+            case 'tariff':
+              setProviderId(
+                {
+                    id: cellProps.row.original.id,
+                })
+              const gettariff=await usegetProviderServiceTariffByIdAuth(cellProps.row.original.id)
+              if(gettariff.data){
+              setServiceTariffData(gettariff.data)
+              setProviderServiceCount(gettariff.count)
+            }
+
+              setTariffDialog(true)
             // ... more cases
             default:
             // Code to execute if expression doesn't match any case
@@ -284,7 +315,7 @@ const ViewAllProvider = () => {
                 cell: (props) => (
                     <div>
                         <Dropdown
-                            placement='bottom-start'>
+                            placement='bottom-center'>
                             {dropdownItems.map((item) => (
                                 <Dropdown.Item
                                     key={item.key}
@@ -301,6 +332,63 @@ const ViewAllProvider = () => {
             },
         ]
     ), [])
+    const serviceTariffColumns: ColumnDef<ProviderServiceTariffType>[] = useMemo(() => (
+      [
+          {
+              header: 'Name',
+              accessorKey: 'item_name',
+          },
+          {
+              header: 'Price',
+              accessorKey: 'item_price',
+          },
+          {
+              header: 'HCPCS Code',
+              accessorKey: 'hcpcs_code',
+          },
+          {
+              header: 'Is Surgical',
+              accessorKey: 'is_surgical',
+          },
+          {
+              header: 'Patient Type',
+              accessorKey: 'patient_type',
+          },
+          {
+              header: 'Category',
+              accessorKey: 'category',
+          },
+          {
+            header: 'Linked Plans',
+            cell: (props) => {
+                const linkedPlans = props.cell.row.original.linked_plans;
+                return (
+                    <div>
+                        {linkedPlans && linkedPlans.length > 0 ? (
+                            linkedPlans.map((plan: { plan_name: string }, index: number) => (
+                                <Tag key={index} className='mr-1 mb-1'>
+                                    <p className="whitespace-nowrap ">{plan.plan_name}</p>
+                                </Tag>
+                            ))
+                        ) :props.cell.row.original.available_to_all_plans===true? (
+                            <p className="whitespace-nowrap underline">available to all plans</p>
+                        ):(
+                            <span>No Plans Linked</span>
+                        )
+                        }
+                    </div>
+                );
+            }
+          },
+
+         {
+              header: 'Service Type',
+              accessorKey: 'service_type',
+          },
+
+      ]
+  ), [])
+
 
     const handlePaginationChange = (pageIndex: number) => {
         setTableData((prevData) => ({ ...prevData, ...{ pageIndex } }))
@@ -354,12 +442,15 @@ const ViewAllProvider = () => {
         const result = await useEditProviderById(data)
 
         setMessage(result.message)
+        setEditDialog(false)
+        // setLoading(true)
+        fetchData2()
 
         if (result.message) {
             setTimeout(() => {
-                openNotification()
+                openNotification(result.message,'success')
             },
-                3000
+                2000
             )
 
         }
@@ -367,15 +458,30 @@ const ViewAllProvider = () => {
 
     }
 
-    const toastNotification = (
-        <Notification title="Message">
-            {message}
-        </Notification>
-    )
+    function openNotification(msg: string, notificationType: 'success' | 'warning' | 'danger' | 'info') {
+      toast.push(
+          <Notification
+              title={notificationType.toString()}
+              type={notificationType}>
 
-    function openNotification() {
-        toast.push(toastNotification)
+              {msg}
+          </Notification>, {
+          placement: 'top-center'
+      })
+  }
+  const fetchData2 = async () => {
+    setLoading(true)
+    const response = await useGetAllProvider(tableData)
+    if (response.data) {
+        setData(response.data)
+        setLoading(false)
+        setTableData((prevData) => ({
+            ...prevData,
+            ...{ total: response.total[0]['count(*)'] },
+        }))
     }
+}
+
 
     async function updateProviderStatus(providerId: string, data: any) {
 
@@ -393,8 +499,16 @@ const ViewAllProvider = () => {
 
         if (response) {
             setStatusDialog(false)
-            window.location.reload();
+            fetchData2()
         }
+        if (response.message) {
+          setTimeout(() => {
+              openNotification(response.message,'success')
+          },
+              2000
+          )
+
+      }
 
     }
 
@@ -720,6 +834,52 @@ const ViewAllProvider = () => {
                     </div>
 
                 </Dialog >
+            }
+            {
+                tariffDialog && <Dialog
+                    isOpen={tariffDialog}
+                    onClose={() => setTariffDialog(false)}
+                    onRequestClose={() => setTariffDialog(false)}
+                    width={1300}
+                    shouldCloseOnOverlayClick={false}
+                    shouldCloseOnEsc={false}
+                >
+                    <div className="flex flex-col h-full justify-between">
+
+
+                        <h5 className="">View Tariffs</h5>
+                        <div className="max-h-96 overflow-y-auto">
+                        <div className="flex justify-end">
+                        <Button
+                               className="mb-5"
+                               variant="solid"
+                               onClick={() => navigate(`/provider/tariff/${providerId.id}/create`)}
+                               icon={<HiPlus />}
+                               size='sm'
+                           >
+                               <span>Add tariff</span>
+                           </Button>
+
+                           </div>
+                        <div>
+                        {(providerServiceCount===0)?(<p>no Tariffs</p>):(
+                                       <DataTable<ProviderServiceTariffType>
+                                          selectable
+                                          columns={serviceTariffColumns}
+                                          data={serviceTariffData}
+                                          loading={loading}
+                                          pagingData={tableData}
+                                          onPaginationChange={handlePaginationChange}
+                                          onSelectChange={handleSelectChange}
+                                          onSort={handleSort}
+                                          // onCheckBoxChange={handleRowSelect}
+                                          // onIndeterminateCheckBoxChange={handleAllRowSelect}
+                                      />)}
+                           </div>
+
+                        </div>
+                    </div>
+                </Dialog>
             }
 
         </>

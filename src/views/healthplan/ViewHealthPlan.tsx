@@ -24,28 +24,60 @@ import {
     HiOutlineDocumentDownload,
 } from 'react-icons/hi'
 import Tag from '@/components/ui/Tag'
+import Select from '@/components/ui/Select'
+import type { FieldProps } from 'formik'
 
 type HealthPlan = {
     id: string
     plan_name: string
     health_plan_category_name: string
     plan_type: string
-    allow_dependent: string
+    allow_dependent: boolean
     max_dependant: string
     plan_age_limit: string
     plan_cost: string
     created_at: string
     user_id: string
+    band_id: string
+    band_name: string
     entered_by: string
     disabled_plan: boolean
 }
+type planbenefit={
+   id: string
+        benefit_name: string
+        limit_type: string
+        limit_value: string
+        health_plan_name: string
+        benefit_item_id: string
+        health_plan_id: string
+}
+
+type FormModel = {
+  input: string
+  select: string
+  multipleSelect: string[]
+  date: Date | null
+  time: Date | null
+  singleCheckbox: boolean
+  multipleCheckbox: Array<string | number>
+  radio: string
+  switcher: boolean
+  segment: string[]
+  upload: File[]
+}
+
+const allowDependent = [
+    { value: true, label: "Yes", color: '#5243AA' },
+    { value: false, label: "No", color: '#0052CC' },
+]
 
 const ViewHealthPlan = () => {
     const {
         useViewHealthPlanAuth,
-        useCreateHealthPlanAuth,
         useUpdateHealthPlanAuth,
         useUpdateHealthPlanStatusAuth,
+        useGetAttachedBenefitByHealthPlanIdAuth,
     } = useHealthPlan()
 
     const navigate = useNavigate()
@@ -78,10 +110,12 @@ const ViewHealthPlan = () => {
         plan_name: string
         health_plan_category_name: string
         plan_type: string
-        allow_dependent: string
+        allow_dependent: boolean
         max_dependant: string
         plan_age_limit: string
         plan_cost: string
+        band_id: string
+        band_name: string
         created_at: string
         entered_by: string
     }>({
@@ -89,10 +123,12 @@ const ViewHealthPlan = () => {
         plan_name: '',
         health_plan_category_name: '',
         plan_type: '',
-        allow_dependent: '',
+        allow_dependent: false,
         max_dependant: '',
         plan_age_limit: '',
         plan_cost: '',
+        band_id: '',
+        band_name: '',
         created_at: '',
         entered_by: '',
     })
@@ -103,7 +139,7 @@ const ViewHealthPlan = () => {
         plan_name: string
         health_plan_category_name: string
         plan_type: string
-        allow_dependent: string
+        allow_dependent: boolean
         max_dependant: string
         plan_age_limit: string
         plan_cost: string
@@ -114,7 +150,7 @@ const ViewHealthPlan = () => {
         plan_name: '',
         health_plan_category_name: '',
         plan_type: '',
-        allow_dependent: '',
+        allow_dependent: false,
         max_dependant: '',
         plan_age_limit: '',
         plan_cost: '',
@@ -131,6 +167,9 @@ const ViewHealthPlan = () => {
         plan_name: '',
     })
 
+
+    const [attachedBenefits, setAttachedBenefits] = useState([])
+
     const inputRef = useRef(null)
 
     const debounceFn = debounce(handleDebounceFn, 500)
@@ -138,12 +177,14 @@ const ViewHealthPlan = () => {
     const dropdownItems = [
         { key: 'view', name: 'View' },
         { key: 'edit', name: 'Edit' },
-        { key: 'status', name: 'deactive' },
+        { key: 'status', name: 'Set Status' },
+        { key: 'benefits', name: 'View Attahed Benefits' },
     ]
 
     const [editDialog, setEditDialog] = useState(false)
     const [viewDialog, setViewDialog] = useState(false)
     const [statusDialog, setStatusDialog] = useState(false)
+    const [benefitsDialog, setBenefitsDialog] = useState(false)
 
     const fetchData2 = async () => {
       setLoading(true)
@@ -193,6 +234,8 @@ const ViewHealthPlan = () => {
                     max_dependant: cellProps.row.original.max_dependant,
                     plan_age_limit: cellProps.row.original.plan_age_limit,
                     plan_cost: cellProps.row.original.plan_cost,
+                    band_id: cellProps.row.original.band_id,
+                    band_name: cellProps.row.original.band_name,
                     created_at: cellProps.row.original.created_at,
                     entered_by: cellProps.row.original.entered_by,
                 })
@@ -221,6 +264,10 @@ const ViewHealthPlan = () => {
                     plan_name: cellProps.row.original.plan_name,
                 })
                 setStatusDialog(true)
+                break
+            case 'benefits':
+                await getAttachedBenefits(cellProps.row.original.id)
+                setBenefitsDialog(true)
                 break
             // ... more cases
             default:
@@ -275,19 +322,35 @@ const ViewHealthPlan = () => {
                 accessorKey: 'max_dependant',
             },
             {
+                header: 'Band',
+                accessorKey: 'band_name',
+            },
+            {
                 header: 'Entered by',
                 accessorKey: 'entered_by',
             },
             {
-              header: 'is active',
-              accessorKey: 'disabled_plan',
+              header: 'Status',
+              cell: (props) => (
+                  <div>
+                      {props.cell.row.original.disabled_plan ? (
+                          <Tag className="text-red-600 bg-red-100 dark:text-red-100 dark:bg-red-500/20 border-0">
+                              Deactivated
+                          </Tag>
+                      ) : (
+                          <Tag className="bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-100 border-0">
+                              Active
+                          </Tag>
+                      )}
+                  </div>
+              ),
           },
             {
                 header: '',
                 id: 'action',
                 cell: (props) => (
                     <div>
-                        <Dropdown placement="bottom-start">
+                        <Dropdown placement="bottom-end">
                             {dropdownItems.map((item) => (
                                 <Dropdown.Item
                                     key={item.key}
@@ -304,6 +367,28 @@ const ViewHealthPlan = () => {
                     </div>
                 ),
             },
+        ],
+        [],
+    )
+    const columns2: ColumnDef<planbenefit>[] = useMemo(
+        () => [
+            {
+                header: 'benefit_name',
+                accessorKey: 'benefit_name',
+            },
+            {
+                header: 'limit_type',
+                accessorKey: 'limit_type',
+            },
+            {
+                header: 'limit_value',
+                accessorKey: 'limit_value',
+            },
+            {
+                header: 'health_plan_name',
+                accessorKey: 'health_plan_name',
+            },
+
         ],
         [],
     )
@@ -416,6 +501,13 @@ const ViewHealthPlan = () => {
             setTimeout(() => {
               openNotification(response.message,notif_type)
           }, 2000)
+        }
+    }
+    async function getAttachedBenefits(healthplanId: string) {
+        const response = await useGetAttachedBenefitByHealthPlanIdAuth({id:healthplanId})
+        if (response.status === 'success') {
+            setAttachedBenefits(response.data)
+            setBenefitsDialog(true)
         }
     }
 
@@ -537,7 +629,7 @@ const ViewHealthPlan = () => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>plan_category</td>
+                                            <td>Plan Category</td>
                                             <td>
                                                 <b>
                                                     {
@@ -547,13 +639,13 @@ const ViewHealthPlan = () => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>plan_type</td>
+                                            <td>Plan Type</td>
                                             <td>
                                                 <b>{healthplan.plan_type}</b>
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>allow_dependent</td>
+                                            <td>Allow Dependent</td>
                                             <td>
                                                 <b>
                                                     {healthplan.allow_dependent
@@ -563,7 +655,7 @@ const ViewHealthPlan = () => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>max_dependant</td>
+                                            <td>Max Dependant</td>
                                             <td>
                                                 <b>
                                                     {healthplan.max_dependant}
@@ -571,7 +663,7 @@ const ViewHealthPlan = () => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>plan_age_limit</td>
+                                            <td>Plan Age Limit</td>
                                             <td>
                                                 <b>
                                                     {healthplan.plan_age_limit}
@@ -579,13 +671,19 @@ const ViewHealthPlan = () => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>plan_cos</td>
+                                            <td>Plan Cost</td>
                                             <td>
                                                 <b>{healthplan.plan_cost}</b>
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td>entered_by</td>
+                                            <td>Band</td>
+                                            <td>
+                                                <b>{healthplan.band_name}</b>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Entered By</td>
                                             <td>
                                                 <b>{healthplan.entered_by}</b>
                                             </td>
@@ -641,7 +739,7 @@ const ViewHealthPlan = () => {
                                         updateHealthPlan(values)
                                     }}
                                 >
-                                    {({ touched, errors, resetForm }) => (
+                                    {({ values,touched, errors, resetForm, }) => (
                                         <Form>
                                             <FormContainer>
                                                 {/* Name */}
@@ -671,15 +769,31 @@ const ViewHealthPlan = () => {
                                                         component={Input}
                                                     />
                                                 </FormItem>
-                                                {/* phone number */}
-                                                <FormItem label="allow_dependent">
-                                                    <Field
-                                                        type="text"
-                                                        autoComplete="off"
-                                                        name="allow_dependent"
-                                                        component={Input}
-                                                    />
-                                                </FormItem>
+
+                                                {/* allow dependent*/}
+                                                 <FormItem label="Allow Dependant?"
+                                                 >
+                                                     <Field
+                                                         name="allow_dependent">
+                                                         {({ field, form }: FieldProps<FormModel>) => (
+                                                             <Select
+                                                                 field={field}
+                                                                 form={form}
+                                                                 options={allowDependent}
+                                                                 value={allowDependent?.filter(
+                                                                     (items) =>
+                                                                         items.value === values.allow_dependent
+                                                                 )}
+
+                                                                 onChange={(items) =>
+                                                                     form.setFieldValue(
+                                                                         field.name,
+                                                                         items?.value
+                                                                     )
+                                                                 } />
+                                                         )}
+                                                     </Field>
+                                                 </FormItem>
                                                 {/* Medical Director's Name */}
                                                 <FormItem label="max_dependant">
                                                     <Field
@@ -743,11 +857,11 @@ const ViewHealthPlan = () => {
                     shouldCloseOnOverlayClick={false}
                     shouldCloseOnEsc={false}
                 >
-                    <h5 className="mb-4">Deactivate Health Plan</h5>
+                    <h5 className="mb-4">Update Health Plan Status</h5>
                     <p>
                         {healthplanStatus.disabled_plan
-                            ? `Deactivate ${healthplanStatus.plan_name}`
-                            : `Activate ${healthplanStatus.plan_name}`}
+                            ? `Activate ${healthplanStatus.plan_name}`
+                            : `Deactivate ${healthplanStatus.plan_name}`}
                     </p>
                     <div className="text-right mt-6">
                         <Button
@@ -769,6 +883,46 @@ const ViewHealthPlan = () => {
                         >
                             Okay
                         </Button>
+                    </div>
+                </Dialog>
+            )}
+            {benefitsDialog && (
+                <Dialog
+                    isOpen={benefitsDialog}
+                    onClose={() => setBenefitsDialog(false)}
+                    onRequestClose={() => setBenefitsDialog(false)}
+                    width={1000}
+                    shouldCloseOnOverlayClick={false}
+                    shouldCloseOnEsc={false}
+                >
+                    <div className="flex flex-col h-full justify-between">
+                        <h5 className="mb-4">View Plan Benefits</h5>
+                        <div className="max-h-96 overflow-y-auto">
+                            <div className="">
+                              <DataTable<planbenefit>
+                                   selectable
+                                   columns={columns2}
+                                   data={attachedBenefits}
+                                   loading={loading}
+                                   pagingData={tableData}
+                                   onPaginationChange={handlePaginationChange}
+                                   onSelectChange={handleSelectChange}
+                                   onSort={handleSort}
+                                  //  onCheckBoxChange={handleRowSelect}
+                                  //  onIndeterminateCheckBoxChange={handleAllRowSelect}
+                               />
+
+                            </div>
+                            <div className="text-right mt-6">
+                                <Button
+                                    className="ltr:mr-2 rtl:ml-2"
+                                    variant="plain"
+                                    onClick={() => setViewDialog(false)}
+                                >
+                                    Cancel
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </Dialog>
             )}

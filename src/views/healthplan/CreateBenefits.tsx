@@ -33,7 +33,7 @@ const validationSchema = Yup.object().shape({
 
     benefit_name: Yup.string().required('Benefit name required'),
     category: Yup.string().required('benefit category required'),
-    sub_category: Yup.string().required('benefit sub-category required'),
+    // sub_category: Yup.string().required('benefit sub-category required'),
 
 })
 
@@ -181,7 +181,7 @@ const CreateBenefit = () => {
 
                         benefit_name: '',
                         category: '',
-                        sub_category: '',
+                        // sub_category: '',
                         user_id: ''
 
                     }}
@@ -224,7 +224,8 @@ const CreateBenefit = () => {
                                     />
                                 </FormItem>
 
-                                <FormItem
+                              {/* Sub Category migth be used again in the future (it was removed because of management) */}
+                                {/* <FormItem
 
                                     asterisk
                                     label="Benefit Sub-Category"
@@ -239,7 +240,8 @@ const CreateBenefit = () => {
                                         placeholder="Health Benefit Subcategory"
                                         component={Input}
                                     />
-                                </FormItem>
+                                </FormItem> */}
+                              {/* Sub Category migth be used again in the future */}
 
                                 <FormItem>
                                     <Button
