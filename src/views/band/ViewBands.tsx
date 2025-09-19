@@ -27,6 +27,7 @@ import {
 import Tag from '@/components/ui/Tag'
 import Select from '@/components/ui/Select'
 import type { FieldProps } from 'formik'
+import { useQuery } from '@tanstack/react-query'
 
 type FormModel = {
   input: string
@@ -54,7 +55,6 @@ const ViewBands = () => {
     } = useBandAuth()
 
     const navigate = useNavigate()
-    const [data, setData] = useState<Band[]>([])
     const [loading, setLoading] = useState(false)
     const [selectedRows, setSelectedRows] = useState<string[]>([])
     const [message, setMessage] = useState('')
@@ -132,14 +132,6 @@ const ViewBands = () => {
     const [viewDialog, setViewDialog] = useState(false)
     const [statusDialog, setStatusDialog] = useState(false)
 
-    const fetchData= async () => {
-      setLoading(true)
-      const response = await useGetBandAuth()
-      if (response?.status === 'success') {
-          setData(response?.data || [])
-          setLoading(false)
-      }
-  }
     const onDropdownClick = (e: SyntheticEvent) => {
         console.log('Dropdown Clicked', e)
     }
@@ -167,15 +159,16 @@ const ViewBands = () => {
     ) => {
         switch (key) {
             case 'view':
-                setBand({
-                    id: cellProps.row.original.id,
-                    name: cellProps.row.original.name,
-                    desciption:cellProps.row.original.description,
-                    created_at: cellProps.row.original.created_at,
-                    created_by: cellProps.row.original.created_by,
-                })
+                // setBand({
+                //     id: cellProps.row.original.id,
+                //     name: cellProps.row.original.name,
+                //     desciption:cellProps.row.original.description,
+                //     created_at: cellProps.row.original.created_at,
+                //     created_by: cellProps.row.original.created_by,
+                // })
 
-                setViewDialog(true)
+                // setViewDialog(true)
+                navigate(`/band/view/${cellProps.row.original.id}`)
                 break
             case 'edit':
                 setEditBand({
@@ -328,7 +321,7 @@ const ViewBands = () => {
           notif_type='warning'
         }
         setEditDialog(false)
-        fetchData()
+        refetch()
         if (result.message) {
             setTimeout(() => {
                 openNotification(result.message,notif_type)
@@ -363,13 +356,13 @@ const ViewBands = () => {
 
         if (response.status === 'success'){
             setStatusDialog(false)
-            fetchData()
-             openNotification(response.message,'success')
+            refetch()
+            openNotification(response.message,'success')
         }
         else if(response.status === 'failed'){
                setStatusDialog(false)
-                fetchData()
-                openNotification(response.message,'warning')
+               refetch()
+               openNotification(response.message,'warning')
         }
         if (response) {
             setStatusDialog(false)
@@ -377,15 +370,15 @@ const ViewBands = () => {
         }
     }
 
-    useEffect(() => {
-        fetchData()
-    }, [
-        tableData.pageIndex,
-        tableData.sort,
-        tableData.pageSize,
-        tableData.query,
-        tableData.total,
-    ])
+    const {data,refetch,isLoading}= useQuery({
+        queryKey: ['band'],
+        queryFn: async()=>{
+          const res =await useGetBandAuth()
+          return res.data
+        },
+        // select: (data) => data?.data || null
+      });
+
 
     return (
         <>
