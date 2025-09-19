@@ -3,7 +3,7 @@ import * as Yup from 'yup'
 import { FormItem, FormContainer, } from '@/components/ui/Form'
 import Input from '@/components/ui/Input'
 import { useLocalStorage } from '@/utils/localStorage'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Notification from '@/components/ui/Notification'
 import type {ProviderServiceTariffType,ProviderDrugTariffType} from '@/utils/customAuth/useProviderAuth'
 import useProvider from '@/utils/customAuth/useProviderAuth'
@@ -24,6 +24,10 @@ import { healthPlan,PlanCategory } from '@/utils/customAuth/useHealthPlanAuth'
 import Radio from '@/components/ui/Radio'
 import Checkbox from '@/components/ui/Checkbox'
 import type { ChangeEvent } from 'react'
+import * as XLSX from 'xlsx'
+import Upload from '@/components/ui/Upload'
+import { HiCheckCircle, HiCloudUpload } from 'react-icons/hi'
+
 
 const { TabNav, TabList, TabContent } = Tabs
 
@@ -151,6 +155,46 @@ const CreateTariff=()=>{
     }
 
 
+
+  const beforeUpload = (files: FileList | null, fileList: File[]) => {
+        let valid: string | boolean = true
+
+        const allowedFileType = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']
+
+        if (files) {
+            for (const f of files) {
+                if (!allowedFileType.includes(f.type)) {
+                    valid = 'Please upload a .xlsx or .xls file!'
+                }
+            }
+        }
+        return valid
+    }
+
+    const handleFileUpload = async (files: File[], fileList: File[]) => {
+            try {
+                if (!files.length) return
+
+                const response =await BulkUploadProviderTariffAuth(files)
+                if(response){
+
+                if(response.status === 'success') {
+                    openNotification(response.message, 'success')
+                }
+                else {
+                    openNotification(response.message, 'danger')
+                }
+              }
+
+
+            } catch (error) {
+                console.error('File upload error:', error)
+            }
+        }
+
+
+
+
     useEffect(()=>{
 
      const fetchData = async () => {
@@ -189,6 +233,16 @@ const CreateTariff=()=>{
             </IconText></ActionLink>
             <h4 className="mb-5">Create Tariff for {provider?.label}</h4>
             <div>
+              <div className='my-5'>
+                              <Upload
+                                  beforeUpload={beforeUpload}
+                                  onChange={handleFileUpload}
+                              >
+                                  <Button variant="solid" icon={<HiCloudUpload />}>
+                                      Upload your file
+                                  </Button>
+                              </Upload>
+                          </div>
 
                 <div className="p-4">
 

@@ -195,3 +195,14 @@ export async function updatePreAuthorizationByPACodeService(PA_code:string,data:
   })
 }
 
+
+export async function ProviderTariffBulkUpload(provider_id:string,data: any) {
+  return ApiService.fetchData<{
+      message: string,
+      data: any,
+  }>({
+      url: `/provider/tarriff/bulk/upload/${provider_id}`,
+      method: 'post',
+      data
+  })
+}
